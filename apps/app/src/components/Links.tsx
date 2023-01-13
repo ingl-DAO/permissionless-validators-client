@@ -1,6 +1,5 @@
-import { GitHub, Twitter, Telegram } from '@mui/icons-material';
+import { GitHub, Telegram, Twitter } from '@mui/icons-material';
 import { Box, Tooltip, Typography } from '@mui/material';
-import Discord from '../assets/discord.png';
 import theme from '../theme/theme';
 
 export default function Links() {
