@@ -1,14 +1,13 @@
-import theme from './theme/theme';
 import { ThemeProvider } from '@mui/material/styles';
-import { useLanguage } from './contexts/language/LanguageContextProvider';
-import frMessages from './languages/fr';
-import enMessages from './languages/en-us';
 import { IntlProvider } from 'react-intl';
 import { useRoutes } from 'react-router';
-import { routes } from './routes/routes';
+import { Flip, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { ToastContainer, Flip } from 'react-toastify';
-import { Typography } from '@mui/material';
+import { useLanguage } from './contexts/language/LanguageContextProvider';
+import enMessages from './languages/en-us';
+import frMessages from './languages/fr';
+import { routes } from './routes/routes';
+import theme from './theme/theme';
 
 export function App() {
   const { activeLanguage } = useLanguage();
