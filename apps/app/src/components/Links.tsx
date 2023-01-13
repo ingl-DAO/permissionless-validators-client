@@ -1,6 +1,6 @@
 import { GitHub, Twitter, Telegram } from '@mui/icons-material';
 import { Box, Tooltip, Typography } from '@mui/material';
-import Discord from '../../assets/discord.png';
+import Discord from '../assets/discord.png';
 import theme from '../theme/theme';
 
 export default function Links() {
@@ -8,22 +8,22 @@ export default function Links() {
     {
       tooltip: 'github',
       link: 'https://github.com/ingl-DAO/ingl',
-      icon: <GitHub color="secondary" />,
+      icon: <GitHub color="primary" />,
     },
-    {
-      tooltip: 'discord',
-      link: 'https://discord.gg/9KWvjKV3Ed',
-      icon: <img src={Discord} height="24px" alt="discord" />,
-    },
+    // {
+    //   tooltip: 'discord',
+    //   link: 'https://discord.gg/9KWvjKV3Ed',
+    //   icon: <img src={Discord} height="24px" alt="discord" />,
+    // },
     {
       tooltip: 'twitter',
       link: 'https://twitter.com/ingldao',
-      icon: <Twitter color="secondary" />,
+      icon: <Twitter color="primary" />,
     },
     {
       tooltip: 'telegram',
       link: 'https://t.me/inglDAO',
-      icon: <Telegram color="secondary" />,
+      icon: <Telegram color="primary" />,
     },
   ];
 

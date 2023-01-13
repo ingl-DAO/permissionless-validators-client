@@ -12,15 +12,10 @@ export default function Footer() {
         alignItems: 'center',
         backgroundColor: 'black',
         padding: '3px 0',
-        width: '100vw',
       }}
     >
       <Link to={'/'} style={{ textDecoration: 'none' }}>
-        <Typography
-          variant="h1"
-          sx={{ fontSize: '1.125rem' }}
-          color="secondary"
-        >
+        <Typography variant="h1" sx={{ fontSize: '1.125rem' }} color="primary">
           ingl.io
         </Typography>
       </Link>
