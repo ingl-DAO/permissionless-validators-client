@@ -1,10 +1,12 @@
-import { Typography } from '@mui/material';
 import { Navigate } from 'react-router';
+import Home from '../pages';
+import Layout from '../pages/layout';
 
 export const routes = [
   {
     path: '/',
-    element: <Typography>Hello world</Typography>,
+    element: <Layout />,
+    children: [{ path: '', element: <Home /> }],
   },
   { path: '*', element: <Navigate to="/" /> },
 ];
