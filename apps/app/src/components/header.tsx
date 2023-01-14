@@ -1,8 +1,10 @@
 import { Box, Button } from '@mui/material';
 import theme from '../theme/theme';
 import Logo from '../assets/full_logo.png';
+import { useNavigate } from 'react-router';
 
 export default function Header() {
+  const navigate = useNavigate();
   return (
     <Box
       sx={{
@@ -13,7 +15,12 @@ export default function Header() {
         paddingTop: theme.spacing(4.25),
       }}
     >
-      <img src={Logo} alt="ingl-logo" />
+      <img
+        src={Logo}
+        alt="ingl-logo"
+        style={{ cursor: 'pointer' }}
+        onClick={() => navigate('/validators')}
+      />
       <Button
         variant="contained"
         style={{
