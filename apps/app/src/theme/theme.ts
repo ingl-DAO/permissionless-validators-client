@@ -127,7 +127,6 @@ const theme = createTheme({
       fontSize: '3.125rem',
       fontWeight: 700,
       color: 'white',
-      fontFamily: 'Space Grotesk,Poppins,Roboto,serif',
     },
     h2: {
       fontSize: '4rem',
