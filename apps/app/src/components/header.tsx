@@ -1,5 +1,6 @@
 import { Box, Button } from '@mui/material';
 import theme from '../theme/theme';
+import Logo from '../assets/full_logo.png';
 
 export default function Header() {
   return (
@@ -12,7 +13,7 @@ export default function Header() {
         paddingTop: theme.spacing(4.25),
       }}
     >
-      <img src={'../full_logo.png'} alt="ingl-logo" />
+      <img src={Logo} alt="ingl-logo" />
       <Button
         variant="contained"
         style={{
