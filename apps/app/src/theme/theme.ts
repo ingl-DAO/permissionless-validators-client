@@ -105,7 +105,7 @@ const theme = createTheme({
       main: '#EF233C',
     },
     success: {
-      main: SECONDARY,
+      main: '#06C270',
     },
   },
   common: {
@@ -119,7 +119,7 @@ const theme = createTheme({
     label: LINE,
     body: '#FFFFFF',
     titleActive: PRIMARY,
-    dialogBackground: '#626262',
+    dialogBackground: '#283452',
   },
   typography: {
     fontFamily: ['Space Grotesk', 'Poppins', 'Roboto', 'serif'].join(','),
