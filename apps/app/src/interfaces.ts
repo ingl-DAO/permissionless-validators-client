@@ -7,3 +7,19 @@ export interface Validator {
   apy: number;
   image_ref: string;
 }
+
+export interface InglNft {
+  nft_pubkey: string;
+  image_ref: string;
+  video_ref?: string;
+  rarity?: string;
+  is_delegated: boolean;
+  numeration: number;
+}
+
+export interface NftReward {
+  nft_pubkey: string;
+  image_ref: string;
+  numeration: number;
+  rewards: number;
+}
