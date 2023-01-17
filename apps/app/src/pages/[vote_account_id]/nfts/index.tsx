@@ -1,5 +1,5 @@
 import { ReportRounded } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Skeleton, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import ErrorMessage from '../../../common/components/ErrorMessage';
@@ -75,7 +75,16 @@ export default function ValidatorNFTs() {
       //TODO: call api here to load validators
       // eslint-disable-next-line no-constant-condition
       if (6 > 5) {
-        const newValidators: InglNft[] = [];
+        const newValidators: InglNft[] = [
+          {
+            image_ref:
+              'https://img.bitscoins.net/v7/www.bitscoins.net/wp-content/uploads/2021/06/NFT-Marketplace-Rarible-Raises-Over-14-Million-Plans-to-Launch.jpg',
+            is_delegated: false,
+            nft_pubkey: 'Make it rain in th best ways',
+            numeration: 1,
+            rarity: 'Benetoite',
+          },
+        ];
         setNfts(newValidators);
         setAreNftsLoading(false);
         notif.dismiss();
@@ -382,25 +391,60 @@ export default function ValidatorNFTs() {
             Mint NFT Now
           </Button>
         </Box>
-        <NftCard
-          delegateNft={() => setIsConfirmDelegateDialogOpen(true)}
-          redeemNft={() => setIsConfirmRedeemDialogOpen(true)}
-          revealRarity={() => setIsConfirmRevealRarityDialogOpen(true)}
-          undelegateNft={() => setIsConfirmUndelegateDialogOpen}
-          setActionnedNft={setActionnedNft}
-          disabled={
-            isRedeeming || isDelegating || isUndelegating || isRevealing
-          }
-          isDialogOpen={true}
-          gem={{
-            image_ref:
-              'https://img.bitscoins.net/v7/www.bitscoins.net/wp-content/uploads/2021/06/NFT-Marketplace-Rarible-Raises-Over-14-Million-Plans-to-Launch.jpg',
-            is_delegated: false,
-            nft_pubkey: 'Make it rain in th best ways',
-            numeration: 1,
-            rarity: 'Benetoite',
-          }}
-        />
+        <Box>
+          {areNftsLoading ? (
+            <Box
+              sx={{
+                display: 'grid',
+                justifyItems: 'start',
+                justifyContent: 'center',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 300px))',
+                columnGap: '53px',
+                rowGap: '20px',
+              }}
+            >
+              {[...new Array(10)].map((_, index) => (
+                <Skeleton
+                  animation="wave"
+                  key={index}
+                  width="300px"
+                  height="500px"
+                />
+              ))}
+            </Box>
+          ) : nfts.length === 0 ? (
+            <Typography variant="h6" sx={{ textAlign: 'center' }}>
+              'You own no NFT's
+            </Typography>
+          ) : (
+            <Box
+              sx={{
+                display: 'grid',
+                justifyItems: 'start',
+                justifyContent: 'center',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 300px))',
+                columnGap: '53px',
+                rowGap: '20px',
+              }}
+            >
+              {nfts.map((nft, index) => (
+                <NftCard
+                  delegateNft={() => setIsConfirmDelegateDialogOpen(true)}
+                  redeemNft={() => setIsConfirmRedeemDialogOpen(true)}
+                  revealRarity={() => setIsConfirmRevealRarityDialogOpen(true)}
+                  undelegateNft={() => setIsConfirmUndelegateDialogOpen}
+                  setActionnedNft={setActionnedNft}
+                  disabled={
+                    isRedeeming || isDelegating || isUndelegating || isRevealing
+                  }
+                  isDialogOpen={true}
+                  gem={nft}
+                  key={index}
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
       </Box>
     </>
   );
