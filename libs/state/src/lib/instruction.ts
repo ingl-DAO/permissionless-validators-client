@@ -1,104 +1,7 @@
 import { field, fixedArray, variant, vec } from '@dao-xyz/borsh';
 import { PublicKey } from '@solana/web3.js';
 import BN = require('bn.js');
-
-export enum Instruction {
-  MintNft,
-  // {
-  //     log_level: u8,
-  // }
-  ImprintRarity,
-  //   {
-  //     log_level: u8,
-  // }
-  Init,
-  //   {
-  //     log_level: u8,
-  //     init_commission: u8,
-  //     max_primary_stake: u64,
-  //     nft_holders_share: u8,
-  //     initial_redemption_fee: u8,
-  //     is_validator_id_switchable: bool,
-  //     unit_backing: u64,
-  //     redemption_fee_duration: u32,
-  //     program_upgrade_threshold: u8,
-  //     creator_royalties: u16,
-  //     rarities: Vec<u16>,
-  //     rarity_names: Vec<String>,
-  //     twitter_handle: String,
-  //     discord_invite: String,
-  //     validator_name: String,
-  //     collection_uri: String,
-  //     default_uri: string,
-  //     website: String,
-  // }
-  Redeem,
-  // {
-  //     log_level: u8,
-  // }
-  NFTWithdraw,
-  // {
-  //     cnt: usize,
-  //     log_level: u8,
-  // }
-  ProcessRewards,
-  // {
-  //     log_level: u8,
-  // }
-  InitRebalance,
-  // {
-  //     log_level: u8,
-  // }
-  FinalizeRebalance,
-  // {
-  //     log_level: u8,
-  // },
-  UploadUris,
-  // {
-  //     uris: Vec<String>,
-  //     rarity: u8,
-  //     log_level: u8,
-  // },
-  ResetUris,
-  // {
-  //     log_level: u8,
-  // },
-  UnDelegateNFT,
-  // {
-  //     log_level: u8,
-  // },
-  DelegateNFT,
-  // {
-  //     log_level: u8,
-  // },
-  CreateVoteAccount,
-  // {
-  //     log_level: u8,
-  // },
-  InitGovernance,
-  // {
-  //     governance_type: GovernanceType,
-  //     log_level: u8,
-  // },
-  VoteGovernance,
-  // {
-  //     numeration: u32,
-  //     vote: bool,
-  //     log_level: u8,
-  // },
-  FinalizeGovernance,
-  // {
-  //     numeration: u32,
-  //     log_level: u8,
-  // },
-  ExecuteGovernance,
-  // {
-  //     numeration: u32,
-  //     log_level: u8,
-  // },
-}
-
-abstract class InglInstruction {
+abstract class Instruction {
   @field({ type: 'u8' })
   public log_level!: number;
 
@@ -108,13 +11,13 @@ abstract class InglInstruction {
 }
 
 @variant(0)
-export class MintNft extends InglInstruction {}
+export class MintNft extends Instruction {}
 
 @variant(1)
-export class ImprintRarity extends InglInstruction {}
+export class ImprintRarity extends Instruction {}
 
 @variant(2)
-export class Init extends InglInstruction {
+export class Init extends Instruction {
   @field({ type: 'u8' })
   public init_commission!: number;
 
@@ -176,10 +79,10 @@ export class Init extends InglInstruction {
 }
 
 @variant(3)
-export class Redeem extends InglInstruction {}
+export class Redeem extends Instruction {}
 
 @variant(4)
-export class NFTWithdraw extends InglInstruction {
+export class NFTWithdraw extends Instruction {
   @field({ type: 'u64' })
   public cnt!: BN;
 
@@ -190,28 +93,28 @@ export class NFTWithdraw extends InglInstruction {
 }
 
 @variant(5)
-export class ProcessRewards extends InglInstruction {}
+export class ProcessRewards extends Instruction {}
 
 @variant(6)
-export class InitRebalance extends InglInstruction {}
+export class InitRebalance extends Instruction {}
 
 @variant(7)
-export class FinalizeRebalance extends InglInstruction {}
+export class FinalizeRebalance extends Instruction {}
 
 @variant(8)
-export class UploadUris extends InglInstruction {}
+export class UploadUris extends Instruction {}
 
 @variant(9)
-export class ResetUris extends InglInstruction {}
+export class ResetUris extends Instruction {}
 
 @variant(10)
-export class UnDelegateNFT extends InglInstruction {}
+export class UnDelegateNFT extends Instruction {}
 
 @variant(11)
-export class DelegateNFT extends InglInstruction {}
+export class DelegateNFT extends Instruction {}
 
 @variant(12)
-export class CreateVoteAccount extends InglInstruction {}
+export class CreateVoteAccount extends Instruction {}
 
 abstract class GovernanceType {}
 
