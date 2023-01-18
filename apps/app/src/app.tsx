@@ -1,4 +1,13 @@
 import { ThemeProvider } from '@mui/material/styles';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import {
+  ConnectionProvider,
+  WalletProvider,
+} from '@solana/wallet-adapter-react';
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { clusterApiUrl } from '@solana/web3.js';
+import { useMemo } from 'react';
 import { IntlProvider } from 'react-intl';
 import { useRoutes } from 'react-router';
 import { Flip, ToastContainer } from 'react-toastify';
@@ -14,26 +23,37 @@ export function App() {
   const activeMessage = activeLanguage === 'en' ? frMessages : enMessages;
   const routing = useRoutes(routes);
 
+  // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
+  const network = WalletAdapterNetwork.Devnet;
+  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
+
   return (
-    <IntlProvider
-      messages={activeMessage}
-      locale={activeLanguage}
-      defaultLocale="en"
-    >
-      <ThemeProvider theme={theme}>
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          transition={Flip}
-        />
-        {routing}
-      </ThemeProvider>
-    </IntlProvider>
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          <IntlProvider
+            messages={activeMessage}
+            locale={activeLanguage}
+            defaultLocale="en"
+          >
+            <ThemeProvider theme={theme}>
+              <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                transition={Flip}
+              />
+              {routing}
+            </ThemeProvider>
+          </IntlProvider>
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
   );
 }
 
