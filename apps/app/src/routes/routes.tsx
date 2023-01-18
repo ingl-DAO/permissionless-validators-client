@@ -5,6 +5,7 @@ import Layout from '../pages/layout';
 import ValidatorLayout from '../pages/[vote_account_id]';
 import ValidatorNFTs from '../pages/[vote_account_id]/nfts';
 import Rewards from '../pages/[vote_account_id]/rewards';
+import ValidatorStats from '../pages/[vote_account_id]/validatorStats';
 
 export const routes = [
   { path: '/', element: <Typography>Authenticate user</Typography> },
@@ -20,6 +21,7 @@ export const routes = [
           { path: '', element: <Navigate to="nfts" /> },
           { path: 'nfts', element: <ValidatorNFTs /> },
           { path: 'rewards', element: <Rewards /> },
+          { path: 'validator', element: <ValidatorStats /> },
         ],
       },
       {
