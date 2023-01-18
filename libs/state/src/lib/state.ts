@@ -1,6 +1,7 @@
 import { field, option, variant, vec } from '@dao-xyz/borsh';
 import { PublicKey } from '@solana/web3.js';
 import * as BN from 'bn.js';
+import { GovernanceType } from './gov-type';
 
 export const DEVNET_PRICE_FEEDS = [
   '9ATrvi6epR5hVYtwNs7BB7VCiYnd4WM7e8MfafWpfiXC', //BTC_USD
@@ -176,4 +177,36 @@ export class GeneralData {
   constructor(properties: GeneralData) {
     Object.assign(this, properties);
   }
+}
+
+export class GovernanceData {
+  @field({ type: 'u32' })
+  public validation_phrase!: number;
+
+  @field({ type: 'u32' })
+  public expiration_time!: number;
+
+  @field({ type: 'bool' })
+  public is_still_ongoing!: boolean;
+
+  @field({ type: option('u32') })
+  public date_finalized?: number;
+
+  @field({ type: option('bool') })
+  public did_proposal_pass?: boolean;
+
+  @field({ type: 'bool' })
+  public is_proposal_executed: boolean;
+
+  @field({ type: 'string' })
+  public title!: string;
+
+  @field({ type: 'string' })
+  public description!: string;
+
+  @field({ type: Vote })
+  public votes!: Vote;
+
+  @field({ type: GovernanceType })
+  public governance_type: GovernanceType;
 }
