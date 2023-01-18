@@ -21,7 +21,7 @@ export const routes = [
           { path: '', element: <Navigate to="nfts" /> },
           { path: 'nfts', element: <ValidatorNFTs /> },
           { path: 'rewards', element: <Rewards /> },
-          { path: 'validator', element: <ValidatorStats /> },
+          { path: 'details', element: <ValidatorStats /> },
         ],
       },
       {
