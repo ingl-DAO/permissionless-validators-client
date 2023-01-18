@@ -1,6 +1,7 @@
 import { field, fixedArray, variant, vec } from '@dao-xyz/borsh';
 import { PublicKey } from '@solana/web3.js';
 import BN = require('bn.js');
+
 abstract class Instruction {
   @field({ type: 'u8' })
   public log_level!: number;
@@ -174,7 +175,7 @@ export class ValidatorName extends ConfigAccountType {
     this.value = value;
   }
 }
-@variant(4)
+@variant(5)
 export class TwitterHandle extends ConfigAccountType {
   @field({ type: 'string' })
   public value!: string;
@@ -253,7 +254,7 @@ export class InitGovernance {
   }
 }
 
-@variant(13)
+@variant(14)
 export class VoteGovernance {
   @field({ type: 'u32' })
   public numeration!: number;
@@ -267,12 +268,12 @@ export class VoteGovernance {
   @field({ type: 'u8' })
   public log_level!: number;
 
-  constructor(properties: InitGovernance) {
+  constructor(properties: VoteGovernance) {
     Object.assign(this, properties);
   }
 }
 
-@variant(14)
+@variant(15)
 export class FinalizeGovernance {
   @field({ type: 'u32' })
   public numeration!: number;
@@ -280,12 +281,12 @@ export class FinalizeGovernance {
   @field({ type: 'u8' })
   public log_level!: number;
 
-  constructor(properties: InitGovernance) {
+  constructor(properties: FinalizeGovernance) {
     Object.assign(this, properties);
   }
 }
 
-@variant(15)
+@variant(16)
 export class ExecuteGovernance {
   @field({ type: 'u32' })
   public numeration!: number;
@@ -293,7 +294,7 @@ export class ExecuteGovernance {
   @field({ type: 'u8' })
   public log_level!: number;
 
-  constructor(properties: InitGovernance) {
+  constructor(properties: ExecuteGovernance) {
     Object.assign(this, properties);
   }
 }

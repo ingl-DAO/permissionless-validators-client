@@ -95,34 +95,85 @@ export class NftData {
   @field({ type: Vote })
   public all_votes!: Vote;
 
-  constructor(properties?: {
-    validation_phrase: number;
-    date_created: number;
-    class: number;
-    redeemable_date: number;
-    numeration: number;
-    rarity: number;
-    funds_location: FundsLocation;
-    rarity_seed_time?: number;
-    date_allocated?: number;
-    last_voted_proposal?: PublicKey;
-    last_withdrawal_epoch?: BN;
-    last_delegation_epoch?: BN;
-    can_auto_delegate?: boolean;
-    all_withdraws: BN[];
-    all_votes: Vote;
-  }) {
-    if (properties) {
-      this.validation_phrase = properties.validation_phrase;
-      this.date_created = properties.date_created;
-      this.numeration = properties.numeration;
-      this.rarity = properties.rarity;
-      this.funds_location = properties.funds_location;
-      this.rarity_seed_time = properties.rarity_seed_time;
-      this.last_delegation_epoch = properties.last_delegation_epoch;
-      this.last_withdrawal_epoch = properties.last_withdrawal_epoch;
-      this.all_withdraws = properties.all_withdraws;
-      this.all_votes = properties.all_votes;
-    }
+  constructor(properties: NftData) {
+    Object.assign(this, properties);
+  }
+}
+
+export class RebalancingData {
+  @field({ type: 'u64' })
+  public pending_validator_rewards!: BN;
+
+  @field({ type: 'u64' })
+  public unclaimed_validator_rewards!: BN;
+
+  @field({ type: 'bool' })
+  public is_rebalancing_active!: boolean;
+
+  constructor(properties: RebalancingData) {
+    Object.assign(this, properties);
+  }
+}
+
+export class VoteReward {
+  @field({ type: 'u64' })
+  public epoch_number!: BN;
+
+  @field({ type: 'u64' })
+  public total_reward!: BN;
+
+  @field({ type: 'u64' })
+  public total_stake!: BN;
+
+  @field({ type: 'u64' })
+  public nft_holders_reward!: BN;
+
+  constructor(properties: VoteReward) {
+    Object.assign(this, properties);
+  }
+}
+
+export class GeneralData {
+  @field({ type: 'u32' })
+  public validation_phrase!: number;
+
+  @field({ type: 'u32' })
+  public mint_numeration!: number;
+
+  @field({ type: 'u64' })
+  public pending_delegation_total!: BN;
+
+  @field({ type: 'u64' })
+  public dealloced: BN;
+
+  @field({ type: 'u64' })
+  public total_delegated!: BN;
+
+  @field({ type: 'u64' })
+  public last_withdraw_epoch!: BN;
+
+  @field({ type: 'u64' })
+  public last_total_staked!: BN;
+
+  @field({ type: 'bool' })
+  public is_t_stake_initialized!: boolean;
+
+  @field({ type: 'u32' })
+  public proposal_numeration!: number;
+
+  @field({ type: 'u32' })
+  public last_feeless_redemption_date!: number;
+
+  @field({ type: 'u32' })
+  public last_validated_validator_id_proposal!: number;
+
+  @field({ type: RebalancingData })
+  public rebalancing_data!: RebalancingData;
+
+  @field({ type: vec(VoteReward) })
+  public vote_rewards!: VoteReward[];
+
+  constructor(properties: GeneralData) {
+    Object.assign(this, properties);
   }
 }
