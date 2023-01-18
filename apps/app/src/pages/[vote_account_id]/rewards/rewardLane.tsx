@@ -43,9 +43,11 @@ export default function RewardLane({
           }}
         />
       </TableCell>
-      <TableCell>{`#${numeration}`}</TableCell>
-      <TableCell>{nft_pubkey}</TableCell>
-      <TableCell align="right">{rewards}</TableCell>
+      <TableCell sx={{ color: 'white' }}>{`#${numeration}`}</TableCell>
+      <TableCell sx={{ color: 'white' }}>{nft_pubkey}</TableCell>
+      <TableCell sx={{ color: 'white' }} align="right">
+        {rewards}
+      </TableCell>
     </TableRow>
   );
 }
