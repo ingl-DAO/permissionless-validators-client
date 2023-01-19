@@ -38,6 +38,10 @@ export const PROGRAM_REGISTRY_ID = new PublicKey(
 export const SYSVAR_STAKE_HISTORY_ID = new PublicKey(
   'Team111111111111111111111111111111111111111'
 );
+export const METAPLEX_PROGRAM_ID = new PublicKey(
+  'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
+);
+
 export const INGL_CONFIG_SEED = 'ingl_config';
 export const URIS_ACCOUNT_SEED = 'uris_account';
 export const GENERAL_ACCOUNT_SEED = 'general_account';

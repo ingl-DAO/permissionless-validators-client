@@ -1,6 +1,5 @@
 import { field, variant, vec } from '@dao-xyz/borsh';
 import { GovernanceType } from './gov-type';
-import BN = require('bn.js');
 
 export * from './helpers';
 
@@ -86,10 +85,10 @@ export class Redeem extends Instruction {}
 
 @variant(4)
 export class NFTWithdraw extends Instruction {
-  @field({ type: 'u64' })
-  public cnt!: BN;
+  @field({ type: 'u8' })
+  public cnt!: number;
 
-  constructor(properties: { log_level: number; cnt: BN }) {
+  constructor(properties: { log_level: number; cnt: number }) {
     super(properties.log_level);
     this.cnt = properties.cnt;
   }
@@ -111,7 +110,7 @@ export class UploadUris extends Instruction {}
 export class ResetUris extends Instruction {}
 
 @variant(10)
-export class UnDelegateNFT extends Instruction {}
+export class UndelegateNFT extends Instruction {}
 
 @variant(11)
 export class DelegateNFT extends Instruction {}

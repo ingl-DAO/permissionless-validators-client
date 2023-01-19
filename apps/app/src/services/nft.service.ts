@@ -1,0 +1,789 @@
+import { deserialize, serialize } from '@dao-xyz/borsh';
+import {
+  AUTHORIZED_WITHDRAWER_KEY,
+  createLookupTable,
+  Delegated,
+  DelegateNFT,
+  forwardV0Transaction,
+  GENERAL_ACCOUNT_SEED,
+  INGL_CONFIG_SEED,
+  INGL_MINT_AUTHORITY_KEY,
+  INGL_NFT_COLLECTION_KEY,
+  METAPLEX_PROGRAM_ID,
+  MintNft,
+  NftData,
+  NFTWithdraw,
+  NFT_ACCOUNT_CONST,
+  PD_POOL_ACCOUNT_KEY,
+  Redeem,
+  UndelegateNFT,
+  URIS_ACCOUNT_SEED,
+  VOTE_ACCOUNT_KEY,
+} from '@ingl-permissionless/state';
+import {
+  Metaplex,
+  Nft,
+  JsonMetadata,
+  Metadata,
+  Sft,
+} from '@metaplex-foundation/js';
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
+import {
+  WalletAdapterNetwork,
+  WalletNotConnectedError,
+} from '@solana/wallet-adapter-base';
+import { WalletContextState } from '@solana/wallet-adapter-react';
+import {
+  AccountMeta,
+  clusterApiUrl,
+  Connection,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  TransactionInstruction,
+} from '@solana/web3.js';
+import { InglNft } from '../interfaces';
+
+export type MetaplexNft = Metadata<JsonMetadata<string>> | Nft | Sft;
+
+export class NftService {
+  constructor(
+    private readonly programId: PublicKey,
+    private readonly walletContext: WalletContextState,
+    private readonly connection = new Connection(
+      clusterApiUrl(WalletAdapterNetwork.Devnet)
+    ),
+    private readonly configAccountPDA = PublicKey.findProgramAddressSync(
+      [Buffer.from(INGL_CONFIG_SEED)],
+      programId
+    ),
+    private readonly generalAccountPDA = PublicKey.findProgramAddressSync(
+      [Buffer.from(GENERAL_ACCOUNT_SEED)],
+      programId
+    ),
+    private readonly mintingPoolPDA = PublicKey.findProgramAddressSync(
+      [Buffer.from(PD_POOL_ACCOUNT_KEY)],
+      programId
+    ),
+    private readonly voteAccountPDA = PublicKey.findProgramAddressSync(
+      [Buffer.from(VOTE_ACCOUNT_KEY)],
+      programId
+    ),
+    private readonly urisAccountPDA = PublicKey.findProgramAddressSync(
+      [Buffer.from(URIS_ACCOUNT_SEED)],
+      programId
+    ),
+    private readonly mintAuthorityPDA = PublicKey.findProgramAddressSync(
+      [Buffer.from(INGL_MINT_AUTHORITY_KEY)],
+      programId
+    ),
+    private readonly collectionPDA = PublicKey.findProgramAddressSync(
+      [Buffer.from(INGL_NFT_COLLECTION_KEY)],
+      programId
+    ),
+    private readonly collectionMetadataPDA = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('metadata'),
+        METAPLEX_PROGRAM_ID.toBuffer(),
+        collectionPDA[0].toBuffer(),
+      ],
+      METAPLEX_PROGRAM_ID
+    ),
+    private readonly collectionEditionPDA = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('metadata'),
+        METAPLEX_PROGRAM_ID.toBuffer(),
+        collectionPDA[0].toBuffer(),
+        Buffer.from('edition'),
+      ],
+      METAPLEX_PROGRAM_ID
+    )
+  ) {}
+
+  async mintNft(network: WalletAdapterNetwork) {
+    const payerAccount: AccountMeta = {
+      pubkey: this.walletContext.publicKey as PublicKey,
+      isSigner: true,
+      isWritable: true,
+    };
+
+    const mintKeyPair = Keypair.generate();
+    const nftMintAccount: AccountMeta = {
+      pubkey: mintKeyPair.publicKey,
+      isSigner: true,
+      isWritable: true,
+    };
+
+    const mintAuthorityAccount: AccountMeta = {
+      pubkey: this.mintAuthorityPDA[0],
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const splTokenProgramAccount: AccountMeta = {
+      pubkey: TOKEN_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const sysvarRentAccount: AccountMeta = {
+      pubkey: SYSVAR_RENT_PUBKEY,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const systemProgramAccount: AccountMeta = {
+      pubkey: SystemProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const [nftMetaplexAccountKey] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('metadata'),
+        METAPLEX_PROGRAM_ID.toBuffer(),
+        nftMintAccount.pubkey.toBuffer(),
+      ],
+      METAPLEX_PROGRAM_ID
+    );
+
+    const nftMetadataAccount: AccountMeta = {
+      pubkey: nftMetaplexAccountKey,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const generalAccountAccount: AccountMeta = {
+      pubkey: this.generalAccountPDA[0],
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const [nftPubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(NFT_ACCOUNT_CONST), mintKeyPair.publicKey.toBuffer()],
+      this.programId
+    );
+
+    const nftAccount: AccountMeta = {
+      pubkey: nftPubkey,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const metaplexProgramAccount: AccountMeta = {
+      pubkey: METAPLEX_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const mintingPoolAccount: AccountMeta = {
+      pubkey: this.mintingPoolPDA[0],
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const associatedTokenAccount: AccountMeta = {
+      pubkey: getAssociatedTokenAddressSync(
+        mintKeyPair.publicKey,
+        payerAccount.pubkey
+      ),
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const inglCollectionMintAccount: AccountMeta = {
+      pubkey: this.collectionPDA[0],
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const inglCollectionAccount: AccountMeta = {
+      pubkey: this.collectionMetadataPDA[0],
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const [nftEditionKey] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('metadata'),
+        METAPLEX_PROGRAM_ID.toBuffer(),
+        nftMintAccount.pubkey.toBuffer(),
+        Buffer.from('edition'),
+      ],
+      METAPLEX_PROGRAM_ID
+    );
+    const nftEditionAccount: AccountMeta = {
+      pubkey: nftEditionKey,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const collectionEditionAccount: AccountMeta = {
+      pubkey: this.collectionEditionPDA[0],
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const associatedTokeProgramAccount: AccountMeta = {
+      pubkey: ASSOCIATED_TOKEN_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const inglConfigAccount: AccountMeta = {
+      isSigner: false,
+      isWritable: false,
+      pubkey: this.configAccountPDA[0],
+    };
+
+    const urisAccountAccount: AccountMeta = {
+      isSigner: false,
+      isWritable: false,
+      pubkey: this.urisAccountPDA[0],
+    };
+    try {
+      const feedAccountInfos = this.getFeedAccountInfos(network);
+      const instructionAccounts = [
+        payerAccount,
+        nftMintAccount,
+        mintAuthorityAccount,
+        associatedTokenAccount,
+        splTokenProgramAccount,
+        sysvarRentAccount,
+        systemProgramAccount,
+        nftMetadataAccount,
+        mintingPoolAccount,
+        nftAccount,
+        collectionEditionAccount,
+        nftEditionAccount,
+        inglCollectionMintAccount,
+        inglCollectionAccount,
+        inglConfigAccount,
+        urisAccountAccount,
+        generalAccountAccount,
+        //switchbord history buffer account infos
+        ...feedAccountInfos,
+
+        systemProgramAccount,
+        splTokenProgramAccount,
+        associatedTokeProgramAccount,
+        metaplexProgramAccount,
+      ];
+      const lookupTableAddresses = await createLookupTable(
+        this.connection,
+        this.walletContext,
+        instructionAccounts.map((_) => _.pubkey)
+      );
+
+      const mintNftInstruction = new TransactionInstruction({
+        programId: this.programId,
+        data: Buffer.from(serialize(new MintNft(0))),
+        keys: instructionAccounts,
+      });
+      //   const closeLookupTableInstructions = getCloseLookupTableInstructions(
+      //     this.walletContext.publicKey as PublicKey,
+      //     lookupTableAddresses
+      //   );
+      return await forwardV0Transaction(
+        { connection: this.connection, wallet: this.walletContext },
+        [mintNftInstruction],
+        {
+          signerKeypairs: [mintKeyPair],
+          additionalUnits: 1_000_000,
+          lookupTableAddresses: lookupTableAddresses,
+        }
+      );
+    } catch (error) {
+      throw new Error('NFT Minting transaction failed with error ' + error);
+    }
+  }
+
+  getFeedAccountInfos(network: WalletAdapterNetwork) {
+    return (
+      network === WalletAdapterNetwork.Devnet
+        ? [
+            '9ATrvi6epR5hVYtwNs7BB7VCiYnd4WM7e8MfafWpfiXC', //BTC
+            '7LLvRhMs73FqcLkA8jvEE1AM2mYZXTmqfUv8GAEurymx', //SOL
+            '6fhxFvPocWapZ5Wa2miDnrX2jYRFKvFqYnX11GGkBo2f', //ETH
+            'DR6PqK15tD21MEGSLmDpXwLA7Fw47kwtdZeUMdT7vd7L', //BNB
+            'HPRYVJQ3DcTqszvorS4gCwbJvvNeWMgaCCoF3Lj3sAgC', //ADA
+            '2qcLzR7FatMnfCbiB9BdhGsd6SxDgEqWq7xkD62n3xoT', //BCH
+            'Bux82YCH8DgqFAQTKBxuQHDp3cud5AhD1Kibhjadz22D', //SBR
+            '9gGvxPErkRubNj1vKE19smLa4Kp89kkzMVyA6TMvmKEZ', //ZEC
+            '3WNhN4RJwRui4R3k1S9agGzyMZkCwKQkWjoEHbDeAF8J', //LUNA
+            'CNzjdKHfXqyAeGd2APpzvwLcuPACrFdHb3k6SLsod6Ao', //TRX
+            '6cBTHY4HQ4PABmhUqVLT4n4bNpmZAi2br5VnqTQoVRUo', //SUSHI
+            'GRGMtrTszsoNzjqwTxsvkHVAPq5Snju2UzaAws5KBPed', //DOGE
+            'C9CeLP5B4Lqq7cFppRBUZjt6hrvd99YR3Sk4EPPuAoAC', //LTC
+            'FReW6u9YPpGQNaeEHNkVqA4KGA2WzbcT87NThwFb7fwm', //XLM
+            'GEp5pZFjFPqn1teMmx9sLPyADf9N9aQsRn9TE17PwmmL', //LINK
+            'Fd3UQMqmKCA6SNf6To97PdC2H3EfzYWR5bxr5CBYuFiy', //DOT
+            'EQHf8ueSzJUPELF6yZkyGfwjbLsDmMwFrAYehmC15b6c', //XMR
+            'C5x5W7BHVY61ULtWQ3qkP7kpE6zHViWd4AHpKDuAywPw', //SRM
+            'HnbpTLbdv78hkVCDBZ52o5E6bkqtsZp4tUXBd2E8Sw9x', //PORT
+            'EbpMMgMkC4Jt2oipUBc2GPL4XQo5uxKT8NpF8NEZWvqL', //PAI
+          ]
+        : [
+            '8SXvChNYFhRq4EZuZvnhjrB3jJRQCv4k3P4W6hesH3Ee', //BTC
+            'E3cqnoFvTeKKNsGmC8YitpMjo2E39hwfoyt2Aiem7dCb', //SOL
+          ]
+    ).map<AccountMeta>((address) => ({
+      pubkey: new PublicKey(address),
+      isSigner: false,
+      isWritable: false,
+    }));
+  }
+
+  async redeemInglGem(tokenMint: PublicKey) {
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey) throw new WalletNotConnectedError();
+
+    const payerAccount: AccountMeta = {
+      pubkey: payerPubkey as PublicKey,
+      isSigner: true,
+      isWritable: true,
+    };
+
+    const mintAccount: AccountMeta = {
+      pubkey: tokenMint,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const mintingPoolAccount: AccountMeta = {
+      pubkey: this.mintingPoolPDA[0],
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const associatedTokenAccount: AccountMeta = {
+      pubkey: getAssociatedTokenAddressSync(tokenMint, payerAccount.pubkey),
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const [nft_pubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(NFT_ACCOUNT_CONST), tokenMint.toBuffer()],
+      this.programId
+    );
+    const nftAccount: AccountMeta = {
+      pubkey: nft_pubkey,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const [metaplexAccountKey] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('metadata'),
+        METAPLEX_PROGRAM_ID.toBuffer(),
+        tokenMint.toBuffer(),
+      ],
+      METAPLEX_PROGRAM_ID
+    );
+
+    const metadataAccount: AccountMeta = {
+      pubkey: metaplexAccountKey,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const [edition_key] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('metadata'),
+        METAPLEX_PROGRAM_ID.toBuffer(),
+        tokenMint.toBuffer(),
+        Buffer.from('edition'),
+      ],
+      METAPLEX_PROGRAM_ID
+    );
+    const nftEditionAccount: AccountMeta = {
+      pubkey: edition_key,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const collectionMetadataAccount: AccountMeta = {
+      pubkey: this.collectionMetadataPDA[0],
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const splTokenProgramAccount: AccountMeta = {
+      pubkey: TOKEN_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const configAccount: AccountMeta = {
+      pubkey: this.configAccountPDA[0],
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const generalAccount: AccountMeta = {
+      pubkey: this.configAccountPDA[0],
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const systemProgramAccount: AccountMeta = {
+      pubkey: SystemProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    };
+    const metaplexProgramAccount: AccountMeta = {
+      pubkey: METAPLEX_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    };
+    const voteAccount: AccountMeta = {
+      pubkey: this.voteAccountPDA[0],
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const redeemInglGemInstruction = new TransactionInstruction({
+      programId: this.programId,
+      data: Buffer.from(serialize(new Redeem(0))),
+      keys: [
+        payerAccount,
+        mintAccount,
+        mintingPoolAccount,
+        associatedTokenAccount,
+        nftAccount,
+        metadataAccount,
+        nftEditionAccount,
+        collectionMetadataAccount,
+        splTokenProgramAccount,
+        configAccount,
+        generalAccount,
+        voteAccount,
+
+        systemProgramAccount,
+        metaplexProgramAccount,
+      ],
+    });
+
+    try {
+      return await forwardV0Transaction(
+        { connection: this.connection, wallet: this.walletContext },
+        [redeemInglGemInstruction]
+      );
+    } catch (error) {
+      throw new Error(
+        'Failed to redeem NFT for the following reason: ' + error
+      );
+    }
+  }
+
+  async delegateNft(tokenMint: PublicKey) {
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey) throw new WalletNotConnectedError();
+
+    const payerAccount: AccountMeta = {
+      pubkey: payerPubkey as PublicKey,
+      isSigner: true,
+      isWritable: true,
+    };
+    const configAccount: AccountMeta = {
+      pubkey: this.configAccountPDA[0],
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const mintAccount: AccountMeta = {
+      pubkey: tokenMint,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const [nftPubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(NFT_ACCOUNT_CONST), tokenMint.toBuffer()],
+      this.programId
+    );
+    const nftAccount: AccountMeta = {
+      pubkey: nftPubkey,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const associatedTokenAccount: AccountMeta = {
+      pubkey: getAssociatedTokenAddressSync(
+        mintAccount.pubkey,
+        payerAccount.pubkey
+      ),
+      isSigner: false,
+      isWritable: false,
+    };
+    const generalAccount: AccountMeta = {
+      pubkey: this.generalAccountPDA[0],
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const delegateSolInstruction = new TransactionInstruction({
+      programId: this.programId,
+      data: Buffer.from(serialize(new DelegateNFT(0))),
+      keys: [
+        payerAccount,
+        configAccount,
+        mintAccount,
+        nftAccount,
+        associatedTokenAccount,
+        generalAccount,
+      ],
+    });
+
+    try {
+      await forwardV0Transaction(
+        { connection: this.connection, wallet: this.walletContext },
+        [delegateSolInstruction]
+      );
+    } catch (error) {
+      throw new Error('Failed to deallocate gem sol with error ' + error);
+    }
+  }
+
+  async undelegateNft(tokenMint: PublicKey, voteMint: PublicKey) {
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey) throw new WalletNotConnectedError();
+
+    const payerAccount: AccountMeta = {
+      pubkey: payerPubkey as PublicKey,
+      isSigner: true,
+      isWritable: true,
+    };
+
+    const voteAccount: AccountMeta = {
+      pubkey: voteMint,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const configAccount: AccountMeta = {
+      pubkey: this.configAccountPDA[0],
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const mintAccount: AccountMeta = {
+      pubkey: tokenMint,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const [nftPubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(NFT_ACCOUNT_CONST), tokenMint.toBuffer()],
+      this.programId
+    );
+    const nftAccount: AccountMeta = {
+      pubkey: nftPubkey,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const associatedTokenAccount: AccountMeta = {
+      pubkey: getAssociatedTokenAddressSync(
+        mintAccount.pubkey,
+        payerAccount.pubkey
+      ),
+      isSigner: false,
+      isWritable: false,
+    };
+    const generalAccount: AccountMeta = {
+      pubkey: this.generalAccountPDA[0],
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const systemProgramAccount: AccountMeta = {
+      pubkey: SystemProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const [authorizedWithdrawerPubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(AUTHORIZED_WITHDRAWER_KEY), voteMint.toBuffer()],
+      this.programId
+    );
+
+    const authorizedWithdrawerAccount: AccountMeta = {
+      pubkey: authorizedWithdrawerPubkey,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const undelegateSolInstruction = new TransactionInstruction({
+      programId: this.programId,
+      data: Buffer.from(serialize(new UndelegateNFT(0))),
+      keys: [
+        payerAccount,
+        voteAccount,
+        configAccount,
+        mintAccount,
+        nftAccount,
+        associatedTokenAccount,
+        generalAccount,
+        systemProgramAccount,
+        authorizedWithdrawerAccount,
+      ],
+    });
+    try {
+      await forwardV0Transaction(
+        { connection: this.connection, wallet: this.walletContext },
+        [undelegateSolInstruction]
+      );
+    } catch (error) {
+      throw new Error('Failed to undelegate gem  with error ' + error);
+    }
+  }
+
+  async loadNFTs(owner: PublicKey) {
+    const metaplex = new Metaplex(this.connection);
+    const metaplexNft = metaplex.nfts();
+
+    try {
+      let ownerNfts = await metaplexNft.findAllByOwner({ owner });
+      ownerNfts = ownerNfts.filter(
+        ({ collection, json }) =>
+          json &&
+          collection?.address.toString() === this.collectionPDA[0].toString()
+      );
+      const validatorNfts: InglNft[] = [];
+
+      for (let i = 0; i < ownerNfts.length; i++) {
+        const ownerNft = ownerNfts[i];
+        const nftData = await this.loadNftData(ownerNft);
+        if (nftData) validatorNfts.push(nftData);
+      }
+      return validatorNfts;
+    } catch (error) {
+      throw new Error('Failed to load metadata with error ' + error);
+    }
+  }
+
+  async loadNFT(tokenMint: PublicKey) {
+    const metaplex = new Metaplex(this.connection);
+    const metaplexNft = metaplex.nfts();
+
+    try {
+      const inglNft = await metaplexNft.findByMint({ mintAddress: tokenMint });
+      return this.loadNftData(inglNft);
+    } catch (error) {
+      throw new Error('Failed to load by mint with error ' + error);
+    }
+  }
+
+  private async loadNftData({ address, json }: MetaplexNft) {
+    const [nftPubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(NFT_ACCOUNT_CONST), address.toBuffer()],
+      this.programId
+    );
+    const accountInfo = await this.connection.getAccountInfo(nftPubkey);
+    if (accountInfo) {
+      const { funds_location, numeration } = deserialize(
+        accountInfo?.data as Buffer,
+        NftData
+      );
+      return {
+        nft_pubkey: address.toBase58(),
+        image_ref: json?.image as string,
+        is_delegated: funds_location instanceof Delegated,
+        numeration,
+        rarity: json?.attributes?.find((attr) => attr.trait_type === 'Rarity')
+          ?.value,
+      };
+    }
+  }
+
+  async claimRewards(voteMint: PublicKey, tokenMints: PublicKey[]) {
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey) throw new WalletNotConnectedError();
+
+    const payerAccount: AccountMeta = {
+      pubkey: payerPubkey as PublicKey,
+      isSigner: true,
+      isWritable: true,
+    };
+
+    const voteAccount: AccountMeta = {
+      pubkey: voteMint,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const generalAccount: AccountMeta = {
+      pubkey: this.generalAccountPDA[0],
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const [authorizedWithdrawerPubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(AUTHORIZED_WITHDRAWER_KEY), voteMint.toBuffer()],
+      this.programId
+    );
+
+    const authorizedWithdrawerAccount: AccountMeta = {
+      pubkey: authorizedWithdrawerPubkey,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const cntAccounts = tokenMints.reduce<AccountMeta[]>(
+      (accounts, tokenMint) => {
+        const [nftPubkey] = PublicKey.findProgramAddressSync(
+          [Buffer.from(NFT_ACCOUNT_CONST), tokenMint.toBuffer()],
+          this.programId
+        );
+        return [
+          ...accounts,
+          {
+            pubkey: getAssociatedTokenAddressSync(tokenMint, payerPubkey),
+            isSigner: false,
+            isWritable: false,
+          },
+          { pubkey: tokenMint, isSigner: false, isWritable: false },
+          { pubkey: nftPubkey, isSigner: false, isWritable: true },
+        ];
+      },
+      []
+    );
+
+    const systemProgramAccount: AccountMeta = {
+      pubkey: SystemProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const claimRewardInstruction = new TransactionInstruction({
+      programId: this.programId,
+      data: Buffer.from(
+        serialize(new NFTWithdraw({ cnt: tokenMints.length, log_level: 0 }))
+      ),
+      keys: [
+        payerAccount,
+        voteAccount,
+        generalAccount,
+        authorizedWithdrawerAccount,
+        //cntAccounts
+        ...cntAccounts,
+
+        systemProgramAccount,
+      ],
+    });
+
+    try {
+      await forwardV0Transaction(
+        { connection: this.connection, wallet: this.walletContext },
+        [claimRewardInstruction]
+      );
+    } catch (error) {
+      throw new Error('Failed to claim gems rewards  with error ' + error);
+    }
+  }
+}
