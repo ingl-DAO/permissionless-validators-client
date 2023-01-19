@@ -145,7 +145,7 @@ export class GeneralData {
   public pending_delegation_total!: BN;
 
   @field({ type: 'u64' })
-  public dealloced: BN;
+  public dealloced!: BN;
 
   @field({ type: 'u64' })
   public total_delegated!: BN;
@@ -208,5 +208,9 @@ export class GovernanceData {
   public votes!: Vote;
 
   @field({ type: GovernanceType })
-  public governance_type: GovernanceType;
+  public governance_type!: GovernanceType;
+
+  constructor(properties: GovernanceData) {
+    Object.assign(this, properties);
+  }
 }
