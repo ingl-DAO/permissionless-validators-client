@@ -14,6 +14,7 @@ export default function ValidatorCard({
     validator_name: name,
     validator_website: website,
     vote_account_id: va_id,
+    validator_program_id: vp_id,
   },
   searchValue,
 }: {
@@ -32,7 +33,7 @@ export default function ValidatorCard({
         width: '100%',
         cursor: 'pointer',
       }}
-      onClick={() => navigate(va_id)}
+      onClick={() => navigate(vp_id)}
     >
       <img
         src={image_ref}

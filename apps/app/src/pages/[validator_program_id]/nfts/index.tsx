@@ -109,7 +109,7 @@ export default function ValidatorNFTs() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const { vote_account_id } = useParams();
+  const { validator_program_id } = useParams();
 
   const [actionnedNft, setActionnedNft] = useState<InglNft>();
   const [isConfirmRedeemDialogOpen, setIsConfirmRedeemDialogOpen] =
@@ -362,7 +362,7 @@ export default function ValidatorNFTs() {
         isDialogOpen={isConfirmMintDialogOpen}
         dialogTitle={'Confirm Mint NFT'}
         confirmButton="Mint"
-        confirm={() => mintNft(vote_account_id as string)}
+        confirm={() => mintNft(validator_program_id as string)}
       />
       <Box>
         <Box

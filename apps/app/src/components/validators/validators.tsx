@@ -37,6 +37,7 @@ export default function AllValidators({
             validator_name: 'Lane.SOL',
             validator_website: 'https://make.com',
             vote_account_id: '5Jkv2mQeoBDhByhgVamWJZEnWd8JkvCb1EhaStMYFEP',
+            validator_program_id: '5Jkv2mQeoBDhByhgVamWJZEnWd8JkvCb1EhaStMYFEP',
           },
         ];
         setValidators(newValidators);
