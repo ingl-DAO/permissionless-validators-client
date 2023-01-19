@@ -1,4 +1,5 @@
 export interface Validator {
+  validator_program_id: string;
   validator_name: string;
   validator_website: string;
   vote_account_id: string;
