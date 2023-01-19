@@ -240,10 +240,7 @@ export default function ValidatorNFTs() {
       render: "Undelegating your NFT's worth...",
     });
     nftService
-      ?.undelegateNft(
-        new PublicKey(actionnedNft.nft_mint_id),
-        new PublicKey(validator_program_id as string) //TODO replace this with the vote_account_id
-      )
+      ?.undelegateNft(new PublicKey(actionnedNft.nft_mint_id))
       .then(() => {
         setNfts(
           nfts.map((nft) => {

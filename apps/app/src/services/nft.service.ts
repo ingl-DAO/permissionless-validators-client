@@ -83,6 +83,10 @@ export class NftService {
       [Buffer.from(INGL_MINT_AUTHORITY_KEY)],
       programId
     ),
+    private readonly authorizedWithdrawerPDA = PublicKey.findProgramAddressSync(
+      [Buffer.from(AUTHORIZED_WITHDRAWER_KEY)],
+      programId
+    ),
     private readonly collectionPDA = PublicKey.findProgramAddressSync(
       [Buffer.from(INGL_NFT_COLLECTION_KEY)],
       programId
@@ -537,7 +541,7 @@ export class NftService {
     }
   }
 
-  async undelegateNft(tokenMint: PublicKey, voteMint: PublicKey) {
+  async undelegateNft(tokenMint: PublicKey) {
     const payerPubkey = this.walletContext.publicKey;
     if (!payerPubkey) throw new WalletNotConnectedError();
 
@@ -548,7 +552,7 @@ export class NftService {
     };
 
     const voteAccount: AccountMeta = {
-      pubkey: voteMint,
+      pubkey: this.voteAccountPDA[0],
       isSigner: false,
       isWritable: false,
     };
@@ -595,13 +599,8 @@ export class NftService {
       isWritable: false,
     };
 
-    const [authorizedWithdrawerPubkey] = PublicKey.findProgramAddressSync(
-      [Buffer.from(AUTHORIZED_WITHDRAWER_KEY), voteMint.toBuffer()],
-      this.programId
-    );
-
     const authorizedWithdrawerAccount: AccountMeta = {
-      pubkey: authorizedWithdrawerPubkey,
+      pubkey: this.authorizedWithdrawerPDA[0],
       isSigner: false,
       isWritable: true,
     };
@@ -692,7 +691,7 @@ export class NftService {
     }
   }
 
-  async claimRewards(voteMint: PublicKey, tokenMints: PublicKey[]) {
+  async claimRewards(tokenMints: PublicKey[]) {
     const payerPubkey = this.walletContext.publicKey;
     if (!payerPubkey) throw new WalletNotConnectedError();
 
@@ -703,7 +702,7 @@ export class NftService {
     };
 
     const voteAccount: AccountMeta = {
-      pubkey: voteMint,
+      pubkey: this.voteAccountPDA[0],
       isSigner: false,
       isWritable: true,
     };
@@ -714,13 +713,8 @@ export class NftService {
       isWritable: true,
     };
 
-    const [authorizedWithdrawerPubkey] = PublicKey.findProgramAddressSync(
-      [Buffer.from(AUTHORIZED_WITHDRAWER_KEY), voteMint.toBuffer()],
-      this.programId
-    );
-
     const authorizedWithdrawerAccount: AccountMeta = {
-      pubkey: authorizedWithdrawerPubkey,
+      pubkey: this.authorizedWithdrawerPDA[0],
       isSigner: false,
       isWritable: true,
     };
