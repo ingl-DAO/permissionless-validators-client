@@ -2,6 +2,8 @@ import { field, variant, vec } from '@dao-xyz/borsh';
 import { GovernanceType } from './gov-type';
 import BN = require('bn.js');
 
+export * from './helpers';
+
 abstract class Instruction {
   @field({ type: 'u8' })
   public log_level!: number;

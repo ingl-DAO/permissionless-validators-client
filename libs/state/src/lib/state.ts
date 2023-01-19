@@ -1,7 +1,7 @@
 import { field, option, variant, vec } from '@dao-xyz/borsh';
 import { PublicKey } from '@solana/web3.js';
 import * as BN from 'bn.js';
-import { GovernanceType } from './gov-type';
+import { GovernanceType } from './instruction/gov-type';
 
 export const DEVNET_PRICE_FEEDS = [
   '9ATrvi6epR5hVYtwNs7BB7VCiYnd4WM7e8MfafWpfiXC', //BTC_USD
