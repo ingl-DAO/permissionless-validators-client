@@ -1,3 +1,5 @@
+import BN from 'bn.js';
+
 export interface Validator {
   validator_name: string;
   validator_website: string;
@@ -24,20 +26,18 @@ export interface NftReward {
   rewards: number;
 }
 
-export interface ValidatorMetaData {
+export interface ValidatorRarity {
   rarities: number[];
   rarity_names: string[];
-  twitter_handle: string;
-  discord_invite: string;
 }
 
-export interface ValidatorRegistration extends ValidatorMetaData {
+export interface ValidatorRegistration extends ValidatorRarity {
   proposal_quorum: number;
   init_commission: number; //in percentage
-  total_delegated_stake: string; //in lamports (big number)
+  max_primary_stake: BN; //in lamports (big number)
   initial_redemption_fee: number;
   is_validator_id_switchable: boolean;
-  unit_backing: string; //big number
+  unit_backing: BN; //big number
   redemption_fee_duration: number;
   creator_royalties: number;
   validator_name: string;
@@ -46,14 +46,33 @@ export interface ValidatorRegistration extends ValidatorMetaData {
   website: string;
   governance_expiration_time: number;
   default_uri: string;
+  twitter_handle: string;
+  discord_invite: string;
 }
 export interface InglValidator
-  extends Omit<ValidatorRegistration, keyof ValidatorMetaData> {
+  extends Omit<ValidatorRegistration, keyof ValidatorRarity> {
   validator_id: string;
   validator_apy: number;
   current_skip_rate: number;
-  vote_account_id: number;
+  vote_account_id: string;
   collection_id: string;
   total_delegated_count: number;
-  total_secondary_stake: string; // in lamports (big number)
+  total_minted_count: number;
+  total_delegated_stake: BN;
+  total_secondary_stake: BN; // in lamports (big number)
+}
+// the JSON file format is as followed:
+export interface NftJSON {
+  collection_uri: string;
+  rarity_names: string[];
+  rarities: number[];
+  uris: string[];
+}
+// A uri will be passed to a function that will return it's data with following structure:
+export interface UriData {
+  name: string;
+  symbol: string;
+  description: string;
+  image: string;
+  rarity: string;
 }
