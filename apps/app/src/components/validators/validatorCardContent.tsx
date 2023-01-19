@@ -9,6 +9,7 @@ export default function ValidatorCardContent({
   revert = false,
   skeleton = false,
   trim = false,
+  wrap = false,
 }: {
   title: string;
   value: string;
@@ -16,6 +17,7 @@ export default function ValidatorCardContent({
   skeleton?: boolean;
   searchValue?: string;
   trim?: boolean;
+  wrap?: boolean;
 }) {
   return (
     <Box
@@ -26,7 +28,11 @@ export default function ValidatorCardContent({
         sx={{ color: 'rgba(255, 255, 255, 0.5)', fontWeight: '300' }}
       >
         {skeleton && revert ? (
-          <Skeleton animation="wave" width={`${random() * 10}%`} />
+          <Skeleton
+            animation="wave"
+            width={`${random() * 10}%`}
+            sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
+          />
         ) : (
           title
         )}
@@ -35,17 +41,19 @@ export default function ValidatorCardContent({
         variant="h6"
         sx={{
           lineHeight: 1,
-          textOverflow: 'ellipsis',
+          textOverflow: wrap ? 'initial' : 'ellipsis',
           overflow: 'hidden',
-          whiteSpace: 'nowrap',
+          whiteSpace: wrap ? 'initial' : 'nowrap',
           width: trim ? '250px' : 'initial',
+          overflowWrap: wrap ? 'anywhere' : 'initial',
           fontSize: revert ? '1.45rem' : theme.typography.h6.fontSize,
         }}
       >
-        {skeleton ? (
+        {skeleton && !revert ? (
           <Skeleton
             animation="wave"
             width={title === 'APY' ? '100%' : `${random() * 10}%`}
+            sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
           />
         ) : searchValue ? (
           <Typography component="div" variant="body1">

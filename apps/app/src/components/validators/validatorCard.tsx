@@ -89,7 +89,12 @@ export function ValidatorSkeleton() {
         width: '100%',
       }}
     >
-      <Skeleton animation="wave" height={'150px'} width="100%" />
+      <Skeleton
+        animation="wave"
+        height={'150px'}
+        width="100%"
+        sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
+      />
       <Box
         sx={{
           display: 'grid',

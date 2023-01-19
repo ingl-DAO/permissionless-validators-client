@@ -38,7 +38,10 @@ export function TableLaneSkeleton({ cols = 6 }: { cols?: number }) {
     >
       {[...new Array(cols)].map((_, index) => (
         <TableCell component="th" scope="row" key={index}>
-          <Skeleton animation="wave" />
+          <Skeleton
+            animation="wave"
+            sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
+          />
         </TableCell>
       ))}
     </TableRow>
