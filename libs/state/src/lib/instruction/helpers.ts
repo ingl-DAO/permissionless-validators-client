@@ -38,7 +38,7 @@ export const forwardLegacyTransaction = async (
   const blockhashObj = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhashObj.blockhash;
 
-  if (signingKeypairs && signingKeypairs?.length > 0)
+  if (signingKeypairs && signingKeypairs.length > 0)
     transaction.sign(...signingKeypairs);
   const signedTransaction = signTransaction
     ? await signTransaction(transaction)
