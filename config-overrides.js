@@ -1,4 +1,4 @@
-const webpack = require("webpack");
+const webpack = require('webpack');
 
 module.exports = function override(webpackConfig) {
   // Disable resolving ESM paths as fully specified.
@@ -16,16 +16,17 @@ module.exports = function override(webpackConfig) {
 
   // Polyfill Buffer.
   webpackConfig.plugins.push(
-    new webpack.ProvidePlugin({ Buffer: ["buffer", "Buffer"] })
+    new webpack.ProvidePlugin({ Buffer: ['buffer', 'Buffer'] })
   );
 
   // Polyfill other modules.
   webpackConfig.resolve.fallback = {
-    crypto: require.resolve("crypto-browserify"),
-    stream: require.resolve("stream-browserify"),
-    assert: require.resolve("assert"),
-    util: require.resolve("util"),
-    url: require.resolve("url"),
+    crypto: require.resolve('crypto-browserify'),
+    stream: require.resolve('stream-browserify'),
+    assert: require.resolve('assert'),
+    util: require.resolve('util'),
+    url: require.resolve('url'),
+    child_process: false,
     fs: false,
     process: false,
     path: false,
@@ -38,6 +39,10 @@ module.exports = function override(webpackConfig) {
     tty: false,
     vm: false,
   };
+  webpackConfig.entry = {
+    ...webpackConfig.entry,
+    polyfills: './polyfill.js'
+  }
 
   return webpackConfig;
 };
