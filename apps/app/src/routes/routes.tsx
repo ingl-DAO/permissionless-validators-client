@@ -2,6 +2,7 @@ import { Typography } from '@mui/material';
 import { Navigate } from 'react-router';
 import Home from '../pages';
 import Layout from '../pages/layout';
+import Register from '../pages/register-validator';
 import ValidatorLayout from '../pages/[vote_account_id]';
 import ValidatorNFTs from '../pages/[vote_account_id]/nfts';
 import Rewards from '../pages/[vote_account_id]/rewards';
@@ -26,7 +27,7 @@ export const routes = [
       },
       {
         path: 'register-validator',
-        element: <Typography>Testing works</Typography>,
+        element: <Register />,
       },
     ],
   },
