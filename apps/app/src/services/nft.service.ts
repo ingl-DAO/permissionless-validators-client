@@ -6,6 +6,7 @@ import {
   DelegateNFT,
   forwardV0Transaction,
   GENERAL_ACCOUNT_SEED,
+  ImprintRarity,
   INGL_CONFIG_SEED,
   INGL_MINT_AUTHORITY_KEY,
   INGL_NFT_COLLECTION_KEY,
@@ -105,7 +106,7 @@ export class NftService {
     )
   ) {}
 
-  async mintNft(network: WalletAdapterNetwork) {
+  async mintNft() {
     const payerAccount: AccountMeta = {
       pubkey: this.walletContext.publicKey as PublicKey,
       isSigner: true,
@@ -247,7 +248,6 @@ export class NftService {
       pubkey: this.urisAccountPDA[0],
     };
     try {
-      const feedAccountInfos = this.getFeedAccountInfos(network);
       const instructionAccounts = [
         payerAccount,
         nftMintAccount,
@@ -266,36 +266,24 @@ export class NftService {
         inglConfigAccount,
         urisAccountAccount,
         generalAccountAccount,
-        //switchbord history buffer account infos
-        ...feedAccountInfos,
 
         systemProgramAccount,
         splTokenProgramAccount,
         associatedTokeProgramAccount,
         metaplexProgramAccount,
       ];
-      const lookupTableAddresses = await createLookupTable(
-        this.connection,
-        this.walletContext,
-        instructionAccounts.map((_) => _.pubkey)
-      );
 
       const mintNftInstruction = new TransactionInstruction({
         programId: this.programId,
         data: Buffer.from(serialize(new MintNft(0))),
         keys: instructionAccounts,
       });
-      //   const closeLookupTableInstructions = getCloseLookupTableInstructions(
-      //     this.walletContext.publicKey as PublicKey,
-      //     lookupTableAddresses
-      //   );
       return await forwardV0Transaction(
         { connection: this.connection, wallet: this.walletContext },
         [mintNftInstruction],
         {
           signerKeypairs: [mintKeyPair],
           additionalUnits: 1_000_000,
-          lookupTableAddresses: lookupTableAddresses,
         }
       );
     } catch (error) {
@@ -339,7 +327,7 @@ export class NftService {
     }));
   }
 
-  async redeemInglGem(tokenMint: PublicKey) {
+  async redeemNft(tokenMint: PublicKey) {
     const payerPubkey = this.walletContext.publicKey;
     if (!payerPubkey) throw new WalletNotConnectedError();
 
@@ -643,12 +631,14 @@ export class NftService {
     }
   }
 
-  async loadNFTs(owner: PublicKey) {
+  async loadNFTs() {
     const metaplex = new Metaplex(this.connection);
     const metaplexNft = metaplex.nfts();
 
     try {
-      let ownerNfts = await metaplexNft.findAllByOwner({ owner });
+      let ownerNfts = await metaplexNft.findAllByOwner({
+        owner: this.walletContext.publicKey as PublicKey,
+      });
       ownerNfts = ownerNfts.filter(
         ({ collection, json }) =>
           json &&
@@ -688,10 +678,11 @@ export class NftService {
     if (accountInfo) {
       const { funds_location, numeration } = deserialize(
         accountInfo?.data as Buffer,
-        NftData
+        NftData,
+        { unchecked: true }
       );
       return {
-        nft_pubkey: address.toBase58(),
+        nft_mint_id: address.toBase58(),
         image_ref: json?.image as string,
         is_delegated: funds_location instanceof Delegated,
         numeration,
@@ -784,6 +775,148 @@ export class NftService {
       );
     } catch (error) {
       throw new Error('Failed to claim gems rewards  with error ' + error);
+    }
+  }
+
+  async imprintRarity(tokenMint: PublicKey, network: WalletAdapterNetwork) {
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey) throw new WalletNotConnectedError();
+
+    const payerAccount: AccountMeta = {
+      pubkey: payerPubkey as PublicKey,
+      isSigner: true,
+      isWritable: true,
+    };
+    const [nftPubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(NFT_ACCOUNT_CONST), tokenMint.toBuffer()],
+      this.programId
+    );
+
+    const accountInfo = await this.connection.getAccountInfo(nftPubkey);
+    if (
+      !accountInfo ||
+      accountInfo?.owner.toBase58() !== this.programId.toBase58()
+    )
+      throw new Error(
+        `No account info was found with the provided token mint: ${tokenMint}`
+      );
+    const nftAccount: AccountMeta = {
+      pubkey: nftPubkey,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const mintAccount: AccountMeta = {
+      pubkey: tokenMint,
+      isSigner: false,
+      isWritable: false,
+    };
+    const associatedTokenAccount: AccountMeta = {
+      pubkey: getAssociatedTokenAddressSync(
+        mintAccount.pubkey,
+        payerAccount.pubkey
+      ),
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const mintAuthorityAccount: AccountMeta = {
+      pubkey: this.mintAuthorityPDA[0],
+      isSigner: false,
+      isWritable: true,
+    };
+    const [nftEditionKey] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('metadata'),
+        METAPLEX_PROGRAM_ID.toBuffer(),
+        tokenMint.toBuffer(),
+        Buffer.from('edition'),
+      ],
+      METAPLEX_PROGRAM_ID
+    );
+    const nftEditionAccount: AccountMeta = {
+      pubkey: nftEditionKey,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const [nftMetadataAccountKey] = await PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('metadata'),
+        METAPLEX_PROGRAM_ID.toBuffer(),
+        tokenMint.toBuffer(),
+      ],
+      METAPLEX_PROGRAM_ID
+    );
+
+    const metadataAccount: AccountMeta = {
+      pubkey: nftMetadataAccountKey,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const metaplexProgramAccount: AccountMeta = {
+      pubkey: METAPLEX_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const configAccount: AccountMeta = {
+      pubkey: this.configAccountPDA[0],
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const urisAccount: AccountMeta = {
+      pubkey: this.urisAccountPDA[0],
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const feedAccountInfos = this.getFeedAccountInfos(network);
+
+    const instructionAccounts = [
+      payerAccount,
+      nftAccount,
+      mintAccount,
+      associatedTokenAccount,
+      mintAuthorityAccount,
+      metadataAccount,
+      nftEditionAccount,
+      configAccount,
+      urisAccount,
+      //switchbord history buffer account infos
+      ...feedAccountInfos,
+
+      metaplexProgramAccount,
+    ];
+
+    const lookupTableAddresses = await createLookupTable(
+      this.connection,
+      this.walletContext,
+      instructionAccounts.map((_) => _.pubkey)
+    );
+
+    const imprintRarityInstruction = new TransactionInstruction({
+      programId: this.programId,
+      data: Buffer.from(serialize(new ImprintRarity(0))),
+      keys: instructionAccounts,
+    });
+
+    try {
+      //   const closeLookupTableInstructions = getCloseLookupTableInstructions(
+      //     this.walletContext.publicKey as PublicKey,
+      //     lookupTableAddresses
+      //   );
+
+      const transactionId = await forwardV0Transaction(
+        { connection: this.connection, wallet: this.walletContext },
+        [imprintRarityInstruction],
+        { lookupTableAddresses, additionalUnits: 600_000 }
+      );
+      return transactionId;
+    } catch (error) {
+      throw new Error('Failed to imprint rarity with error ' + error);
     }
   }
 }
