@@ -1,6 +1,6 @@
-import { field, fixedArray, variant } from "@dao-xyz/borsh";
-import { PublicKey } from "@solana/web3.js";
-import BN = require("bn.js");
+import { field, fixedArray, variant } from '@dao-xyz/borsh';
+import { PublicKey } from '@solana/web3.js';
+import * as BN from 'bn.js';
 
 export abstract class GovernanceType {}
 
