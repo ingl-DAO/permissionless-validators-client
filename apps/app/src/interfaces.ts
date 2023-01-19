@@ -10,7 +10,7 @@ export interface Validator {
 }
 
 export interface InglNft {
-  nft_pubkey: string;
+  nft_mint_id: string;
   image_ref: string;
   video_ref?: string;
   rarity?: string;
