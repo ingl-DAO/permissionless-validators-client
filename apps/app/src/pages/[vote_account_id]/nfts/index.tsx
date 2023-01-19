@@ -409,6 +409,7 @@ export default function ValidatorNFTs() {
                   key={index}
                   width="300px"
                   height="500px"
+                  sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
                 />
               ))}
             </Box>
