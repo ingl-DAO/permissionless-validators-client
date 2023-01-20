@@ -104,12 +104,13 @@ export async function forwardV0Transaction(
   const signature = await connection.sendTransaction(
     signedTransaction as VersionedTransaction
   );
+  console.log(blockhashObj, signature);
   await connection.confirmTransaction(
     {
       ...blockhashObj,
       signature,
     },
-    options?.commitment
+    options?.commitment || 'confirmed'
   );
   return signature;
 }

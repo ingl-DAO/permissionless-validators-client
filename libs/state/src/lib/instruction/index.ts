@@ -5,18 +5,29 @@ export * from './helpers';
 
 abstract class Instruction {
   @field({ type: 'u8' })
+  public instruction!: number;
+
+  @field({ type: 'u8' })
   public log_level!: number;
 
-  constructor(log_level: number) {
-    this.log_level = log_level;
+  constructor(properties: Instruction) {
+    Object.assign(this, properties);
   }
 }
 
 @variant(0)
-export class MintNft extends Instruction {}
+export class MintNft extends Instruction {
+  constructor(log_level: number) {
+    super({ log_level, instruction: 0 });
+  }
+}
 
 @variant(1)
-export class ImprintRarity extends Instruction {}
+export class ImprintRarity extends Instruction {
+  constructor(log_level: number) {
+    super({ log_level, instruction: 1 });
+  }
+}
 
 @variant(2)
 export class Init extends Instruction {
@@ -74,51 +85,90 @@ export class Init extends Instruction {
   @field({ type: 'string' })
   public default_ui!: string;
 
-  constructor(properties: Init) {
-    super(properties.log_level);
+  constructor({ log_level, ...properties }: Omit<Init, 'instruction'>) {
+    super({ log_level, instruction: 2 });
     Object.assign(this, properties);
   }
 }
 
 @variant(3)
-export class Redeem extends Instruction {}
+export class Redeem extends Instruction {
+  constructor(log_level: number) {
+    super({ log_level, instruction: 3 });
+  }
+}
 
 @variant(4)
 export class NFTWithdraw extends Instruction {
   @field({ type: 'u8' })
   public cnt!: number;
 
-  constructor(properties: { log_level: number; cnt: number }) {
-    super(properties.log_level);
-    this.cnt = properties.cnt;
+  constructor(cnt: number, log_level: number) {
+    super({ log_level, instruction: 4 });
+    this.cnt = cnt;
   }
 }
 
 @variant(5)
-export class ProcessRewards extends Instruction {}
+export class ProcessRewards extends Instruction {
+  constructor(log_level: number) {
+    super({ log_level, instruction: 5 });
+  }
+}
 
 @variant(6)
-export class InitRebalance extends Instruction {}
+export class InitRebalance extends Instruction {
+  constructor(log_level: number) {
+    super({ log_level, instruction: 6 });
+  }
+}
 
 @variant(7)
-export class FinalizeRebalance extends Instruction {}
+export class FinalizeRebalance extends Instruction {
+  constructor(log_level: number) {
+    super({ log_level, instruction: 7 });
+  }
+}
 
 @variant(8)
-export class UploadUris extends Instruction {}
+export class UploadUris extends Instruction {
+  constructor(log_level: number) {
+    super({ log_level, instruction: 8 });
+  }
+}
 
 @variant(9)
-export class ResetUris extends Instruction {}
+export class ResetUris extends Instruction {
+  constructor(log_level: number) {
+    super({ log_level, instruction: 9 });
+  }
+}
 
 @variant(10)
-export class UndelegateNFT extends Instruction {}
+export class UnDelegateNFT extends Instruction {
+  constructor(log_level: number) {
+    super({ log_level, instruction: 10 });
+  }
+}
 
 @variant(11)
-export class DelegateNFT extends Instruction {}
+export class DelegateNFT extends Instruction {
+  constructor(log_level: number) {
+    super({ log_level, instruction: 11 });
+  }
+}
 
 @variant(12)
-export class CreateVoteAccount extends Instruction {}
+export class CreateVoteAccount extends Instruction {
+  constructor(log_level: number) {
+    super({ log_level, instruction: 12 });
+  }
+}
 @variant(13)
 export class InitGovernance {
+  @field({ type: 'u8' })
+  public instruction!: number;
+
   @field({ type: GovernanceType })
   public governance_tpe!: GovernanceType;
 
@@ -131,13 +181,17 @@ export class InitGovernance {
   @field({ type: 'u8' })
   public log_level!: number;
 
-  constructor(properties: InitGovernance) {
+  constructor(properties: Omit<InitGovernance, 'instruction'>) {
+    this.instruction = 13;
     Object.assign(this, properties);
   }
 }
 
 @variant(14)
 export class VoteGovernance {
+  @field({ type: 'u8' })
+  public instruction!: number;
+
   @field({ type: 'u32' })
   public numeration!: number;
 
@@ -150,33 +204,42 @@ export class VoteGovernance {
   @field({ type: 'u8' })
   public log_level!: number;
 
-  constructor(properties: VoteGovernance) {
+  constructor(properties: Omit<VoteGovernance, 'instruction'>) {
+    this.instruction = 14;
     Object.assign(this, properties);
   }
 }
 
 @variant(15)
 export class FinalizeGovernance {
+  @field({ type: 'u8' })
+  public instruction!: number;
+
   @field({ type: 'u32' })
   public numeration!: number;
 
   @field({ type: 'u8' })
   public log_level!: number;
 
-  constructor(properties: FinalizeGovernance) {
+  constructor(properties: Omit<FinalizeGovernance, 'instruction'>) {
+    this.instruction = 15;
     Object.assign(this, properties);
   }
 }
 
 @variant(16)
 export class ExecuteGovernance {
+  @field({ type: 'u8' })
+  public instruction!: number;
+
   @field({ type: 'u32' })
   public numeration!: number;
 
   @field({ type: 'u8' })
   public log_level!: number;
 
-  constructor(properties: ExecuteGovernance) {
+  constructor(properties: Omit<ExecuteGovernance, 'instruction'>) {
+    this.instruction = 16;
     Object.assign(this, properties);
   }
 }

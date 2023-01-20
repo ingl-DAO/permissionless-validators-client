@@ -1,24 +1,43 @@
 import { ReportRounded } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { Box, Button, Skeleton, Typography } from '@mui/material';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import ErrorMessage from '../../../common/components/ErrorMessage';
 import useNotification from '../../../common/utils/notification';
 import ConfirmDialog from '../../../components/confirmDialog';
 import NftCard from '../../../components/nft/nftCard';
 import { InglNft } from '../../../interfaces';
+import { NftService } from '../../../services/nft.service';
 import theme from '../../../theme/theme';
 
 export default function ValidatorNFTs() {
+  const wallet = useWallet();
+  const { connection } = useConnection();
+  const { validator_program_id } = useParams();
+
   const [isConfirmMintDialogOpen, setIsConfirmMintDialogOpen] =
     useState<boolean>(false);
 
+  const nftService = useMemo(
+    () =>
+      validator_program_id
+        ? new NftService(
+            new PublicKey(validator_program_id),
+            wallet,
+            connection
+          )
+        : null,
+    [connection, validator_program_id, wallet]
+  );
   const [nfts, setNfts] = useState<InglNft[]>([]);
 
   const [isMinting, setIsMinting] = useState<boolean>(false);
   const [nftNotif, setNftNotif] = useState<useNotification>();
 
-  const mintNft = (vote_account_id: string) => {
+  const mintNft = () => {
     setIsMinting(true);
     const notif = new useNotification();
     if (nftNotif) nftNotif.dismiss();
@@ -26,31 +45,38 @@ export default function ValidatorNFTs() {
     notif.notify({
       render: 'Minting your awesome NFT...',
     });
-    setTimeout(() => {
-      //TODO: call api here to mint nft with data vote_account_id
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
-        const newNft: InglNft = {
-          image_ref: '',
-          is_delegated: false,
-          nft_pubkey: '5Jkv2mQeoBDhByhgVamWJZEnWd8JkvCb1EhaStMYFEP',
-          numeration: 1,
-        };
-        setNfts([newNft, ...nfts]);
-        setIsMinting(false);
+
+    nftService
+      ?.mintNft()
+      .then((tokenMint) => {
         notif.update({
           render: 'NFT minted successfully',
         });
-        setNftNotif(undefined);
-      } else {
+        nftService
+          ?.loadNFT(tokenMint)
+          .then((newNft) => {
+            if (newNft) setNfts([newNft, ...nfts]);
+            setNftNotif(undefined);
+          })
+          .catch((error) => {
+            notif.update({
+              type: 'ERROR',
+              render:
+                error?.message ||
+                'An error occured while fetching new token data.',
+              icon: () => <ReportRounded fontSize="medium" color="error" />,
+            });
+          });
+      })
+      .catch((error) => {
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => mintNft(vote_account_id)}
+              retryFunction={() => mintNft()}
               notification={notif}
-              //TODO: message should come from backend
               message={
+                error?.message ||
                 'There was an error minting the NFT. Please try again!!!'
               }
             />
@@ -58,8 +84,8 @@ export default function ValidatorNFTs() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      })
+      .finally(() => setIsMinting(false));
   };
 
   const [areNftsLoading, setAreNftsLoading] = useState<boolean>(false);
@@ -71,45 +97,43 @@ export default function ValidatorNFTs() {
       nftNotif.dismiss();
     }
     setNftNotif(notif);
-    setTimeout(() => {
-      //TODO: call api here to load validators
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
-        const newValidators: InglNft[] = [];
-        setNfts(newValidators);
-        setAreNftsLoading(false);
+    // notif.notify({
+    //   render: 'Loading nfts...',
+    // });
+    nftService
+      ?.loadNFTs()
+      .then((nfts) => {
+        setNfts(nfts);
         notif.dismiss();
         setNftNotif(undefined);
-      } else {
-        notif.notify({
-          render: 'Loading validators...',
-        });
+      })
+      .catch((error) => {
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
               retryFunction={loadNfts}
               notification={notif}
-              //TODO: message should come from backend
-              message={'There was an error loading validators. please retry!!!'}
+              message={
+                error?.message ||
+                'There was an error loading nfts. please retry!!!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      })
+      .finally(() => setAreNftsLoading(false));
   };
 
   useEffect(() => {
-    loadNfts();
+    if (nftService) loadNfts();
     return () => {
       //TODO: CLEANUP ABOVE CALL
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const { validator_program_id } = useParams();
+  }, [nftService]);
 
   const [actionnedNft, setActionnedNft] = useState<InglNft>();
   const [isConfirmRedeemDialogOpen, setIsConfirmRedeemDialogOpen] =
@@ -131,28 +155,27 @@ export default function ValidatorNFTs() {
     notif.notify({
       render: "Redeeming your NFT's worth...",
     });
-    setTimeout(() => {
-      //TODO: call api here to redeem nft with data actionnedNft
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
+    nftService
+      ?.redeemNft(new PublicKey(actionnedNft.nft_mint_id))
+      .then(() => {
         setNfts(
           nfts.filter(({ numeration: n }) => n !== actionnedNft.numeration)
         );
         setActionnedNft(undefined);
-        setIsRedeeming(false);
         notif.update({
           render: 'NFT redeemed successfully',
         });
         setNftNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
               retryFunction={() => redeemNft(actionnedNft)}
               notification={notif}
-              //TODO: message should come from backend
               message={
+                error?.message ||
                 'There was an error redeeming the NFT. Please try again!!!'
               }
             />
@@ -160,8 +183,8 @@ export default function ValidatorNFTs() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      })
+      .finally(() => setIsRedeeming(false));
   };
 
   const [isDelegating, setIsDelegating] = useState<boolean>(false);
@@ -174,10 +197,9 @@ export default function ValidatorNFTs() {
     notif.notify({
       render: "Delegating your NFT's worth...",
     });
-    setTimeout(() => {
-      //TODO: call api here to delegate nft with data actionnedNft
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
+    nftService
+      ?.delegateNft(new PublicKey(actionnedNft.nft_mint_id))
+      .then(() => {
         setNfts(
           nfts.map((nft) => {
             const { numeration: n } = nft;
@@ -186,21 +208,21 @@ export default function ValidatorNFTs() {
             return nft;
           })
         );
-        setIsDelegating(false);
         notif.update({
           render: 'NFT delegated successfully',
         });
         setActionnedNft(undefined);
         setNftNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
               retryFunction={() => delegateNft(actionnedNft)}
               notification={notif}
-              //TODO: message should come from backend
               message={
+                error?.message ||
                 'There was an error delegating the NFT. Please try again!!!'
               }
             />
@@ -208,8 +230,8 @@ export default function ValidatorNFTs() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      })
+      .finally(() => setIsDelegating(false));
   };
 
   const [isUndelegating, setIsUndelegating] = useState<boolean>(false);
@@ -222,10 +244,9 @@ export default function ValidatorNFTs() {
     notif.notify({
       render: "Undelegating your NFT's worth...",
     });
-    setTimeout(() => {
-      //TODO: call api here to undelegate nft with data actionnedNft
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
+    nftService
+      ?.undelegateNft(new PublicKey(actionnedNft.nft_mint_id))
+      .then(() => {
         setNfts(
           nfts.map((nft) => {
             const { numeration: n } = nft;
@@ -234,21 +255,21 @@ export default function ValidatorNFTs() {
             return nft;
           })
         );
-        setIsUndelegating(false);
         notif.update({
           render: 'NFT undelegated successfully',
         });
         setActionnedNft(undefined);
         setNftNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
               retryFunction={() => undelegateNft(actionnedNft)}
               notification={notif}
-              //TODO: message should come from backend
               message={
+                error?.message ||
                 'There was an error undelegating the NFT. Please try again!!!'
               }
             />
@@ -256,8 +277,8 @@ export default function ValidatorNFTs() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      })
+      .finally(() => setIsUndelegating(false));
   };
 
   const [isRevealing, setIsRevealing] = useState<boolean>(false);
@@ -270,10 +291,12 @@ export default function ValidatorNFTs() {
     notif.notify({
       render: "revealing your NFT's rarity...",
     });
-    setTimeout(() => {
-      //TODO: call api here to reveal nft's rarity with data actionnedNft
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
+    nftService
+      ?.imprintRarity(
+        new PublicKey(actionnedNft.nft_mint_id),
+        WalletAdapterNetwork.Devnet
+      )
+      .then(() => {
         setNfts(
           nfts.map((nft) => {
             const { numeration: n } = nft;
@@ -282,21 +305,21 @@ export default function ValidatorNFTs() {
             return nft;
           })
         );
-        setIsRevealing(false);
-        setActionnedNft(undefined);
         notif.update({
           render: 'Revealed rarity successfully',
         });
+        setActionnedNft(undefined);
         setNftNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
               retryFunction={() => revealRarity(actionnedNft)}
               notification={notif}
-              //TODO: message should come from backend
               message={
+                error?.message ||
                 "There was an error revealing the NFT's rarity. Please try again!!!"
               }
             />
@@ -304,8 +327,8 @@ export default function ValidatorNFTs() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      })
+      .finally(() => setIsRevealing(false));
   };
 
   return (
@@ -362,7 +385,7 @@ export default function ValidatorNFTs() {
         isDialogOpen={isConfirmMintDialogOpen}
         dialogTitle={'Confirm Mint NFT'}
         confirmButton="Mint"
-        confirm={() => mintNft(validator_program_id as string)}
+        confirm={() => mintNft()}
       />
       <Box>
         <Box
@@ -382,25 +405,64 @@ export default function ValidatorNFTs() {
             Mint NFT Now
           </Button>
         </Box>
-        <NftCard
-          delegateNft={() => setIsConfirmDelegateDialogOpen(true)}
-          redeemNft={() => setIsConfirmRedeemDialogOpen(true)}
-          revealRarity={() => setIsConfirmRevealRarityDialogOpen(true)}
-          undelegateNft={() => setIsConfirmUndelegateDialogOpen}
-          setActionnedNft={setActionnedNft}
-          disabled={
-            isRedeeming || isDelegating || isUndelegating || isRevealing
-          }
-          isDialogOpen={true}
-          gem={{
-            image_ref:
-              'https://img.bitscoins.net/v7/www.bitscoins.net/wp-content/uploads/2021/06/NFT-Marketplace-Rarible-Raises-Over-14-Million-Plans-to-Launch.jpg',
-            is_delegated: false,
-            nft_pubkey: 'Make it rain in th best ways',
-            numeration: 1,
-            rarity: 'Benetoite',
-          }}
-        />
+        <Box>
+          {areNftsLoading ? (
+            <Box
+              sx={{
+                display: 'grid',
+                justifyItems: 'start',
+                justifyContent: 'center',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 300px))',
+                columnGap: '53px',
+                rowGap: '20px',
+              }}
+            >
+              {[...new Array(10)].map((_, index) => (
+                <Skeleton
+                  animation="wave"
+                  key={index}
+                  width="300px"
+                  height="500px"
+                  sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
+                />
+              ))}
+            </Box>
+          ) : nfts.length === 0 ? (
+            <Typography variant="h6" sx={{ textAlign: 'center' }}>
+              'You own no NFT's
+            </Typography>
+          ) : (
+            <Box
+              sx={{
+                display: 'grid',
+                justifyItems: 'start',
+                justifyContent: 'center',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 300px))',
+                columnGap: '53px',
+                rowGap: '20px',
+              }}
+            >
+              {nfts.map((nft, index) => (
+                <NftCard
+                  delegateNft={() => setIsConfirmDelegateDialogOpen(true)}
+                  redeemNft={() => setIsConfirmRedeemDialogOpen(true)}
+                  revealRarity={() => {
+                    setActionnedNft(nft);
+                    setIsConfirmRevealRarityDialogOpen(true);
+                  }}
+                  undelegateNft={() => setIsConfirmUndelegateDialogOpen}
+                  setActionnedNft={setActionnedNft}
+                  disabled={
+                    isRedeeming || isDelegating || isUndelegating || isRevealing
+                  }
+                  isDialogOpen={true}
+                  nftData={nft}
+                  key={index}
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
       </Box>
     </>
   );
