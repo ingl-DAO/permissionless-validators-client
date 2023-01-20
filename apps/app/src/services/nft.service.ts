@@ -831,7 +831,7 @@ export class NftService {
       isWritable: false,
     };
 
-    const [nftMetadataAccountKey] = await PublicKey.findProgramAddressSync(
+    const [nftMetadataAccountKey] = PublicKey.findProgramAddressSync(
       [
         Buffer.from('metadata'),
         METAPLEX_PROGRAM_ID.toBuffer(),

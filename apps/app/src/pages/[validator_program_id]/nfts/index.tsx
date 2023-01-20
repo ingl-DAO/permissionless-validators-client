@@ -446,7 +446,10 @@ export default function ValidatorNFTs() {
                 <NftCard
                   delegateNft={() => setIsConfirmDelegateDialogOpen(true)}
                   redeemNft={() => setIsConfirmRedeemDialogOpen(true)}
-                  revealRarity={() => setIsConfirmRevealRarityDialogOpen(true)}
+                  revealRarity={() => {
+                    setActionnedNft(nft);
+                    setIsConfirmRevealRarityDialogOpen(true);
+                  }}
                   undelegateNft={() => setIsConfirmUndelegateDialogOpen}
                   setActionnedNft={setActionnedNft}
                   disabled={
