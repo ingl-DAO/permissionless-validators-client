@@ -46,7 +46,7 @@ export default function RewardLane({
       <TableCell sx={{ color: 'white' }}>{`#${numeration}`}</TableCell>
       <TableCell sx={{ color: 'white' }}>{nft_mint_id}</TableCell>
       <TableCell sx={{ color: 'white' }} align="right">
-        {rewards}
+        {rewards.toString(10)}
       </TableCell>
     </TableRow>
   );

@@ -8,79 +8,91 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Typography,
+  Typography
 } from '@mui/material';
-import ErrorMessage from '../../../common/components/ErrorMessage';
-import useNotification from '../../../common/utils/notification';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+import BN from 'bn.js';
 import Scrollbars from 'rc-scrollbars';
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
+import ErrorMessage from '../../../common/components/ErrorMessage';
 import NoTableElement, {
-  TableLaneSkeleton,
+  TableLaneSkeleton
 } from '../../../common/components/noTableElement';
+import useNotification from '../../../common/utils/notification';
+import ConfirmDialog from '../../../components/confirmDialog';
 import { NftReward } from '../../../interfaces';
+import { NftService } from '../../../services/nft.service';
 import theme from '../../../theme/theme';
 import RewardLane from './rewardLane';
-import ConfirmDialog from '../../../components/confirmDialog';
 
 export default function Rewards() {
+  const wallet = useWallet();
+  const { connection } = useConnection();
+  const { validator_program_id } = useParams();
+
   const [areRewardsLoading, setAreRewardsLoading] = useState<boolean>(false);
   const [rewardNotif, setRewardNotif] = useState<useNotification>();
   const [rewards, setRewards] = useState<NftReward[]>([]);
-  const { validator_program_id } = useParams();
 
-  const loadRewards = (validator_program_id: string) => {
+  const nftService = useMemo(
+    () =>
+      validator_program_id
+        ? new NftService(
+            new PublicKey(validator_program_id),
+            wallet,
+            connection
+          )
+        : null,
+    [connection, validator_program_id, wallet]
+  );
+
+  const loadRewards = () => {
     setAreRewardsLoading(true);
     const notif = new useNotification();
     if (rewardNotif) {
       rewardNotif.dismiss();
     }
     setRewardNotif(notif);
-    setTimeout(() => {
-      //TODO: call api here to load rewards with data vote_account_id
-      if (6 > 5) {
-        const newRewards: NftReward[] = [
-          {
-            image_ref:
-              'https://img.bitscoins.net/v7/www.bitscoins.net/wp-content/uploads/2021/06/NFT-Marketplace-Rarible-Raises-Over-14-Million-Plans-to-Launch.jpg',
-            nft_mint_id: 'Make it rain let',
-            numeration: 2,
-            rewards: 200,
-          },
-        ];
-        setRewards(newRewards);
+    notif.notify({
+      render: 'Loading rewards...',
+    });
+    nftService
+      ?.loadRewards()
+      .then((rewards) => {
+        setRewards(rewards);
         setAreRewardsLoading(false);
         notif.dismiss();
         setRewardNotif(undefined);
-      } else {
-        notif.notify({
-          render: 'Loading rewards...',
-        });
+      })
+      .catch((error) => {
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => loadRewards(validator_program_id)}
+              retryFunction={() => loadRewards()}
               notification={notif}
-              //TODO: message should come from backend
-              message={'There was an error loading rewards. please retry!!!'}
+              message={
+                error?.message ||
+                'There was an error loading rewards. please retry!!!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   };
 
   useEffect(() => {
-    loadRewards(validator_program_id as string);
+    if (nftService) loadRewards();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [nftService]);
 
   const [isClaiming, setIsClaiming] = useState<boolean>(false);
 
-  const claimRewards = (actionnedNft: string[]) => {
+  const claimRewards = (actionnedNfts: string[]) => {
     setIsClaiming(true);
     const notif = new useNotification();
     if (rewardNotif) rewardNotif.dismiss();
@@ -88,31 +100,31 @@ export default function Rewards() {
     notif.notify({
       render: 'Claiming rewards...',
     });
-    setTimeout(() => {
-      //TODO: call api here to reveal nft's rarity with data actionnedNft
-      if (6 > 5) {
+    nftService
+      ?.claimRewards(actionnedNfts.map((address) => new PublicKey(address)))
+      .then(() => {
         setRewards(
           rewards.map((reward) => {
             const { nft_mint_id: nft_pubkey } = reward;
-            if (actionnedNft.includes(nft_pubkey))
+            if (actionnedNfts.includes(nft_pubkey))
               return { ...reward, reward: 0 };
             return reward;
           })
         );
-        setIsClaiming(false);
         notif.update({
           render: 'Claimed rewards successfully',
         });
         setRewardNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => claimRewards(actionnedNft)}
+              retryFunction={() => claimRewards(actionnedNfts)}
               notification={notif}
-              //TODO: message should come from backend
               message={
+                error?.message ||
                 'There was an error claiming your rewards. Please try again!!!'
               }
             />
@@ -120,8 +132,8 @@ export default function Rewards() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      })
+      .finally(() => setIsClaiming(false));
   };
 
   const [selectedRewards, setSelectedRewards] = useState<NftReward[]>([]);
@@ -132,7 +144,7 @@ export default function Rewards() {
       <ConfirmDialog
         closeDialog={() => setIsConfirmClaimDialogOpen(false)}
         confirm={() =>
-          claimRewards(selectedRewards.map(({ nft_mint_id: nft_pubkey }) => nft_pubkey))
+          claimRewards(selectedRewards.map(({ nft_mint_id }) => nft_mint_id))
         }
         dialogMessage="You are about to claim rewards on select nfts. Click Claim to continue!!!"
         isDialogOpen={isConfirmClaimDialogOpen}
@@ -171,10 +183,9 @@ export default function Rewards() {
               variant="h6"
               component="span"
               sx={{ color: theme.palette.primary.main }}
-            >{`${rewards.reduce(
-              (total, reward) => reward.rewards + total,
-              0
-            )} SOL`}</Typography>
+            >{`${rewards
+              .reduce((total, { rewards }) => total.add(rewards), new BN(0))
+              .toString(10)} L`}</Typography>
           </Typography>
         </Box>
         <Scrollbars autoHide>
@@ -238,17 +249,20 @@ export default function Rewards() {
                     reward={reward}
                     isChecked={Boolean(
                       selectedRewards.find(
-                        ({ nft_mint_id: nft_pubkey }) => nft_pubkey === reward.nft_mint_id
+                        ({ nft_mint_id: nft_pubkey }) =>
+                          nft_pubkey === reward.nft_mint_id
                       )
                     )}
                     onSelect={(reward: NftReward) => {
                       const tt = selectedRewards.find(
-                        ({ nft_mint_id: nft_pubkey }) => nft_pubkey === reward.nft_mint_id
+                        ({ nft_mint_id: nft_pubkey }) =>
+                          nft_pubkey === reward.nft_mint_id
                       );
                       if (tt)
                         return setSelectedRewards(
                           selectedRewards.filter(
-                            ({ nft_mint_id: nft_pubkey }) => nft_pubkey !== reward.nft_mint_id
+                            ({ nft_mint_id: nft_pubkey }) =>
+                              nft_pubkey !== reward.nft_mint_id
                           )
                         );
                       return setSelectedRewards([...selectedRewards, reward]);

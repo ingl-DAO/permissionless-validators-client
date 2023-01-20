@@ -24,7 +24,7 @@ export interface NftReward {
   nft_mint_id: string;
   image_ref: string;
   numeration: number;
-  rewards: number;
+  rewards: BN;
 }
 
 export interface ValidatorRarity {
