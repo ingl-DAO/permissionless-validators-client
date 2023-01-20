@@ -17,7 +17,7 @@ import {
   NFT_ACCOUNT_CONST,
   PD_POOL_ACCOUNT_KEY,
   Redeem,
-  UndelegateNFT,
+  UnDelegateNFT,
   URIS_ACCOUNT_SEED,
   VOTE_ACCOUNT_KEY,
 } from '@ingl-permissionless/state';
@@ -439,7 +439,6 @@ export class NftService {
       isSigner: false,
       isWritable: true,
     };
-
     const redeemInglGemInstruction = new TransactionInstruction({
       programId: this.programId,
       data: Buffer.from(serialize(new Redeem(0))),
@@ -608,7 +607,7 @@ export class NftService {
 
     const undelegateSolInstruction = new TransactionInstruction({
       programId: this.programId,
-      data: Buffer.from(serialize(new UndelegateNFT(0))),
+      data: Buffer.from(serialize(new UnDelegateNFT(0))),
       keys: [
         payerAccount,
         voteAccount,
@@ -749,9 +748,7 @@ export class NftService {
 
     const claimRewardInstruction = new TransactionInstruction({
       programId: this.programId,
-      data: Buffer.from(
-        serialize(new NFTWithdraw({ cnt: tokenMints.length, log_level: 0 }))
-      ),
+      data: Buffer.from(serialize(new NFTWithdraw(tokenMints.length, 0))),
       keys: [
         payerAccount,
         voteAccount,

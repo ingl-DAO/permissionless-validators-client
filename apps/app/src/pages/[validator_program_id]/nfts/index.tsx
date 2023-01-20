@@ -104,7 +104,6 @@ export default function ValidatorNFTs() {
     nftService
       ?.loadNFTs()
       .then((nfts) => {
-        console.log(nfts);
         setNfts(nfts);
         notif.dismiss();
         setNftNotif(undefined);
