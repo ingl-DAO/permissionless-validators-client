@@ -360,17 +360,17 @@ export class NftService {
       isWritable: true,
     };
 
-    const [nft_pubkey] = PublicKey.findProgramAddressSync(
+    const [nftPubkey] = PublicKey.findProgramAddressSync(
       [Buffer.from(NFT_ACCOUNT_CONST), tokenMint.toBuffer()],
       this.programId
     );
     const nftAccount: AccountMeta = {
-      pubkey: nft_pubkey,
+      pubkey: nftPubkey,
       isSigner: false,
       isWritable: true,
     };
 
-    const [metaplexAccountKey] = PublicKey.findProgramAddressSync(
+    const [nftMetadataAccountKey] = PublicKey.findProgramAddressSync(
       [
         Buffer.from('metadata'),
         METAPLEX_PROGRAM_ID.toBuffer(),
@@ -380,12 +380,12 @@ export class NftService {
     );
 
     const metadataAccount: AccountMeta = {
-      pubkey: metaplexAccountKey,
+      pubkey: nftMetadataAccountKey,
       isSigner: false,
       isWritable: true,
     };
 
-    const [edition_key] = PublicKey.findProgramAddressSync(
+    const [nftEditionKey] = PublicKey.findProgramAddressSync(
       [
         Buffer.from('metadata'),
         METAPLEX_PROGRAM_ID.toBuffer(),
@@ -395,7 +395,7 @@ export class NftService {
       METAPLEX_PROGRAM_ID
     );
     const nftEditionAccount: AccountMeta = {
-      pubkey: edition_key,
+      pubkey: nftEditionKey,
       isSigner: false,
       isWritable: true,
     };
@@ -403,7 +403,7 @@ export class NftService {
     const collectionMetadataAccount: AccountMeta = {
       pubkey: this.collectionMetadataPDA[0],
       isSigner: false,
-      isWritable: false,
+      isWritable: true,
     };
 
     const splTokenProgramAccount: AccountMeta = {
@@ -419,7 +419,7 @@ export class NftService {
     };
 
     const generalAccount: AccountMeta = {
-      pubkey: this.configAccountPDA[0],
+      pubkey: this.generalAccountPDA[0],
       isSigner: false,
       isWritable: false,
     };
@@ -675,7 +675,7 @@ export class NftService {
     }
     const accountInfo = await this.connection.getAccountInfo(nftPubkey);
     if (accountInfo) {
-      const { funds_location, numeration } = deserialize(
+      const { funds_location, numeration, rarity } = deserialize(
         accountInfo?.data as Buffer,
         NftData,
         { unchecked: true }
@@ -685,9 +685,7 @@ export class NftService {
         image_ref: jsonData?.image as string,
         is_delegated: funds_location instanceof Delegated,
         numeration,
-        rarity: jsonData?.attributes?.find(
-          (attr) => attr.trait_type === 'Rarity'
-        )?.value,
+        rarity: rarity?.toString(),
       };
     }
   }
