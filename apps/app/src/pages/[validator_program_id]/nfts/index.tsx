@@ -1,18 +1,17 @@
 import { ReportRounded } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
-import { NftService } from '../../../services/nft.service';
-import { useEffect, useState } from 'react';
+import { Box, Button, Skeleton, Typography } from '@mui/material';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import ErrorMessage from '../../../common/components/ErrorMessage';
 import useNotification from '../../../common/utils/notification';
 import ConfirmDialog from '../../../components/confirmDialog';
 import NftCard from '../../../components/nft/nftCard';
 import { InglNft } from '../../../interfaces';
+import { NftService } from '../../../services/nft.service';
 import theme from '../../../theme/theme';
-import { useMemo } from 'react';
-import { PublicKey } from '@solana/web3.js';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 
 export default function ValidatorNFTs() {
   const wallet = useWallet();
@@ -406,20 +405,61 @@ export default function ValidatorNFTs() {
             Mint NFT Now
           </Button>
         </Box>
-        {nfts.map((nftData) => (
-          <NftCard
-            delegateNft={() => setIsConfirmDelegateDialogOpen(true)}
-            redeemNft={() => setIsConfirmRedeemDialogOpen(true)}
-            revealRarity={() => setIsConfirmRevealRarityDialogOpen(true)}
-            undelegateNft={() => setIsConfirmUndelegateDialogOpen(true)}
-            setActionnedNft={setActionnedNft}
-            disabled={
-              isRedeeming || isDelegating || isUndelegating || isRevealing
-            }
-            isDialogOpen={true}
-            nftData={nftData}
-          />
-        ))}
+        <Box>
+          {areNftsLoading ? (
+            <Box
+              sx={{
+                display: 'grid',
+                justifyItems: 'start',
+                justifyContent: 'center',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 300px))',
+                columnGap: '53px',
+                rowGap: '20px',
+              }}
+            >
+              {[...new Array(10)].map((_, index) => (
+                <Skeleton
+                  animation="wave"
+                  key={index}
+                  width="300px"
+                  height="500px"
+                  sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
+                />
+              ))}
+            </Box>
+          ) : nfts.length === 0 ? (
+            <Typography variant="h6" sx={{ textAlign: 'center' }}>
+              'You own no NFT's
+            </Typography>
+          ) : (
+            <Box
+              sx={{
+                display: 'grid',
+                justifyItems: 'start',
+                justifyContent: 'center',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 300px))',
+                columnGap: '53px',
+                rowGap: '20px',
+              }}
+            >
+              {nfts.map((nft, index) => (
+                <NftCard
+                  delegateNft={() => setIsConfirmDelegateDialogOpen(true)}
+                  redeemNft={() => setIsConfirmRedeemDialogOpen(true)}
+                  revealRarity={() => setIsConfirmRevealRarityDialogOpen(true)}
+                  undelegateNft={() => setIsConfirmUndelegateDialogOpen}
+                  setActionnedNft={setActionnedNft}
+                  disabled={
+                    isRedeeming || isDelegating || isUndelegating || isRevealing
+                  }
+                  isDialogOpen={true}
+                  nftData={nft}
+                  key={index}
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
       </Box>
     </>
   );

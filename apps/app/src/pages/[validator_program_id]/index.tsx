@@ -5,7 +5,14 @@ import theme from '../../theme/theme';
 
 export default function ValidatorLayout() {
   return (
-    <Box sx={{ display: 'grid', rowGap: theme.spacing(2.375) }}>
+    <Box
+      sx={{
+        display: 'grid',
+        rowGap: theme.spacing(2.375),
+        height: '100%',
+        gridTemplateRows: 'auto 1fr',
+      }}
+    >
       <Navbar />
       <Box>
         <Outlet />
