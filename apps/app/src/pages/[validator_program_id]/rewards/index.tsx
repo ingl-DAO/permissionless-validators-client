@@ -27,9 +27,9 @@ export default function Rewards() {
   const [areRewardsLoading, setAreRewardsLoading] = useState<boolean>(false);
   const [rewardNotif, setRewardNotif] = useState<useNotification>();
   const [rewards, setRewards] = useState<NftReward[]>([]);
-  const { vote_account_id } = useParams();
+  const { validator_program_id } = useParams();
 
-  const loadRewards = (vote_account_id: string) => {
+  const loadRewards = (validator_program_id: string) => {
     setAreRewardsLoading(true);
     const notif = new useNotification();
     if (rewardNotif) {
@@ -43,7 +43,7 @@ export default function Rewards() {
           {
             image_ref:
               'https://img.bitscoins.net/v7/www.bitscoins.net/wp-content/uploads/2021/06/NFT-Marketplace-Rarible-Raises-Over-14-Million-Plans-to-Launch.jpg',
-            nft_pubkey: 'Make it rain let',
+            nft_mint_id: 'Make it rain let',
             numeration: 2,
             rewards: 200,
           },
@@ -60,7 +60,7 @@ export default function Rewards() {
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => loadRewards(vote_account_id)}
+              retryFunction={() => loadRewards(validator_program_id)}
               notification={notif}
               //TODO: message should come from backend
               message={'There was an error loading rewards. please retry!!!'}
@@ -74,7 +74,7 @@ export default function Rewards() {
   };
 
   useEffect(() => {
-    loadRewards(vote_account_id as string);
+    loadRewards(validator_program_id as string);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -93,7 +93,7 @@ export default function Rewards() {
       if (6 > 5) {
         setRewards(
           rewards.map((reward) => {
-            const { nft_pubkey } = reward;
+            const { nft_mint_id: nft_pubkey } = reward;
             if (actionnedNft.includes(nft_pubkey))
               return { ...reward, reward: 0 };
             return reward;
@@ -132,7 +132,7 @@ export default function Rewards() {
       <ConfirmDialog
         closeDialog={() => setIsConfirmClaimDialogOpen(false)}
         confirm={() =>
-          claimRewards(selectedRewards.map(({ nft_pubkey }) => nft_pubkey))
+          claimRewards(selectedRewards.map(({ nft_mint_id: nft_pubkey }) => nft_pubkey))
         }
         dialogMessage="You are about to claim rewards on select nfts. Click Claim to continue!!!"
         isDialogOpen={isConfirmClaimDialogOpen}
@@ -238,17 +238,17 @@ export default function Rewards() {
                     reward={reward}
                     isChecked={Boolean(
                       selectedRewards.find(
-                        ({ nft_pubkey }) => nft_pubkey === reward.nft_pubkey
+                        ({ nft_mint_id: nft_pubkey }) => nft_pubkey === reward.nft_mint_id
                       )
                     )}
                     onSelect={(reward: NftReward) => {
                       const tt = selectedRewards.find(
-                        ({ nft_pubkey }) => nft_pubkey === reward.nft_pubkey
+                        ({ nft_mint_id: nft_pubkey }) => nft_pubkey === reward.nft_mint_id
                       );
                       if (tt)
                         return setSelectedRewards(
                           selectedRewards.filter(
-                            ({ nft_pubkey }) => nft_pubkey !== reward.nft_pubkey
+                            ({ nft_mint_id: nft_pubkey }) => nft_pubkey !== reward.nft_mint_id
                           )
                         );
                       return setSelectedRewards([...selectedRewards, reward]);

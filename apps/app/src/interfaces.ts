@@ -21,7 +21,7 @@ export interface InglNft {
 }
 
 export interface NftReward {
-  nft_pubkey: string;
+  nft_mint_id: string;
   image_ref: string;
   numeration: number;
   rewards: number;

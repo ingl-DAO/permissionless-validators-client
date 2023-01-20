@@ -15,9 +15,9 @@ export default function ValidatorStats() {
   const [areDetailsLoading, setAreDetailsLoading] = useState<boolean>(false);
   const [details, setDetails] = useState<InglValidator>();
   const [detailNotif, setDetailNotif] = useState<useNotification>();
-  const { vote_account_id } = useParams();
+  const { validator_program_id } = useParams();
 
-  const loadDetails = (vote_account_id: string) => {
+  const loadDetails = (validator_program_id: string) => {
     setAreDetailsLoading(true);
     const notif = new useNotification();
     if (detailNotif) {
@@ -68,7 +68,7 @@ export default function ValidatorStats() {
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => loadDetails(vote_account_id)}
+              retryFunction={() => loadDetails(validator_program_id)}
               notification={notif}
               //TODO: message should come from backend
               message="There was an error loading validator details. please retry!!!"
@@ -84,7 +84,7 @@ export default function ValidatorStats() {
   const { formatNumber } = useIntl();
 
   useEffect(() => {
-    loadDetails(vote_account_id as string);
+    loadDetails(validator_program_id as string);
     return () => {
       //TODO: CLEANUP fetch above
     };

@@ -3,7 +3,7 @@ import { NftReward } from '../../../interfaces';
 import theme from '../../../theme/theme';
 
 export default function RewardLane({
-  reward: { image_ref, nft_pubkey, numeration, rewards },
+  reward: { image_ref, nft_mint_id, numeration, rewards },
   reward,
   onSelect,
   isChecked,
@@ -44,7 +44,7 @@ export default function RewardLane({
         />
       </TableCell>
       <TableCell sx={{ color: 'white' }}>{`#${numeration}`}</TableCell>
-      <TableCell sx={{ color: 'white' }}>{nft_pubkey}</TableCell>
+      <TableCell sx={{ color: 'white' }}>{nft_mint_id}</TableCell>
       <TableCell sx={{ color: 'white' }} align="right">
         {rewards}
       </TableCell>
