@@ -13,17 +13,17 @@ import { InglNft } from '../../interfaces';
 import theme from '../../theme/theme';
 
 export default function NftCard({
-  gem: { rarity, image_ref, is_delegated, numeration },
+  nftData: { rarity, image_ref, is_delegated, numeration },
   isDialogOpen,
   disabled,
   setActionnedNft,
-  gem,
+  nftData: gem,
   revealRarity,
   redeemNft,
   delegateNft,
   undelegateNft,
 }: {
-  gem: InglNft;
+  nftData: InglNft;
   disabled: boolean;
   isDialogOpen: boolean;
   setActionnedNft: (nft: InglNft) => void;

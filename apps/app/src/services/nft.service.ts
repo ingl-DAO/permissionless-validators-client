@@ -282,7 +282,7 @@ export class NftService {
         data: Buffer.from(serialize(new MintNft(0))),
         keys: instructionAccounts,
       });
-      return await forwardV0Transaction(
+      await forwardV0Transaction(
         { connection: this.connection, wallet: this.walletContext },
         [mintNftInstruction],
         {
@@ -290,6 +290,7 @@ export class NftService {
           additionalUnits: 1_000_000,
         }
       );
+      return mintKeyPair.publicKey;
     } catch (error) {
       throw new Error('NFT Minting transaction failed with error ' + error);
     }
@@ -635,19 +636,14 @@ export class NftService {
     const metaplexNft = metaplex.nfts();
 
     try {
-      let ownerNfts = await metaplexNft.findAllByOwner({
+      const ownerNfts = await metaplexNft.findAllByOwner({
         owner: this.walletContext.publicKey as PublicKey,
       });
-      ownerNfts = ownerNfts.filter(
-        ({ collection, json }) =>
-          json &&
-          collection?.address.toString() === this.collectionPDA[0].toString()
-      );
       const validatorNfts: InglNft[] = [];
 
       for (let i = 0; i < ownerNfts.length; i++) {
-        const ownerNft = ownerNfts[i];
-        const nftData = await this.loadNftData(ownerNft);
+        const ownerNft = ownerNfts[i] as Metadata;
+        const nftData = await this.loadNftData(ownerNft.mintAddress, ownerNft);
         if (nftData) validatorNfts.push(nftData);
       }
       return validatorNfts;
@@ -662,17 +658,22 @@ export class NftService {
 
     try {
       const inglNft = await metaplexNft.findByMint({ mintAddress: tokenMint });
-      return this.loadNftData(inglNft);
+      return this.loadNftData(inglNft.mint.address, inglNft);
     } catch (error) {
       throw new Error('Failed to load by mint with error ' + error);
     }
   }
 
-  private async loadNftData({ address, json }: MetaplexNft) {
+  private async loadNftData(mintAddress: PublicKey, metaplexNft: MetaplexNft) {
+    const { json, jsonLoaded, uri } = metaplexNft;
     const [nftPubkey] = PublicKey.findProgramAddressSync(
-      [Buffer.from(NFT_ACCOUNT_CONST), address.toBuffer()],
+      [Buffer.from(NFT_ACCOUNT_CONST), mintAddress.toBuffer()],
       this.programId
     );
+    let jsonData = json;
+    if (!jsonLoaded) {
+      jsonData = await (await fetch(uri)).json();
+    }
     const accountInfo = await this.connection.getAccountInfo(nftPubkey);
     if (accountInfo) {
       const { funds_location, numeration } = deserialize(
@@ -681,12 +682,13 @@ export class NftService {
         { unchecked: true }
       );
       return {
-        nft_mint_id: address.toBase58(),
-        image_ref: json?.image as string,
+        nft_mint_id: mintAddress.toBase58(),
+        image_ref: jsonData?.image as string,
         is_delegated: funds_location instanceof Delegated,
         numeration,
-        rarity: json?.attributes?.find((attr) => attr.trait_type === 'Rarity')
-          ?.value,
+        rarity: jsonData?.attributes?.find(
+          (attr) => attr.trait_type === 'Rarity'
+        )?.value,
       };
     }
   }

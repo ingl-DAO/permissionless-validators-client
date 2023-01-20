@@ -1,7 +1,8 @@
-import { Box, Button } from '@mui/material';
+import { Box } from '@mui/material';
 import theme from '../theme/theme';
 import Logo from '../assets/full_logo.png';
 import { useNavigate } from 'react-router';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -21,8 +22,7 @@ export default function Header() {
         style={{ cursor: 'pointer' }}
         onClick={() => navigate('/validators')}
       />
-      <Button
-        variant="contained"
+      <WalletMultiButton
         style={{
           textTransform: 'none',
           backgroundColor: '#2A2B40',
@@ -30,9 +30,7 @@ export default function Header() {
           boxShadow:
             '0px 0px 1px rgba(239, 35, 60, 0.08), 0px 1px 2px rgba(239, 35, 60, 0.32)',
         }}
-      >
-        Connect
-      </Button>
+      />
     </Box>
   );
 }
