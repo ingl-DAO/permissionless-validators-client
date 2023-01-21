@@ -1,6 +1,5 @@
 import { Box } from '@mui/material';
 import theme from '../theme/theme';
-import Logo from '../assets/full_logo.png';
 import { useNavigate } from 'react-router';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
@@ -17,7 +16,7 @@ export default function Header() {
       }}
     >
       <img
-        src={Logo}
+        src={'/assets/full_logo.png'}
         alt="ingl-logo"
         style={{ cursor: 'pointer' }}
         onClick={() => navigate('/validators')}
