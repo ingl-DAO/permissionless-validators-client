@@ -33,7 +33,7 @@ export default function ValidatorNFTs() {
         const newNft: InglNft = {
           image_ref: '',
           is_delegated: false,
-          nft_pubkey: '5Jkv2mQeoBDhByhgVamWJZEnWd8JkvCb1EhaStMYFEP',
+          nft_mint_id: '5Jkv2mQeoBDhByhgVamWJZEnWd8JkvCb1EhaStMYFEP',
           numeration: 1,
         };
         setNfts([newNft, ...nfts]);
@@ -80,7 +80,7 @@ export default function ValidatorNFTs() {
             image_ref:
               'https://img.bitscoins.net/v7/www.bitscoins.net/wp-content/uploads/2021/06/NFT-Marketplace-Rarible-Raises-Over-14-Million-Plans-to-Launch.jpg',
             is_delegated: false,
-            nft_pubkey: 'Make it rain in th best ways',
+            nft_mint_id: 'Make it rain in th best ways',
             numeration: 1,
             rarity: 'Benetoite',
           },
