@@ -2,13 +2,8 @@ import { Checkbox, TableCell, TableRow } from '@mui/material';
 import { NftReward } from '../../../interfaces';
 import theme from '../../../theme/theme';
 
-<<<<<<< HEAD:apps/app/src/pages/[validator_program_id]/rewards/rewardLine.tsx
 export default function RewardLine({
-  reward: { image_ref, nft_pubkey, numeration, rewards },
-=======
-export default function RewardLane({
   reward: { image_ref, nft_mint_id, numeration, rewards },
->>>>>>> f2a946bbb2d7180a1867a0e9794f7187ef07729b:apps/app/src/pages/[validator_program_id]/rewards/rewardLane.tsx
   reward,
   onSelect,
   isChecked,
