@@ -7,7 +7,7 @@ import {
   Menu,
   MenuItem,
   Tooltip,
-  Typography
+  Typography,
 } from '@mui/material';
 import { useState } from 'react';
 import { InglNft } from '../../interfaces';
