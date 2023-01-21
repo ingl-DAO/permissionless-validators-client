@@ -5,8 +5,8 @@ import Layout from '../pages/layout';
 import ValidatorLayout from '../pages/[validator_program_id]';
 import ValidatorNFTs from '../pages/[validator_program_id]/nfts';
 import Register from '../pages/register-validator';
-import Rewards from '../pages/[vote_account_id]/rewards';
-import ValidatorStats from '../pages/[vote_account_id]/validatorStats';
+import Rewards from '../pages/[validator_program_id]/rewards';
+import ValidatorStats from '../pages/[validator_program_id]/validatorStats';
 
 export const routes = [
   { path: '/', element: <Typography>Authenticate user</Typography> },

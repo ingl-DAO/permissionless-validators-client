@@ -7,7 +7,6 @@ import {
   INGL_CONFIG_SEED,
   INGL_MINT_AUTHORITY_KEY,
   INGL_NFT_COLLECTION_KEY,
-  METAPLEX_PROGRAM_ID,
   PD_POOL_ACCOUNT_KEY,
   URIS_ACCOUNT_SEED,
   ValidatorConfig,
@@ -21,7 +20,6 @@ import {
   Connection,
   LAMPORTS_PER_SOL,
   PublicKey,
-  VoteAccount,
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import { InglValidator } from '../interfaces';
@@ -65,14 +63,6 @@ export class ValidatorService {
     private readonly collectionPDA = PublicKey.findProgramAddressSync(
       [Buffer.from(INGL_NFT_COLLECTION_KEY)],
       programId
-    ),
-    private readonly collectionMetadataPDA = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from('metadata'),
-        METAPLEX_PROGRAM_ID.toBuffer(),
-        collectionPDA[0].toBuffer(),
-      ],
-      METAPLEX_PROGRAM_ID
     )
   ) {}
 
@@ -91,7 +81,6 @@ export class ValidatorService {
       validatorConfigAccountInfo = response[0];
       generalAccountInfo = response[1];
       collectionMetadata = response[2];
-      // console.log('response: ', response[3]);
       // eslint-disable-next-line prefer-const
       let { current, delinquent } = response[3];
       current = current.concat(delinquent);

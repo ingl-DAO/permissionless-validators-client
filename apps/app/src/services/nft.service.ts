@@ -5,6 +5,7 @@ import {
   Delegated,
   DelegateNFT,
   forwardV0Transaction,
+  GeneralData,
   GENERAL_ACCOUNT_SEED,
   ImprintRarity,
   INGL_CONFIG_SEED,
@@ -48,7 +49,8 @@ import {
   SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { InglNft } from '../interfaces';
+import BN from 'bn.js';
+import { InglNft, NftReward } from '../interfaces';
 
 export type MetaplexNft = Metadata<JsonMetadata<string>> | Nft | Sft;
 
@@ -908,6 +910,92 @@ export class NftService {
       return transactionId;
     } catch (error) {
       throw new Error('Failed to imprint rarity with error ' + error);
+    }
+  }
+
+  async loadRewards() {
+    const metaplex = new Metaplex(this.connection);
+    const metaplexNft = metaplex.nfts();
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey) throw new WalletNotConnectedError();
+    try {
+      let ownerNfts = await metaplexNft.findAllByOwner({ owner: payerPubkey });
+      ownerNfts = ownerNfts.filter(
+        ({ collection }) =>
+          collection?.address.toBase58() ===
+          this.collectionEditionPDA[0].toBase58()
+      );
+      const generalAccountInfo = await this.connection.getAccountInfo(
+        this.generalAccountPDA[0]
+      );
+      if (!generalAccountInfo)
+        throw new Error(
+          'Invalid program id. Could retrieve account info from general account PDA key'
+        );
+      const { vote_rewards: voteRewards } = deserialize(
+        generalAccountInfo.data as Buffer,
+        GeneralData,
+        { unchecked: true }
+      );
+
+      const nftRewards: NftReward[] = [];
+      for (let i = 0; i < ownerNfts.length; i++) {
+        const { json, uri, jsonLoaded, mintAddress } = ownerNfts[i] as Metadata;
+        let jsonData = json;
+        if (!jsonLoaded) {
+          jsonData = await (await fetch(uri)).json();
+        }
+        const [nftPubkey] = PublicKey.findProgramAddressSync(
+          [Buffer.from(NFT_ACCOUNT_CONST), mintAddress.toBuffer()],
+          this.programId
+        );
+        const accountInfo = await this.connection.getAccountInfo(nftPubkey);
+        const {
+          funds_location,
+          last_withdrawal_epoch,
+          last_delegation_epoch,
+          numeration,
+        } = deserialize(accountInfo?.data as Buffer, NftData, {
+          unchecked: true,
+        });
+        if (funds_location instanceof Delegated) {
+          const comp = last_delegation_epoch?.cmp(
+            (last_withdrawal_epoch ?? 0) as BN
+          );
+          const interestedEpoch =
+            comp === 0
+              ? last_delegation_epoch
+              : comp === -1
+              ? last_withdrawal_epoch
+              : last_delegation_epoch;
+          const interestedIndex = voteRewards.findIndex(
+            ({ epoch_number }) => epoch_number.cmp(interestedEpoch as BN) !== -1
+          );
+          if (interestedIndex !== -1) {
+            const totalRewards: BN = voteRewards
+              .slice(interestedIndex)
+              .reduce((total, { total_stake, nft_holders_reward }, i) => {
+                return total.add(nft_holders_reward.div(total_stake));
+              }, new BN(0));
+            nftRewards.push({
+              rewards: totalRewards,
+              numeration: numeration,
+              image_ref: jsonData?.image as string,
+              nft_mint_id: mintAddress.toString(),
+            });
+          } else {
+            nftRewards.push({
+              rewards: new BN(0),
+              numeration: numeration,
+              image_ref: jsonData?.image as string,
+              nft_mint_id: mintAddress.toString(),
+            });
+          }
+        }
+      }
+      return nftRewards;
+    } catch (error) {
+      throw new Error('Failed to load gems rewards  with error ' + error);
     }
   }
 }
