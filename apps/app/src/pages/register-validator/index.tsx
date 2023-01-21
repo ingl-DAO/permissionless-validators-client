@@ -1,26 +1,160 @@
-import { ArrowBackIosNewOutlined } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
-import Scrollbars from 'rc-scrollbars';
-import { useState } from 'react';
+import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
+import { Box, Typography } from '@mui/material';
+import BN from 'bn.js';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
+import ErrorMessage from '../../common/components/ErrorMessage';
+import useNotification from '../../common/utils/notification';
+import CollectionInformation from '../../components/register-validator/collectionInformation';
+import DaoInformation, {
+  DaoInfo,
+} from '../../components/register-validator/daoInformation';
+import ValidatorInformation, {
+  ValidatorInfo,
+} from '../../components/register-validator/validatorInformation';
+import VoteAccountInformation, {
+  VoteAccountInfo,
+} from '../../components/register-validator/voteAccountInformation';
+import { NftJSON, ValidatorRegistration } from '../../interfaces';
 import theme from '../../theme/theme';
 
 export default function Register() {
   const navigate = useNavigate();
   const [step, setStep] = useState<number>(1);
-  const stepTitle: Record<number, string> = {
-    1: "Validator's information",
-    2: "Vote account's information",
-    3: "NFT collection's information",
-    4: "Validator's DAO information",
+
+  const [validatorInfo, setValidatorInfo] = useState<ValidatorInfo>({
+    discord_invite: '',
+    twitter_handle: '',
+    validator_id: '',
+    validator_name: '',
+    website: '',
+  });
+  const [voteAccountInfo, setVoteAccountInfo] = useState<VoteAccountInfo>();
+  const [jsonFileData, setJsonFileData] = useState<NftJSON>();
+  const [solBacking, setSolBacking] = useState<number>(0);
+  const [creatorRoyalties, setCreatorRoyalties] = useState<number>(0);
+  const [daoInfo, setDaoInfo] = useState<DaoInfo>();
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+
+  const stepComponent: Record<number, React.ReactNode> = {
+    4: (
+      <DaoInformation
+        onPrev={(val: DaoInfo | undefined) => {
+          setDaoInfo(val);
+          setStep(3);
+        }}
+        handleSubmit={(val: DaoInfo) => {
+          if (jsonFileData && validatorInfo && voteAccountInfo) {
+            const validator: ValidatorRegistration = {
+              nft_holders_share: voteAccountInfo.nft_holders_share,
+              proposal_quorum: val.proposal_quorum,
+              unit_backing: new BN(solBacking),
+              collection_uri: jsonFileData.collection_uri,
+              rarities: jsonFileData.rarities,
+              discord_invite: validatorInfo.discord_invite,
+              website: validatorInfo.website,
+              twitter_handle: validatorInfo.twitter_handle,
+              rarity_names: jsonFileData.rarity_names,
+              is_validator_id_switchable:
+                voteAccountInfo.is_validator_id_switchable,
+              validator_name: validatorInfo.validator_name,
+              initial_redemption_fee: voteAccountInfo.initial_redemption_fee,
+              max_primary_stake: voteAccountInfo.max_primary_stake,
+              redemption_fee_duration: voteAccountInfo.redemption_fee_duration,
+              init_commission: voteAccountInfo.init_commission,
+              default_uri: jsonFileData.default_uri,
+              governance_expiration_time: val.governance_expiration_time,
+              creator_royalties: creatorRoyalties,
+            };
+            createValidator(validator);
+          }
+        }}
+        daoInfo={daoInfo}
+        isCreating={isCreating}
+      />
+    ),
+    3: (
+      <CollectionInformation
+        onPrev={(val) => {
+          setJsonFileData(val.jsonFileData);
+          setSolBacking(val.solBacking);
+          setCreatorRoyalties(val.creatorRoyalties);
+          setStep(2);
+        }}
+        onNext={(val) => {
+          setJsonFileData(val.jsonFileData);
+          setSolBacking(val.solBacking);
+          setCreatorRoyalties(val.creatorRoyalties);
+          setStep(4);
+        }}
+        jsonFileData={jsonFileData}
+        solBacking={solBacking}
+        creatorRoyalties={creatorRoyalties}
+      />
+    ),
+    1: (
+      <ValidatorInformation
+        setStep={setStep}
+        handleSubmit={(val: ValidatorInfo) => setValidatorInfo(val)}
+        validatorInfo={validatorInfo}
+      />
+    ),
+    2: (
+      <VoteAccountInformation
+        handleSubmit={(val: VoteAccountInfo) => setVoteAccountInfo(val)}
+        onPrev={() => setStep(1)}
+        setStep={setStep}
+        voteAccountInfo={voteAccountInfo}
+      />
+    ),
   };
+
+  const [validatorNotif, setValidatorNotif] = useState<useNotification>();
+
+  function createValidator(validator: ValidatorRegistration) {
+    setIsCreating(true);
+    const notif = new useNotification();
+    if (validatorNotif) validatorNotif.dismiss();
+    setValidatorNotif(notif);
+    notif.notify({
+      render: 'Creating Validator...',
+    });
+    setTimeout(() => {
+      //TODO: call api here create validator with data validator
+      // eslint-disable-next-line no-constant-condition
+      if (6 > 5) {
+        setIsCreating(false);
+        notif.update({
+          render: 'Created validator successfully',
+        });
+        setValidatorNotif(undefined);
+      } else {
+        notif.update({
+          type: 'ERROR',
+          render: (
+            <ErrorMessage
+              retryFunction={() => createValidator(validator)}
+              notification={notif}
+              //TODO: message should come from backend
+              message={
+                'There was an error creating validator. Please try again!!!'
+              }
+            />
+          ),
+          autoClose: false,
+          icon: () => <ReportRounded fontSize="medium" color="error" />,
+        });
+      }
+    }, 3000);
+  }
+
   return (
     <Box
       sx={{
         display: 'grid',
         rowGap: theme.spacing(4),
         height: '100%',
-        gridTemplateRows: 'auto auto 1fr',
+        gridTemplateRows: 'auto 1fr',
       }}
     >
       <Box sx={{ display: 'grid', rowGap: theme.spacing(1) }}>
@@ -42,43 +176,7 @@ export default function Register() {
         )}
         <Typography variant="h5">Validator Registration</Typography>
       </Box>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: '1fr auto',
-          columnGap: theme.spacing(3),
-          alignItems: 'center',
-        }}
-      >
-        <Typography variant="body2">{stepTitle[step]}</Typography>
-        <Box
-          sx={{
-            display: 'grid',
-            gridAutoFlow: 'column',
-            columnGap: theme.spacing(2),
-          }}
-        >
-          <Button
-            variant="contained"
-            color="primary"
-            disabled={step === 1}
-            onClick={() => setStep((prevStep) => prevStep - 1)}
-          >
-            Prev
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            disabled={step === 4}
-            onClick={() => setStep((prevStep) => prevStep + 1)}
-          >
-            Next
-          </Button>
-        </Box>
-      </Box>
-      <Box sx={{ height: '100%' }}>
-        <Scrollbars autoHide>Content</Scrollbars>
-      </Box>
+      {stepComponent[step]}
     </Box>
   );
 }
