@@ -77,3 +77,29 @@ export interface UriData {
   image: string;
   rarity: string;
 }
+
+export abstract class GovernanceType {}
+export interface GovenanceInterface {
+  proposal_id: string;
+  title: string;
+  description: string;
+  votes: [number, boolean][];
+  is_still_ongoing: boolean; //can vote
+  did_proposal_pass?: boolean; //succeded a few second ago
+  is_proposal_executed: boolean;
+  date_finalize?: boolean; //completed
+  expiration_time: boolean;
+  govenance_type: GovernanceType;
+}
+export class ConfigAccount extends GovernanceType {}
+export class ProgramUpgrade extends GovernanceType {
+  public buffer_account!: string;
+
+  public code_link!: string;
+
+  constructor(properties: ProgramUpgrade) {
+    super();
+    Object.assign(this, properties);
+  }
+}
+export class VoteAccountGovernance extends GovernanceType {}
