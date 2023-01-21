@@ -12,7 +12,10 @@ import {
   TransactionMessage,
   TransactionSignature,
   VersionedTransaction,
+  VoteAccount,
 } from '@solana/web3.js';
+import { BN } from 'bn.js';
+import { GeneralData, ValidatorConfig } from '../state';
 
 export const forwardLegacyTransaction = async (
   walletConnection: { connection: Connection; wallet: WalletContextState },
@@ -168,4 +171,49 @@ export async function createLookupTable(
   }
   if (signature) await connection.confirmTransaction(signature, 'finalized');
   return lookupTableAddresses;
+}
+
+export async function computeVoteAccountRewardAPY(
+  generalData: GeneralData,
+  validatorConfig: ValidatorConfig,
+  connection: Connection
+) {
+  const latestVoteRewards =
+    generalData?.vote_rewards.length <= 10
+      ? generalData?.vote_rewards
+      : generalData?.vote_rewards.slice(-1, 10);
+  const rewardPerPrimaryLamportPerEpoch =
+    latestVoteRewards.length === 0
+      ? 0
+      : latestVoteRewards.reduce(
+          (acc, curr) =>
+            acc +
+            Number(
+              new BN(curr.nft_holders_reward)
+                .div(new BN(validatorConfig.max_primary_stake))
+                .toString(10)
+            ),
+          0
+        ) / latestVoteRewards.length;
+
+  const numberOfSlotsInCurrentEpoch = (await connection.getEpochInfo())
+    .slotsInEpoch;
+
+  const timePerSlot = 0.4; //400 milliseconds
+  const timePerEpoch =
+    (numberOfSlotsInCurrentEpoch * timePerSlot) / (60 * 60 * 24);
+
+  const rewardPerYear = rewardPerPrimaryLamportPerEpoch * (365 / timePerEpoch);
+  const apy = rewardPerYear * 100;
+  // console.log('latestVoteRewards', latestVoteRewards);
+  // console.log(
+  //   'rewardPerPrimaryLamportPerEpoch',
+  //   rewardPerPrimaryLamportPerEpoch
+  // );
+  // console.log('numberOfSlotsInCurrentEpoch', numberOfSlotsInCurrentEpoch);
+  // console.log('timePerSlot', timePerSlot);
+  // console.log('timePerEpoch', timePerEpoch);
+  // console.log('rewardPerYear', rewardPerYear);
+  // console.log('APY', apy);
+  return apy;
 }

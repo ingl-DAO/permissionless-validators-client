@@ -20,16 +20,16 @@ import NoTableElement, {
 } from '../../../common/components/noTableElement';
 import { NftReward } from '../../../interfaces';
 import theme from '../../../theme/theme';
-import RewardLane from './rewardLane';
+import RewardLine from './rewardLine';
 import ConfirmDialog from '../../../components/confirmDialog';
 
 export default function Rewards() {
   const [areRewardsLoading, setAreRewardsLoading] = useState<boolean>(false);
   const [rewardNotif, setRewardNotif] = useState<useNotification>();
   const [rewards, setRewards] = useState<NftReward[]>([]);
-  const { vote_account_id } = useParams();
+  const { program_id } = useParams();
 
-  const loadRewards = (vote_account_id: string) => {
+  const loadRewards = (program_id: string) => {
     setAreRewardsLoading(true);
     const notif = new useNotification();
     if (rewardNotif) {
@@ -37,7 +37,8 @@ export default function Rewards() {
     }
     setRewardNotif(notif);
     setTimeout(() => {
-      //TODO: call api here to load rewards with data vote_account_id
+      //TODO: call api here to load rewards with data program_id
+      // eslint-disable-next-line no-constant-condition
       if (6 > 5) {
         const newRewards: NftReward[] = [
           {
@@ -60,7 +61,7 @@ export default function Rewards() {
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => loadRewards(vote_account_id)}
+              retryFunction={() => loadRewards(program_id)}
               notification={notif}
               //TODO: message should come from backend
               message={'There was an error loading rewards. please retry!!!'}
@@ -74,7 +75,7 @@ export default function Rewards() {
   };
 
   useEffect(() => {
-    loadRewards(vote_account_id as string);
+    loadRewards(program_id as string);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -90,6 +91,7 @@ export default function Rewards() {
     });
     setTimeout(() => {
       //TODO: call api here to reveal nft's rarity with data actionnedNft
+      // eslint-disable-next-line no-constant-condition
       if (6 > 5) {
         setRewards(
           rewards.map((reward) => {
@@ -233,7 +235,7 @@ export default function Rewards() {
                 />
               ) : (
                 rewards.map((reward, index) => (
-                  <RewardLane
+                  <RewardLine
                     key={index}
                     reward={reward}
                     isChecked={Boolean(

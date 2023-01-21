@@ -2,7 +2,7 @@ import { Checkbox, TableCell, TableRow } from '@mui/material';
 import { NftReward } from '../../../interfaces';
 import theme from '../../../theme/theme';
 
-export default function RewardLane({
+export default function RewardLine({
   reward: { image_ref, nft_pubkey, numeration, rewards },
   reward,
   onSelect,

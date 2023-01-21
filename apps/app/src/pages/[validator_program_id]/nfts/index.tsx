@@ -16,21 +16,17 @@ import theme from '../../../theme/theme';
 export default function ValidatorNFTs() {
   const wallet = useWallet();
   const { connection } = useConnection();
-  const { validator_program_id } = useParams();
+  const { program_id } = useParams();
 
   const [isConfirmMintDialogOpen, setIsConfirmMintDialogOpen] =
     useState<boolean>(false);
 
   const nftService = useMemo(
     () =>
-      validator_program_id
-        ? new NftService(
-            new PublicKey(validator_program_id),
-            wallet,
-            connection
-          )
+      program_id
+        ? new NftService(new PublicKey(program_id), wallet, connection)
         : null,
-    [connection, validator_program_id, wallet]
+    [connection, program_id, wallet]
   );
   const [nfts, setNfts] = useState<InglNft[]>([]);
 

@@ -54,7 +54,7 @@ export interface InglValidator
   extends Omit<ValidatorRegistration, keyof ValidatorRarity> {
   validator_id: string;
   validator_apy: number;
-  current_skip_rate: number;
+  current_skip_rate?: number;
   vote_account_id: string;
   collection_id: string;
   total_delegated_count: number;

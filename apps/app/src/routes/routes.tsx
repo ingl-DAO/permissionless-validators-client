@@ -16,7 +16,7 @@ export const routes = [
     children: [
       { path: 'validators', element: <Home /> },
       {
-        path: 'validators/:validator_program_id',
+        path: 'validators/:program_id',
         element: <ValidatorLayout />,
         children: [
           { path: '', element: <Navigate to="nfts" /> },
