@@ -8,7 +8,7 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Typography
+  Typography,
 } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
@@ -18,7 +18,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import ErrorMessage from '../../../common/components/ErrorMessage';
 import NoTableElement, {
-  TableLaneSkeleton
+  TableLaneSkeleton,
 } from '../../../common/components/noTableElement';
 import useNotification from '../../../common/utils/notification';
 import ConfirmDialog from '../../../components/confirmDialog';
@@ -28,7 +28,7 @@ import theme from '../../../theme/theme';
 import RewardLane from './rewardLane';
 
 export default function Rewards() {
-  const wallet = useWallet();
+  const walletContext = useWallet();
   const { connection } = useConnection();
   const { validator_program_id } = useParams();
 
@@ -41,11 +41,11 @@ export default function Rewards() {
       validator_program_id
         ? new NftService(
             new PublicKey(validator_program_id),
-            wallet,
-            connection
+            connection,
+            walletContext
           )
         : null,
-    [connection, validator_program_id, wallet]
+    [connection, validator_program_id, walletContext]
   );
 
   const loadRewards = () => {

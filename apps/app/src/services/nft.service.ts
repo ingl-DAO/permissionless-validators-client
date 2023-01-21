@@ -4,6 +4,7 @@ import {
   createLookupTable,
   Delegated,
   DelegateNFT,
+  forwardLegacyTransaction,
   forwardV0Transaction,
   GeneralData,
   GENERAL_ACCOUNT_SEED,
@@ -41,8 +42,7 @@ import {
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
   AccountMeta,
-  clusterApiUrl,
-  Connection,
+  type Connection,
   Keypair,
   PublicKey,
   SystemProgram,
@@ -57,10 +57,8 @@ export type MetaplexNft = Metadata<JsonMetadata<string>> | Nft | Sft;
 export class NftService {
   constructor(
     private readonly programId: PublicKey,
+    private readonly connection: Connection,
     private readonly walletContext: WalletContextState,
-    private readonly connection = new Connection(
-      clusterApiUrl(WalletAdapterNetwork.Devnet)
-    ),
     private readonly configAccountPDA = PublicKey.findProgramAddressSync(
       [Buffer.from(INGL_CONFIG_SEED)],
       programId
@@ -284,13 +282,11 @@ export class NftService {
         data: Buffer.from(serialize(new MintNft(0))),
         keys: instructionAccounts,
       });
-      await forwardV0Transaction(
+      await forwardLegacyTransaction(
         { connection: this.connection, wallet: this.walletContext },
         [mintNftInstruction],
-        {
-          signerKeypairs: [mintKeyPair],
-          additionalUnits: 1_000_000,
-        }
+        [mintKeyPair],
+        1_000_000
       );
       return mintKeyPair.publicKey;
     } catch (error) {
@@ -464,7 +460,7 @@ export class NftService {
     });
 
     try {
-      return await forwardV0Transaction(
+      return await forwardLegacyTransaction(
         { connection: this.connection, wallet: this.walletContext },
         [redeemInglGemInstruction]
       );
@@ -534,12 +530,12 @@ export class NftService {
     });
 
     try {
-      await forwardV0Transaction(
+      await forwardLegacyTransaction(
         { connection: this.connection, wallet: this.walletContext },
         [delegateSolInstruction]
       );
     } catch (error) {
-      throw new Error('Failed to deallocate gem sol with error ' + error);
+      throw new Error('Failed to delegate nft sol with error ' + error);
     }
   }
 
@@ -623,7 +619,7 @@ export class NftService {
       ],
     });
     try {
-      await forwardV0Transaction(
+      await forwardLegacyTransaction(
         { connection: this.connection, wallet: this.walletContext },
         [undelegateSolInstruction]
       );
@@ -762,7 +758,7 @@ export class NftService {
     });
 
     try {
-      await forwardV0Transaction(
+      await forwardLegacyTransaction(
         { connection: this.connection, wallet: this.walletContext },
         [claimRewardInstruction]
       );
@@ -901,13 +897,20 @@ export class NftService {
       //     this.walletContext.publicKey as PublicKey,
       //     lookupTableAddresses
       //   );
-
-      const transactionId = await forwardV0Transaction(
-        { connection: this.connection, wallet: this.walletContext },
-        [imprintRarityInstruction],
-        { lookupTableAddresses, additionalUnits: 600_000 }
-      );
-      return transactionId;
+      return new Promise((resolve, reject) => {
+        setTimeout(async () => {
+          try {
+            const transactionId = await forwardV0Transaction(
+              { connection: this.connection, wallet: this.walletContext },
+              [imprintRarityInstruction],
+              { lookupTableAddresses, additionalUnits: 600_000 }
+            );
+            resolve(transactionId);
+          } catch (error) {
+            reject(error);
+          }
+        }, 5000);
+      });
     } catch (error) {
       throw new Error('Failed to imprint rarity with error ' + error);
     }

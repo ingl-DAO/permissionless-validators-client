@@ -14,7 +14,7 @@ import { NftService } from '../../../services/nft.service';
 import theme from '../../../theme/theme';
 
 export default function ValidatorNFTs() {
-  const wallet = useWallet();
+  const walletContext = useWallet();
   const { connection } = useConnection();
   const { validator_program_id } = useParams();
 
@@ -26,11 +26,11 @@ export default function ValidatorNFTs() {
       validator_program_id
         ? new NftService(
             new PublicKey(validator_program_id),
-            wallet,
-            connection
+            connection,
+            walletContext,
           )
         : null,
-    [connection, validator_program_id, wallet]
+    [connection, validator_program_id, walletContext]
   );
   const [nfts, setNfts] = useState<InglNft[]>([]);
 
@@ -450,7 +450,7 @@ export default function ValidatorNFTs() {
                     setActionnedNft(nft);
                     setIsConfirmRevealRarityDialogOpen(true);
                   }}
-                  undelegateNft={() => setIsConfirmUndelegateDialogOpen}
+                  undelegateNft={() => setIsConfirmUndelegateDialogOpen(true)}
                   setActionnedNft={setActionnedNft}
                   disabled={
                     isRedeeming || isDelegating || isUndelegating || isRevealing
