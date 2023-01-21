@@ -23,9 +23,11 @@ module.exports = function override(webpackConfig) {
   webpackConfig.resolve.fallback = {
     crypto: require.resolve('crypto-browserify'),
     stream: require.resolve('stream-browserify'),
+    http: false,
+    url: require.resolve('whatwg-url'),
     assert: require.resolve('assert'),
+    https: false,
     util: require.resolve('util'),
-    url: require.resolve('url'),
     child_process: false,
     fs: false,
     process: false,
@@ -33,16 +35,14 @@ module.exports = function override(webpackConfig) {
     zlib: false,
     tls: false,
     net: false,
-    https: false,
-    http: false,
     os: false,
     tty: false,
     vm: false,
   };
   webpackConfig.entry = {
     ...webpackConfig.entry,
-    polyfills: './polyfill.js'
-  }
+    polyfills: './polyfill.js',
+  };
 
   return webpackConfig;
 };

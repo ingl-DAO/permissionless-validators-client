@@ -10,7 +10,6 @@ import {
   Transaction,
   TransactionInstruction,
   TransactionMessage,
-  TransactionSignature,
   VersionedTransaction,
 } from '@solana/web3.js';
 
@@ -48,7 +47,6 @@ export const forwardLegacyTransaction = async (
     signedTransaction as Transaction,
     connection
   );
-  await connection.confirmTransaction({ ...blockhashObj, signature });
   return signature;
 };
 
@@ -101,16 +99,17 @@ export async function forwardV0Transaction(
   const signedTransaction = signTransaction
     ? await signTransaction(transactionV0)
     : null;
+
   const signature = await connection.sendTransaction(
     signedTransaction as VersionedTransaction
   );
-  console.log(blockhashObj, signature);
   await connection.confirmTransaction(
     {
-      ...blockhashObj,
       signature,
+      blockhash: blockhashObj.blockhash,
+      lastValidBlockHeight: blockhashObj.lastValidBlockHeight,
     },
-    options?.commitment || 'confirmed'
+    options?.commitment
   );
   return signature;
 }
@@ -143,7 +142,7 @@ export async function createLookupTable(
 ) {
   const { publicKey: payerPubkey } = wallet;
   const lookupTableAddresses: PublicKey[] = [];
-  let signature: TransactionSignature | null = null;
+  let signature: string | null = null;
   while (addresses.length > 0) {
     const [lookupTableInst, lookupTableAddress] =
       AddressLookupTableProgram.createLookupTable({
