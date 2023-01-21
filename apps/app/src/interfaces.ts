@@ -11,11 +11,11 @@ export interface Validator {
 }
 
 export interface InglNft {
-  nft_pubkey: string;
   image_ref: string;
-  video_ref?: string;
   rarity?: string;
   is_delegated: boolean;
+  nft_mint_id: string;
+  video_ref?: string;
   numeration: number;
 }
 
@@ -66,7 +66,8 @@ export interface NftJSON {
   collection_uri: string;
   rarity_names: string[];
   rarities: number[];
-  uris: string[];
+  uris: string[][];
+  default_uri: string;
 }
 // A uri will be passed to a function that will return it's data with following structure:
 export interface UriData {
