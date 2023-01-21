@@ -14,7 +14,7 @@ import { InglNft } from '../../interfaces';
 import theme from '../../theme/theme';
 
 export default function NftCard({
-  gem: { rarity, image_ref, is_delegated, numeration, nft_pubkey },
+  gem: { rarity, image_ref, is_delegated, numeration, nft_mint_id },
   isDialogOpen,
   disabled,
   setActionnedNft,
@@ -333,7 +333,7 @@ export default function NftCard({
                 textAlign: 'center',
               }}
             >
-              {nft_pubkey}
+              {nft_mint_id}
             </Typography>
             <Typography
               variant="h1"
