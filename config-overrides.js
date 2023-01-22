@@ -23,10 +23,10 @@ module.exports = function override(webpackConfig) {
   webpackConfig.resolve.fallback = {
     crypto: require.resolve('crypto-browserify'),
     stream: require.resolve('stream-browserify'),
-    http: false,
+    https: require.resolve('https-browserify'),
+    http: require.resolve('stream-http'),
     url: require.resolve('whatwg-url'),
     assert: require.resolve('assert'),
-    https: false,
     util: require.resolve('util'),
     child_process: false,
     fs: false,

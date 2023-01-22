@@ -279,14 +279,14 @@ export class NftService {
 
       const mintNftInstruction = new TransactionInstruction({
         programId: this.programId,
-        data: Buffer.from(serialize(new MintNft(0))),
+        data: Buffer.from(serialize(new MintNft(2))),
         keys: instructionAccounts,
       });
       await forwardLegacyTransaction(
         { connection: this.connection, wallet: this.walletContext },
         [mintNftInstruction],
-        [mintKeyPair],
-        1_000_000
+        1_000_000,
+        [mintKeyPair]
       );
       return mintKeyPair.publicKey;
     } catch (error) {
@@ -377,7 +377,7 @@ export class NftService {
       METAPLEX_PROGRAM_ID
     );
 
-    const metadataAccount: AccountMeta = {
+    const nftMetadataAccount: AccountMeta = {
       pubkey: nftMetadataAccountKey,
       isSigner: false,
       isWritable: true,
@@ -435,8 +435,9 @@ export class NftService {
     const voteAccount: AccountMeta = {
       pubkey: this.voteAccountPDA[0],
       isSigner: false,
-      isWritable: true,
+      isWritable: false,
     };
+    console.log('creating redeem instruction...');
     const redeemInglGemInstruction = new TransactionInstruction({
       programId: this.programId,
       data: Buffer.from(serialize(new Redeem(0))),
@@ -446,7 +447,7 @@ export class NftService {
         mintingPoolAccount,
         associatedTokenAccount,
         nftAccount,
-        metadataAccount,
+        nftMetadataAccount,
         nftEditionAccount,
         collectionMetadataAccount,
         splTokenProgramAccount,
@@ -458,7 +459,7 @@ export class NftService {
         metaplexProgramAccount,
       ],
     });
-
+    console.log(redeemInglGemInstruction.data, this.programId.toBase58());
     try {
       return await forwardLegacyTransaction(
         { connection: this.connection, wallet: this.walletContext },
@@ -683,7 +684,9 @@ export class NftService {
         image_ref: jsonData?.image as string,
         is_delegated: funds_location instanceof Delegated,
         numeration,
-        rarity: rarity?.toString(),
+        rarity: rarity
+          ? jsonData?.attributes?.find((_) => _.trait_type === 'Rarity')?.value
+          : undefined,
       };
     }
   }
@@ -862,6 +865,12 @@ export class NftService {
       isWritable: false,
     };
 
+    const tokenProgramAccount: AccountMeta = {
+      pubkey: TOKEN_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    };
+
     const feedAccountInfos = this.getFeedAccountInfos(network);
 
     const instructionAccounts = [
@@ -874,6 +883,7 @@ export class NftService {
       nftEditionAccount,
       configAccount,
       urisAccount,
+      tokenProgramAccount,
       //switchbord history buffer account infos
       ...feedAccountInfos,
 
@@ -885,7 +895,7 @@ export class NftService {
       this.walletContext,
       instructionAccounts.map((_) => _.pubkey)
     );
-
+    console.log(this.programId.toBase58());
     const imprintRarityInstruction = new TransactionInstruction({
       programId: this.programId,
       data: Buffer.from(serialize(new ImprintRarity(0))),
@@ -897,7 +907,7 @@ export class NftService {
       //     this.walletContext.publicKey as PublicKey,
       //     lookupTableAddresses
       //   );
-      return new Promise((resolve, reject) => {
+      return await new Promise((resolve, reject) => {
         setTimeout(async () => {
           try {
             const transactionId = await forwardV0Transaction(
