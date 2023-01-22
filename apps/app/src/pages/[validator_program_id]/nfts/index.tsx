@@ -52,21 +52,23 @@ export default function ValidatorNFTs() {
         notif.update({
           render: 'NFT minted successfully',
         });
-        nftService
-          ?.loadNFT(tokenMint)
-          .then((newNft) => {
-            if (newNft) setNfts([newNft, ...nfts]);
-            setNftNotif(undefined);
-          })
-          .catch((error) => {
-            notif.update({
-              type: 'ERROR',
-              render:
-                error?.message ||
-                'An error occured while fetching new token data.',
-              icon: () => <ReportRounded fontSize="medium" color="error" />,
+        setTimeout(() => {
+          nftService
+            ?.loadNFT(tokenMint)
+            .then((newNft) => {
+              if (newNft) setNfts([newNft, ...nfts]);
+              setNftNotif(undefined);
+            })
+            .catch((error) => {
+              notif.update({
+                type: 'ERROR',
+                render:
+                  error?.message ||
+                  'An error occured while fetching new token data.',
+                icon: () => <ReportRounded fontSize="medium" color="error" />,
+              });
             });
-          });
+        }, 3000);
       })
       .catch((error) => {
         notif.update({
