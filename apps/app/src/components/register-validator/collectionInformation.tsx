@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { NftJSON } from '../../interfaces';
+import { CollectionJson } from '../../interfaces';
 import theme from '../../theme/theme';
 
 interface JsonNft {
@@ -93,12 +93,12 @@ export default function CollectionInformation({
   creatorRoyalties:cr,
 }: {
   solBacking: number;
-  jsonFileData?: NftJSON;
+  jsonFileData?: CollectionJson;
   creatorRoyalties: number;
-  onPrev: (val: { jsonFileData: NftJSON|undefined; solBacking: number, creatorRoyalties:number }) => void;
-  onNext: (val: { jsonFileData: NftJSON; solBacking: number, creatorRoyalties:number }) => void;
+  onPrev: (val: { jsonFileData: CollectionJson|undefined; solBacking: number, creatorRoyalties:number }) => void;
+  onNext: (val: { jsonFileData: CollectionJson; solBacking: number, creatorRoyalties:number }) => void;
 }) {
-  const [jsonFileData, setJsonFileData] = useState<NftJSON | undefined>(jfd);
+  const [jsonFileData, setJsonFileData] = useState<CollectionJson | undefined>(jfd);
   const [solBacking, setSolBacking] = useState<number>(sb);
   const [creatorRoyalties, setCreatorRoyalties] = useState<number>(cr)
   const [jsonNfts, setJsonNfts] = useState<JsonNft[]>([]);
