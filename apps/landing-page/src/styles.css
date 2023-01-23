@@ -1,0 +1,21 @@
+/* You can add global styles to this file, and also import other style files */
+
+@font-face {
+  font-family: 'Berlin Sans FB';
+  font-style: normal;
+  font-weight: normal;
+  src: local('Berlin Sans FB'), url('BRLNSR.woff') format('woff');
+}
+
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  background: linear-gradient(180deg, #10141E 0.01%, #0F1E25 12.5%, #1C1C28 47.92%, #1C1C28 71.35%, #1C1C28 81.25%, #0A0E14 99.98%, #004B3F 99.99%, #1C1C28 100%);
+  background-repeat: no-repeat;
+  background-size: contain;
+  /* height: 100vh; */
+}

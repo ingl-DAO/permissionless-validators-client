@@ -24,7 +24,7 @@ export default function ValidatorNFTs() {
   const nftService = useMemo(
     () =>
       program_id
-        ? new NftService(new PublicKey(program_id), walletContext, connection)
+        ? new NftService(new PublicKey(program_id), connection, walletContext)
         : null,
     [connection, program_id, walletContext]
   );
