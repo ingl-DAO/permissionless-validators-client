@@ -25,9 +25,9 @@ export default function SectionNFT() {
         laptop={5.5}
         tablet={12}
         sx={{
-          display: 'flex',
           position: 'relative',
           justifyContent: 'flex-end',
+          display: { mobile: 'none', laptop: 'flex', tablet: 'none' },
         }}
       >
         <Box

@@ -12,7 +12,7 @@ import Team from './Team';
 import SectionValidator from './ValidatorSection';
 import NFTListing from './NFTListing';
 
-export function Test({ intl: { formatMessage } }: { intl: IntlShape }) {
+export function Index({ intl: { formatMessage } }: { intl: IntlShape }) {
   return (
     <Box
       sx={{
@@ -72,4 +72,4 @@ export function Test({ intl: { formatMessage } }: { intl: IntlShape }) {
     </Box>
   );
 }
-export default injectIntl(Test);
+export default injectIntl(Index);

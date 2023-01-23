@@ -1,10 +1,10 @@
 import { Navigate } from 'react-router';
-import Test from '../components/Test';
+import Index from '../components/Index';
 
 export const routes = [
   {
     path: '/',
-    element: <Test />,
+    element: <Index />,
   },
   { path: '*', element: <Navigate to="/" /> },
 ];

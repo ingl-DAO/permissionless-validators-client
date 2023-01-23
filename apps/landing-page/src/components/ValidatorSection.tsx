@@ -22,9 +22,9 @@ export default function SectionValidator() {
         item
         mobile={0}
         laptop={5.8}
-        tablet={12}
+        tablet={0}
         sx={{
-          display: 'flex',
+          display: { mobile: 'none', laptop: 'flex', tablet: 'none' },
           position: 'relative',
         }}
       >

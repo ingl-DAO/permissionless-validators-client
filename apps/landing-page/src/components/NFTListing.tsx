@@ -62,6 +62,8 @@ export default function NFTListing() {
           justifyContent: 'center',
           alignItems: 'center',
           width: '100%',
+          maxWidth: '1200px',
+          overflowX: 'auto',
         }}
       >
         {nftsData.map((nft) => (
