@@ -5,7 +5,7 @@ import Layout from '../pages/layout';
 import ValidatorLayout from '../pages/[validator_program_id]';
 import ValidatorNFTs from '../pages/[validator_program_id]/nfts';
 import Register from '../pages/register-validator';
-import Rewards from '../pages/[validator_program_id]/rewards';
+import Rewards from '../pages/[validator_program_id]/rewards/index';
 import ValidatorStats from '../pages/[validator_program_id]/validatorStats';
 import Dao from '../pages/[vote_account_id]/dao';
 
@@ -17,7 +17,7 @@ export const routes = [
     children: [
       { path: 'validators', element: <Home /> },
       {
-        path: 'validators/:validator_program_id',
+        path: 'validators/:program_id',
         element: <ValidatorLayout />,
         children: [
           { path: '', element: <Navigate to="nfts" /> },

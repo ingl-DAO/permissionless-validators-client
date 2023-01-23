@@ -644,7 +644,7 @@ export class NftService {
         const nftData = await this.loadNftData(ownerNft.mintAddress, ownerNft);
         if (nftData) validatorNfts.push(nftData);
       }
-      return validatorNfts;
+      return validatorNfts.sort((a, b) => b.numeration - a.numeration);
     } catch (error) {
       throw new Error('Failed to load metadata with error ' + error);
     }

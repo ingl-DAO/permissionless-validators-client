@@ -10,7 +10,7 @@ export default function Footer() {
         gridTemplateColumns: 'auto 1fr auto',
         justifyItems: 'center',
         alignItems: 'center',
-        backgroundColor: 'black',
+        backgroundColor: '#1C1C28',
         padding: '3px 0',
       }}
     >

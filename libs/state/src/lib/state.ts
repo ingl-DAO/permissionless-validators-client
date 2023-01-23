@@ -1,4 +1,4 @@
-import { field, option, variant, vec } from '@dao-xyz/borsh';
+import { field, fixedArray, option, variant, vec } from '@dao-xyz/borsh';
 import { PublicKey } from '@solana/web3.js';
 import * as BN from 'bn.js';
 import { GovernanceType } from './instruction/gov-type';
@@ -215,6 +215,63 @@ export class GovernanceData {
   public governance_type!: GovernanceType;
 
   constructor(properties: GovernanceData) {
+    Object.assign(this, properties);
+  }
+}
+
+export class ValidatorConfig {
+  @field({ type: 'u32' })
+  public validation_phrase!: number;
+
+  @field({ type: 'bool' })
+  is_validator_id_switchable!: boolean;
+
+  @field({ type: 'u64' })
+  max_primary_stake!: BN;
+
+  @field({ type: 'u8' })
+  nft_holders_share!: number;
+
+  @field({ type: 'u8' })
+  initial_redemption_fee!: number;
+
+  @field({ type: 'u64' })
+  unit_backing!: BN;
+
+  @field({ type: 'u32' })
+  redemption_fee_duration!: number;
+
+  @field({ type: 'u8' })
+  proposal_quorum!: number;
+
+  @field({ type: 'u16' })
+  creator_royalties!: number;
+
+  @field({ type: 'u8' })
+  commission!: number;
+
+  @field({ type: fixedArray('u8', 32) })
+  validator_id!: PublicKey;
+
+  @field({ type: 'u32' })
+  governance_expiration_time!: number;
+
+  @field({ type: 'string' })
+  default_uri!: string;
+
+  @field({ type: 'string' })
+  validator_name!: string;
+
+  @field({ type: 'string' })
+  twitter_handle!: string;
+
+  @field({ type: 'string' })
+  discord_invite!: string;
+
+  @field({ type: 'string' })
+  website!: string;
+
+  constructor(properties: ValidatorConfig) {
     Object.assign(this, properties);
   }
 }
