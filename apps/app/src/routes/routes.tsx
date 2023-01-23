@@ -7,6 +7,7 @@ import ValidatorNFTs from '../pages/[validator_program_id]/nfts';
 import Register from '../pages/register-validator';
 import Rewards from '../pages/[validator_program_id]/rewards';
 import ValidatorStats from '../pages/[validator_program_id]/validatorStats';
+import Dao from '../pages/[vote_account_id]/dao';
 
 export const routes = [
   { path: '/', element: <Typography>Authenticate user</Typography> },
@@ -23,6 +24,7 @@ export const routes = [
           { path: 'nfts', element: <ValidatorNFTs /> },
           { path: 'rewards', element: <Rewards /> },
           { path: 'details', element: <ValidatorStats /> },
+          { path: 'dao', element: <Dao /> },
         ],
       },
       {
