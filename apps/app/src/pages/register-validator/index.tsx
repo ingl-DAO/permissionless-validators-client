@@ -1,7 +1,9 @@
 import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import ErrorMessage from '../../common/components/ErrorMessage';
 import useNotification from '../../common/utils/notification';
@@ -15,12 +17,20 @@ import ValidatorInformation, {
 import VoteAccountInformation, {
   VoteAccountInfo,
 } from '../../components/register-validator/voteAccountInformation';
-import { NftJSON, ValidatorRegistration } from '../../interfaces';
+import { CollectionJson, ValidatorRegistration } from '../../interfaces';
+import { RegistryService } from '../../services/registry.service';
 import theme from '../../theme/theme';
 
 export default function Register() {
   const navigate = useNavigate();
   const [step, setStep] = useState<number>(1);
+
+  const walletContext = useWallet();
+  const { connection } = useConnection();
+  const registryService = useMemo(
+    () => new RegistryService(connection, walletContext),
+    [connection, walletContext]
+  );
 
   const [validatorInfo, setValidatorInfo] = useState<ValidatorInfo>({
     discord_invite: '',
@@ -29,8 +39,9 @@ export default function Register() {
     validator_name: '',
     website: '',
   });
+
   const [voteAccountInfo, setVoteAccountInfo] = useState<VoteAccountInfo>();
-  const [jsonFileData, setJsonFileData] = useState<NftJSON>();
+  const [jsonFileData, setJsonFileData] = useState<CollectionJson>();
   const [solBacking, setSolBacking] = useState<number>(0);
   const [creatorRoyalties, setCreatorRoyalties] = useState<number>(0);
   const [daoInfo, setDaoInfo] = useState<DaoInfo>();
@@ -66,7 +77,7 @@ export default function Register() {
               governance_expiration_time: val.governance_expiration_time,
               creator_royalties: creatorRoyalties,
             };
-            createValidator(validator);
+            createValidator(validatorInfo.validator_id, validator);
           }
         }}
         daoInfo={daoInfo}
@@ -108,10 +119,26 @@ export default function Register() {
       />
     ),
   };
+  const [programId, setProgramId] = useState();
+  useEffect(() => {
+    registryService
+      .findPrograms()
+      .then(({ program: programId }) => {
+        setProgramId(programId);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [validatorNotif, setValidatorNotif] = useState<useNotification>();
 
-  function createValidator(validator: ValidatorRegistration) {
+  function createValidator(
+    validatorId: string,
+    validator: ValidatorRegistration
+  ) {
     setIsCreating(true);
     const notif = new useNotification();
     if (validatorNotif) validatorNotif.dismiss();
@@ -119,24 +146,30 @@ export default function Register() {
     notif.notify({
       render: 'Creating Validator...',
     });
-    setTimeout(() => {
-      //TODO: call api here create validator with data validator
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
+
+    registryService
+      .registerProgram(
+        programId ??
+          new PublicKey('52xjVDELdiFhu9AdHJZ7kfyYBtjgoffcxifxBPaDp2Pe'),
+        new PublicKey(validatorId),
+        validator
+      )
+      .then((signature) => {
         setIsCreating(false);
         notif.update({
-          render: 'Created validator successfully',
+          render: `Created validator successfully. Signature: ${signature}`,
         });
         setValidatorNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => createValidator(validator)}
+              retryFunction={() => createValidator(validatorId, validator)}
               notification={notif}
-              //TODO: message should come from backend
               message={
+                error?.mesage ||
                 'There was an error creating validator. Please try again!!!'
               }
             />
@@ -144,8 +177,7 @@ export default function Register() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   }
 
   return (
