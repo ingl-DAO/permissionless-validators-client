@@ -8,12 +8,13 @@ export default function CopyTransactionId({
   message?: string;
 }) {
   return (
-    <Box sx={{color:'whiteF'}}>
+    <Box sx={{ color: 'whiteF' }}>
       <Typography variant="body2">{message}</Typography>
       <Typography variant="caption">{transaction_id}</Typography>
       <Button
         color="primary"
         variant="contained"
+        size="small"
         onClick={() => navigator.clipboard.writeText(transaction_id)}
       >
         Copy transaction id
