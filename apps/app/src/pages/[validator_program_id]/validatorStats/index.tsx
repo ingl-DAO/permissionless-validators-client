@@ -334,9 +334,9 @@ export default function ValidatorStats() {
                 value={
                   areDetailsLoading || !details
                     ? ''
-                    : `${formatNumber(details.governance_expiration_time, {
+                    : `${formatNumber(details.governance_expiration_time/(24*3600), {
                         style: 'unit',
-                        unit: 'hour',
+                        unit: 'day',
                         unitDisplay: 'short',
                       })}`
                 }

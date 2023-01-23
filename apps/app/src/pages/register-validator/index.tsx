@@ -55,11 +55,11 @@ export default function Register() {
           setStep(3);
         }}
         handleSubmit={(val: DaoInfo) => {
-          if (jsonFileData && validatorInfo && voteAccountInfo) {
+          if (jsonFileData && validatorInfo && voteAccountInfo && solBacking>1 && creatorRoyalties<2) {
             const validator: ValidatorRegistration = {
               nft_holders_share: voteAccountInfo.nft_holders_share,
               proposal_quorum: val.proposal_quorum,
-              unit_backing: new BN(solBacking),
+              unit_backing: new BN(solBacking*10_000_000_000),
               collection_uri: jsonFileData.collection_uri,
               rarities: jsonFileData.rarities,
               discord_invite: validatorInfo.discord_invite,
@@ -70,15 +70,15 @@ export default function Register() {
                 voteAccountInfo.is_validator_id_switchable,
               validator_name: validatorInfo.validator_name,
               initial_redemption_fee: voteAccountInfo.initial_redemption_fee,
-              max_primary_stake: voteAccountInfo.max_primary_stake,
+              max_primary_stake: new BN(voteAccountInfo.max_primary_stake.toNumber() *10_000_000_000),
               redemption_fee_duration: voteAccountInfo.redemption_fee_duration,
               init_commission: voteAccountInfo.init_commission,
               default_uri: jsonFileData.default_uri,
               governance_expiration_time: val.governance_expiration_time,
-              creator_royalties: creatorRoyalties,
+              creator_royalties: creatorRoyalties*100,
             };
             createValidator(validatorInfo.validator_id, validator);
-          }
+          }else alert('Unit backing must be greater than 1 and creator royalties greater than 2%')
         }}
         daoInfo={daoInfo}
         isCreating={isCreating}

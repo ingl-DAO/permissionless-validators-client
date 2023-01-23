@@ -179,9 +179,9 @@ export default function Rewards() {
               variant="h6"
               component="span"
               sx={{ color: theme.palette.primary.main }}
-            >{`${rewards
-              .reduce((total, { rewards }) => total.add(rewards), new BN(0))
-              .toString(10)} L`}</Typography>
+            >{`${(rewards
+              .reduce((total, { rewards }) => total.add(rewards), new BN(0))).divn(10_000_000_000)
+              .toString(10)} SOL`}</Typography>
           </Typography>
         </Box>
         <Scrollbars autoHide>

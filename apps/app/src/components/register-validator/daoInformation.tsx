@@ -22,12 +22,12 @@ export default function DaoInformation({
   isCreating: boolean;
 }) {
   const initialValues: DaoInfo = daoInfo ?? {
-    proposal_quorum: 0,
+    proposal_quorum: 65,
     governance_expiration_time: 35 * 24 * 3600,
   };
 
   const validationSchema = Yup.object().shape({
-    proposal_quorum: Yup.number().required('required'),
+    proposal_quorum: Yup.number().required('required').max(100).min(65),
     governance_expiration_time: Yup.number()
       .required('required')
       .min(35 * 24 * 3600, 'Must be greater an 35 days')
@@ -94,7 +94,7 @@ export default function DaoInformation({
         <Box sx={{ display: 'grid', rowGap: theme.spacing(1) }}>
           {[
             {
-              label: 'Proposal quorum',
+              label: 'Proposal quorum (%)',
               description:
                 'Minimum percentage of NFTs required to vote on a proposal⚖ ',
               formikKey: 'proposal_quorum',

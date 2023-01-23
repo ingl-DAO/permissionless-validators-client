@@ -429,7 +429,7 @@ export default function CollectionInformation({
           </Box>
           <Box>
             <Box>
-              <Typography variant="h6">Creator royalties</Typography>
+              <Typography variant="h6">Creator royalties(%)</Typography>
               {/* eslint-disable-next-line jsx-a11y/accessible-emoji */}
               <Typography variant="caption" sx={{ color: 'wheat' }}>
                 Profit gotten by nft creator when it's sold!
