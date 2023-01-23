@@ -6,7 +6,7 @@ import ValidatorLayout from '../pages/[validator_program_id]';
 import ValidatorNFTs from '../pages/[validator_program_id]/nfts';
 import Rewards from '../pages/[validator_program_id]/rewards/index';
 import ValidatorStats from '../pages/[validator_program_id]/validatorStats';
-import Dao from '../pages/[vote_account_id]/dao';
+import Dao from '../pages/[validator_program_id]/dao';
 
 export const routes = [
   { path: '/', element:  <Navigate to="/validators" /> },
