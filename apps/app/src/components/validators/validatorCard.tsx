@@ -1,5 +1,6 @@
 import { Skeleton } from '@mui/material';
 import { Box } from '@mui/system';
+import { BN } from 'bn.js';
 import { useNavigate } from 'react-router';
 import { Validator } from '../../interfaces';
 import theme from '../../theme/theme';
@@ -21,6 +22,7 @@ export default function ValidatorCard({
   validator: Validator;
   searchValue: string;
 }) {
+  console.log(tr_stake)
   const navigate = useNavigate();
   return (
     <Box
@@ -70,7 +72,7 @@ export default function ValidatorCard({
         >
           <ValidatorCardContent
             title="Total stake requested"
-            value={`${tr_stake.divn(10_000_000_000)} SOL`}
+            value={`${new BN(tr_stake).div(new BN(10_000_000_000))} SOL`}
           />
           <ValidatorCardContent title="APY" value={`${apy}%`} />
         </Box>

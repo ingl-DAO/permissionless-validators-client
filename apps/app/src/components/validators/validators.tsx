@@ -25,40 +25,40 @@ export default function AllValidators({
   );
 
   const loadValidators = () => {
-    // setAreValidatorsLoading(true);
-    // const notif = new useNotification();
-    // if (validatorsNotif) {
-    //   validatorsNotif.dismiss();
-    // }
-    // setValidatorsNotif(notif);
+    setAreValidatorsLoading(true);
+    const notif = new useNotification();
+    if (validatorsNotif) {
+      validatorsNotif.dismiss();
+    }
+    setValidatorsNotif(notif);
     // notif.notify({
     //   render: 'Loading validators...',
     // });
-    // validatorService
-    //   .loadValidators()
-    //   .then((validators) => {
-    //     setValidators(validators);
-    //     setAreValidatorsLoading(false);
-    //     notif.dismiss();
-    //     setValidatorsNotif(undefined);
-    //   })
-    //   .catch((error) => {
-    //     notif.update({
-    //       type: 'ERROR',
-    //       render: (
-    //         <ErrorMessage
-    //           retryFunction={loadValidators}
-    //           notification={notif}
-    //           message={
-    //             error?.message ||
-    //             'There was an error loading validators. please retry!!!'
-    //           }
-    //         />
-    //       ),
-    //       autoClose: false,
-    //       icon: () => <ReportRounded fontSize="medium" color="error" />,
-    //     });
-    //   });
+    validatorService
+      .loadValidators()
+      .then((validators) => {
+        setValidators(validators);
+        setAreValidatorsLoading(false);
+        notif.dismiss();
+        setValidatorsNotif(undefined);
+      })
+      .catch((error) => {
+        notif.update({
+          type: 'ERROR',
+          render: (
+            <ErrorMessage
+              retryFunction={loadValidators}
+              notification={notif}
+              message={
+                error?.message ||
+                'There was an error loading validators. please retry!!!'
+              }
+            />
+          ),
+          autoClose: false,
+          icon: () => <ReportRounded fontSize="medium" color="error" />,
+        });
+      });
   };
 
   const [displayValidators, setDisplayValidators] = useState<Validator[]>([]);

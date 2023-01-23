@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
+import CopyTransactionId from '../../../common/components/copyTransactionId';
 import Scrollbars from 'rc-scrollbars';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
@@ -54,9 +55,9 @@ export default function Rewards() {
       rewardNotif.dismiss();
     }
     setRewardNotif(notif);
-    notif.notify({
-      render: 'Loading rewards...',
-    });
+    // notif.notify({
+    //   render: 'Loading rewards...',
+    // });
     nftService
       ?.loadRewards()
       .then((rewards) => {
@@ -108,7 +109,7 @@ export default function Rewards() {
         actionnedNfts.map((address) => new PublicKey(address)),
         totalRewards
       )
-      .then(() => {
+      .then((signature) => {
         setRewards(
           rewards.map((reward) => {
             const { nft_mint_id: nft_pubkey } = reward;
@@ -118,7 +119,12 @@ export default function Rewards() {
           })
         );
         notif.update({
-          render: 'Claimed rewards successfully',
+          render: (
+            <CopyTransactionId
+              transaction_id={signature}
+              message="Claimed rewards successfully"
+            />
+          ),
         });
         setRewardNotif(undefined);
       })

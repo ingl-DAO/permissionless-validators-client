@@ -1,5 +1,5 @@
 import { ContentCopyRounded } from '@mui/icons-material';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 export default function CopyTransactionId({
   transaction_id,
@@ -22,23 +22,17 @@ export default function CopyTransactionId({
         <Typography variant="body2">{message}</Typography>
         <Typography variant="caption">{transaction_id}</Typography>
       </Box>
-      <Button
-        color="primary"
-        variant="contained"
-        size="small"
-        endIcon={
-          <ContentCopyRounded
-            fontSize="small"
-            sx={{
-              color: 'white',
-              '&:hover': { color: `#EF233C` },
-              justifySelf: 'start',
-              cursor: 'pointer',
-            }}
-          />
-        }
-        onClick={() => navigator.clipboard.writeText(transaction_id)}
-      />
+      <label onClick={() => navigator.clipboard.writeText(transaction_id)}>
+        <ContentCopyRounded
+          fontSize="small"
+          sx={{
+            color: 'white',
+            '&:hover': { color: `#EF233C` },
+            justifySelf: 'start',
+            cursor: 'pointer',
+          }}
+        />
+      </label>
     </Box>
   );
 }
