@@ -109,14 +109,14 @@ export default function CollectionInformation({
     const nfts: JsonNft[] = [];
 
     for (let index = 0; index < rarity_names.length; index++) {
-      for (let i = 0; i < uris[index].length; i++) {
-        const uriData = await (await fetch(uris[index][i])).json();
+      // for (let i = 0; i < uris[index].length; i++) {
+        const uriData = await (await fetch(uris[index][0])).json();
         nfts.push({
           image_ref: uriData.image,
           is_delegated: true,
           rarity: rarity_names[index],
         });
-      }
+      // }
     }
     return nfts;
   };
