@@ -105,11 +105,15 @@ export class ValidatorService {
     if (!voteAccountInfo) {
       console.log('Error: Vote account info is null');
     }
-    console.log(validatorConfigAccountData.default_uri);
+    const { uri, json, jsonLoaded } = collectionMetadata;
+    let jsonData = json;
+    if (!jsonLoaded) {
+      jsonData = await (await fetch(uri)).json();
+    }
     const result: InglValidator = {
       collection_id: collectionkey.toString(),
       // eslint-disable-next-line no-constant-condition
-      collection_uri: validatorConfigAccountData.default_uri,
+      collection_uri: jsonData?.image as string,
       creator_royalties: validatorConfigAccountData.creator_royalties,
       // TODO: determine how to calculate current skip rate
       // current_skip_rate: 0,

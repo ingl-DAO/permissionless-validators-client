@@ -291,8 +291,8 @@ export default function ValidatorStats() {
               sx={{
                 height: 'fit-content',
                 display: 'grid',
-                rowGap: theme.spacing(1),
-                padding: `0 ${theme.spacing(1)} 0 0`,
+                rowGap: theme.spacing(3),
+                padding: `0 ${theme.spacing(3)} 0 0`,
               }}
             >
               <ValidatorCardContent
@@ -329,15 +329,6 @@ export default function ValidatorStats() {
                 }
                 skeleton={areDetailsLoading || !details}
               />
-            </Box>
-            <Box
-              sx={{
-                height: 'fit-content',
-                display: 'grid',
-                rowGap: theme.spacing(1),
-                padding: `0 ${theme.spacing(1)} 0 0`,
-              }}
-            >
               <ValidatorCardContent
                 title="Governance expiration time"
                 value={
@@ -351,6 +342,28 @@ export default function ValidatorStats() {
                 }
                 skeleton={areDetailsLoading || !details}
               />
+              <ValidatorCardContent
+                title="Redemption fee duration"
+                value={
+                  areDetailsLoading || !details
+                    ? ''
+                    : `${formatNumber(details.redemption_fee_duration, {
+                        style: 'unit',
+                        unit: 'day',
+                        unitDisplay: 'short',
+                      })}`
+                }
+                skeleton={areDetailsLoading || !details}
+              />
+            </Box>
+            <Box
+              sx={{
+                height: 'fit-content',
+                display: 'grid',
+                rowGap: theme.spacing(5),
+                padding: `0 ${theme.spacing(1)} 0 0`,
+              }}
+            >
               <ValidatorCardContent
                 title="Validator share"
                 value={
@@ -375,19 +388,6 @@ export default function ValidatorStats() {
                   areDetailsLoading || !details
                     ? ''
                     : `${details.unit_backing} SOL`
-                }
-                skeleton={areDetailsLoading || !details}
-              />
-              <ValidatorCardContent
-                title="Redemption fee duration"
-                value={
-                  areDetailsLoading || !details
-                    ? ''
-                    : `${formatNumber(details.redemption_fee_duration, {
-                        style: 'unit',
-                        unit: 'day',
-                        unitDisplay: 'short',
-                      })}`
                 }
                 skeleton={areDetailsLoading || !details}
               />

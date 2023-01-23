@@ -1,7 +1,7 @@
 import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { Keypair, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -9,13 +9,13 @@ import ErrorMessage from '../../common/components/ErrorMessage';
 import useNotification from '../../common/utils/notification';
 import CollectionInformation from '../../components/register-validator/collectionInformation';
 import DaoInformation, {
-  DaoInfo,
+  DaoInfo
 } from '../../components/register-validator/daoInformation';
 import ValidatorInformation, {
-  ValidatorInfo,
+  ValidatorInfo
 } from '../../components/register-validator/validatorInformation';
 import VoteAccountInformation, {
-  VoteAccountInfo,
+  VoteAccountInfo
 } from '../../components/register-validator/voteAccountInformation';
 import { CollectionJson, ValidatorRegistration } from '../../interfaces';
 import { RegistryService } from '../../services/registry.service';
@@ -135,7 +135,6 @@ export default function Register() {
 
   const [validatorNotif, setValidatorNotif] = useState<useNotification>();
 
-  console.log(Keypair.generate().publicKey.toBase58())
   function createValidator(
     validatorId: string,
     validator: ValidatorRegistration
@@ -149,8 +148,7 @@ export default function Register() {
     });
     registryService
       .registerProgram(
-        programId ??
-          new PublicKey('52xjVDELdiFhu9AdHJZ7kfyYBtjgoffcxifxBPaDp2Pe'),
+        programId as PublicKey,
         new PublicKey(validatorId),
         validator
       )
