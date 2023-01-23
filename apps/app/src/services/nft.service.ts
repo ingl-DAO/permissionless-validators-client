@@ -21,6 +21,8 @@ import {
   Redeem,
   UnDelegateNFT,
   URIS_ACCOUNT_SEED,
+  ValidatorConfig,
+  VoteReward,
   VOTE_ACCOUNT_KEY,
 } from '@ingl-permissionless/state';
 import {
@@ -48,6 +50,7 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
+  LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import { InglNft, NftReward } from '../interfaces';
@@ -691,10 +694,11 @@ export class NftService {
     }
   }
 
-  async claimRewards(tokenMints: PublicKey[]) {
+  async claimRewards(tokenMints: PublicKey[], expectedRewards: number) {
     const payerPubkey = this.walletContext.publicKey;
     if (!payerPubkey) throw new WalletNotConnectedError();
 
+    if (expectedRewards === 0) throw new Error('No rewards to claim');
     const payerAccount: AccountMeta = {
       pubkey: payerPubkey as PublicKey,
       isSigner: true,
@@ -709,6 +713,12 @@ export class NftService {
 
     const generalAccount: AccountMeta = {
       pubkey: this.generalAccountPDA[0],
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const validatorConfigAccount: AccountMeta = {
+      pubkey: this.configAccountPDA[0],
       isSigner: false,
       isWritable: true,
     };
@@ -752,6 +762,7 @@ export class NftService {
         payerAccount,
         voteAccount,
         generalAccount,
+        validatorConfigAccount,
         authorizedWithdrawerAccount,
         //cntAccounts
         ...cntAccounts,
@@ -929,26 +940,41 @@ export class NftService {
   async loadRewards() {
     const metaplex = new Metaplex(this.connection);
     const metaplexNft = metaplex.nfts();
-    const payerPubkey = this.walletContext.publicKey;
-    if (!payerPubkey) throw new WalletNotConnectedError();
+    const payerPubkey = this.walletContext.publicKey as PublicKey;
+
     try {
-      let ownerNfts = await metaplexNft.findAllByOwner({ owner: payerPubkey });
-      ownerNfts = ownerNfts.filter(
-        ({ collection }) =>
-          collection?.address.toBase58() ===
-          this.collectionEditionPDA[0].toBase58()
-      );
-      const generalAccountInfo = await this.connection.getAccountInfo(
-        this.generalAccountPDA[0]
-      );
-      if (!generalAccountInfo)
+      let ownerNfts = await metaplexNft.findAllByOwner({
+        owner: payerPubkey,
+      });
+      const nftsOwnByProgram = [];
+
+      for (let i = 0; i < ownerNfts.length; i++) {
+        const ownerNft = ownerNfts[i] as Metadata;
+        const nftData = await this.loadNftData(ownerNft.mintAddress, ownerNft);
+        if (nftData) {
+          nftsOwnByProgram.push(ownerNft);
+        }
+      }
+
+      ownerNfts = nftsOwnByProgram;
+      const [generalAccountInfo, validatorConfigAccountInfo] =
+        await Promise.all([
+          this.connection.getAccountInfo(this.generalAccountPDA[0]),
+          this.connection.getAccountInfo(this.configAccountPDA[0]),
+        ]);
+
+      if (!generalAccountInfo || !validatorConfigAccountInfo)
         throw new Error(
-          'Invalid program id. Could retrieve account info from general account PDA key'
+          'Invalid program id. Could retrieve account info from general account PDA key or validator config account PDA key'
         );
       const { vote_rewards: voteRewards } = deserialize(
         generalAccountInfo.data as Buffer,
         GeneralData,
         { unchecked: true }
+      );
+      const { unit_backing } = deserialize(
+        validatorConfigAccountInfo.data as Buffer,
+        ValidatorConfig
       );
 
       const nftRewards: NftReward[] = [];
@@ -971,34 +997,50 @@ export class NftService {
         } = deserialize(accountInfo?.data as Buffer, NftData, {
           unchecked: true,
         });
+        console.log(last_delegation_epoch, last_withdrawal_epoch);
         if (funds_location instanceof Delegated) {
-          const comp = last_delegation_epoch?.cmp(
-            (last_withdrawal_epoch ?? 0) as BN
-          );
+          const comp = (left?: BN, right?: BN) => {
+            const temp_left = Number(left?.toString(10));
+            const temp_right = Number(right?.toString(10));
+            if (left == null) {
+              return 0;
+            } else if (right == null) {
+              return 1;
+            } else if (temp_left > temp_right) {
+              return 1;
+            } else {
+              return 0;
+            }
+          };
+
           const interestedEpoch =
-            comp === 0
+            comp(last_delegation_epoch, last_withdrawal_epoch) === 1
               ? last_delegation_epoch
-              : comp === -1
-              ? last_withdrawal_epoch
-              : last_delegation_epoch;
+              : last_withdrawal_epoch;
+
           const interestedIndex = voteRewards.findIndex(
-            ({ epoch_number }) => epoch_number.cmp(interestedEpoch as BN) !== -1
+            ({ epoch_number }) => comp(epoch_number, interestedEpoch) === 1
           );
           if (interestedIndex !== -1) {
-            const totalRewards: BN = voteRewards
+            const totalRewards: number = voteRewards
               .slice(interestedIndex)
               .reduce((total, { total_stake, nft_holders_reward }, i) => {
-                return total.add(nft_holders_reward.div(total_stake));
-              }, new BN(0));
+                return (
+                  total +
+                  Number(new BN(unit_backing).toString(10)) *
+                    (Number(nft_holders_reward.toString(10)) /
+                      Number(total_stake.toString(10)))
+                );
+              }, 0);
             nftRewards.push({
-              rewards: totalRewards,
+              rewards: totalRewards / LAMPORTS_PER_SOL,
               numeration: numeration,
               image_ref: jsonData?.image as string,
               nft_mint_id: mintAddress.toString(),
             });
           } else {
             nftRewards.push({
-              rewards: new BN(0),
+              rewards: 0,
               numeration: numeration,
               image_ref: jsonData?.image as string,
               nft_mint_id: mintAddress.toString(),

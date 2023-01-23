@@ -39,6 +39,9 @@ export const forwardLegacyTransaction = async (
   }
   transaction.add(...instructions).feePayer = payerKey as PublicKey;
 
+  const blockhashObj = await connection.getLatestBlockhash();
+  transaction.recentBlockhash = blockhashObj.blockhash;
+
   if (signingKeypairs && signingKeypairs.length > 0)
     transaction.sign(...signingKeypairs);
 
@@ -46,8 +49,6 @@ export const forwardLegacyTransaction = async (
     ? await signTransaction(transaction)
     : null;
 
-  const blockhashObj = await connection.getLatestBlockhash();
-  transaction.recentBlockhash = blockhashObj.blockhash;
   const signature = await connection.sendRawTransaction(
     (signedTransaction as Transaction).serialize()
   );

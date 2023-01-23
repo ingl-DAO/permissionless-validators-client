@@ -63,6 +63,7 @@ export default function Rewards() {
         setRewardNotif(undefined);
       })
       .catch((error) => {
+        console.log('Error here', error);
         notif.update({
           type: 'ERROR',
           render: (
@@ -82,7 +83,7 @@ export default function Rewards() {
   };
 
   useEffect(() => {
-    if (nftService) loadRewards();
+    if (walletContext.connected && nftService) loadRewards();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nftService]);
 
@@ -96,14 +97,20 @@ export default function Rewards() {
     notif.notify({
       render: 'Claiming rewards...',
     });
+    const totalRewards = Number(
+      rewards.reduce((total, { rewards }) => total + rewards, 0).toString(10)
+    );
     nftService
-      ?.claimRewards(actionnedNfts.map((address) => new PublicKey(address)))
+      ?.claimRewards(
+        actionnedNfts.map((address) => new PublicKey(address)),
+        totalRewards
+      )
       .then(() => {
         setRewards(
           rewards.map((reward) => {
             const { nft_mint_id: nft_pubkey } = reward;
             if (actionnedNfts.includes(nft_pubkey))
-              return { ...reward, reward: 0 };
+              return { ...reward, rewards: 0 };
             return reward;
           })
         );
@@ -180,8 +187,8 @@ export default function Rewards() {
               component="span"
               sx={{ color: theme.palette.primary.main }}
             >{`${rewards
-              .reduce((total, { rewards }) => total.add(rewards), new BN(0))
-              .toString(10)} L`}</Typography>
+              .reduce((total, { rewards }) => total + rewards, 0)
+              .toString(10)} SOL`}</Typography>
           </Typography>
         </Box>
         <Scrollbars autoHide>
@@ -211,7 +218,10 @@ export default function Rewards() {
                       if (rewards.length > 0)
                         if (selectedRewards.length === rewards.length)
                           setSelectedRewards([]);
-                        else setSelectedRewards(rewards);
+                        else
+                          setSelectedRewards(
+                            rewards.filter((r) => r.rewards > 0)
+                          );
                     }}
                   />
                 </TableCell>
