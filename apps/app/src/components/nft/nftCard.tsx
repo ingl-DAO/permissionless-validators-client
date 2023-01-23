@@ -7,7 +7,7 @@ import {
   Menu,
   MenuItem,
   Tooltip,
-  Typography
+  Typography,
 } from '@mui/material';
 import { useState } from 'react';
 import { InglNft } from '../../interfaces';
@@ -352,7 +352,7 @@ export default function NftCard({
                 textAlign: 'center',
               }}
             >
-              {rarity}
+              {rarity ?? 'Not yet revealed'}
             </Typography>
           </Box>
         </Box>

@@ -1,4 +1,4 @@
-import { field, vec } from '@dao-xyz/borsh';
+import { field, vec, variant } from '@dao-xyz/borsh';
 import { GovernanceType } from './gov-type';
 
 export * from './helpers';
@@ -151,6 +151,7 @@ export class CreateVoteAccount extends Instruction {
     super({ log_level, instruction: 12 });
   }
 }
+@variant(13)
 export class InitGovernance {
   @field({ type: 'u8' })
   public instruction!: number;
@@ -173,6 +174,7 @@ export class InitGovernance {
   }
 }
 
+@variant(14)
 export class VoteGovernance {
   @field({ type: 'u8' })
   public instruction!: number;
@@ -195,6 +197,7 @@ export class VoteGovernance {
   }
 }
 
+@variant(15)
 export class FinalizeGovernance {
   @field({ type: 'u8' })
   public instruction!: number;
@@ -211,6 +214,7 @@ export class FinalizeGovernance {
   }
 }
 
+@variant(16)
 export class ExecuteGovernance {
   @field({ type: 'u8' })
   public instruction!: number;

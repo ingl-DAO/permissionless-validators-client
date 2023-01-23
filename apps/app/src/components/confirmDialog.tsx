@@ -37,7 +37,7 @@ export default function ConfirmDialog({
         },
       }}
     >
-      <DialogTitle>{dialogTitle}</DialogTitle>
+      <DialogTitle sx={{ fontSize: '28px' }}>{dialogTitle}</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ color: '#ffffff99' }}>
           {dialogMessage}

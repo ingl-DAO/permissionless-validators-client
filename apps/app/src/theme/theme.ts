@@ -119,7 +119,7 @@ const theme = createTheme({
     label: LINE,
     body: '#FFFFFF',
     titleActive: PRIMARY,
-    dialogBackground: '#283452',
+    dialogBackground: '#1C1C28',
   },
   typography: {
     fontFamily: ['Space Grotesk', 'Poppins', 'Roboto', 'serif'].join(','),

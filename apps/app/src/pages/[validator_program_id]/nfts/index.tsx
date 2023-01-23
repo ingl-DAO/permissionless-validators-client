@@ -16,21 +16,17 @@ import theme from '../../../theme/theme';
 export default function ValidatorNFTs() {
   const walletContext = useWallet();
   const { connection } = useConnection();
-  const { validator_program_id } = useParams();
+  const { program_id } = useParams();
 
   const [isConfirmMintDialogOpen, setIsConfirmMintDialogOpen] =
     useState<boolean>(false);
 
   const nftService = useMemo(
     () =>
-      validator_program_id
-        ? new NftService(
-            new PublicKey(validator_program_id),
-            connection,
-            walletContext,
-          )
+      program_id
+        ? new NftService(new PublicKey(program_id), walletContext, connection)
         : null,
-    [connection, validator_program_id, walletContext]
+    [connection, program_id, walletContext]
   );
   const [nfts, setNfts] = useState<InglNft[]>([]);
 
@@ -205,7 +201,7 @@ export default function ValidatorNFTs() {
         setNfts(
           nfts.map((nft) => {
             const { numeration: n } = nft;
-            if (n !== actionnedNft.numeration)
+            if (n === actionnedNft.numeration)
               return { ...nft, is_delegated: true };
             return nft;
           })
@@ -252,7 +248,7 @@ export default function ValidatorNFTs() {
         setNfts(
           nfts.map((nft) => {
             const { numeration: n } = nft;
-            if (n !== actionnedNft.numeration)
+            if (n === actionnedNft.numeration)
               return { ...nft, is_delegated: false };
             return nft;
           })
@@ -343,7 +339,7 @@ export default function ValidatorNFTs() {
               "You are about to reveal your NFT's rarity. Click confirm to continue!"
             }
             isDialogOpen={isConfirmRevealRarityDialogOpen}
-            dialogTitle={'Confirm NFT Rarity'}
+            dialogTitle={'Confirm NFT Rarity Revelation'}
             confirmButton="Reveal"
             confirm={() => (actionnedNft ? revealRarity(actionnedNft) : null)}
           />

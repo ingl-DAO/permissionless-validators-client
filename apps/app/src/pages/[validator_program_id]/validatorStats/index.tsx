@@ -1,66 +1,53 @@
 import { GitHub, ReportRounded, Twitter } from '@mui/icons-material';
 import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
 import { InglValidator } from '../../../interfaces';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ValidatorCardContent from '../../../components/validators/validatorCardContent';
 import theme from '../../../theme/theme';
 import StatCard from '../../../components/stats/statCard';
-import BN from 'bn.js';
 import { useIntl } from 'react-intl';
 import useNotification from '../../../common/utils/notification';
 import { useParams } from 'react-router';
 import ErrorMessage from '../../../common/components/ErrorMessage';
+import { ValidatorService } from '../../../services/validator.service';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 
 export default function ValidatorStats() {
+  const wallet = useWallet();
+  const { connection } = useConnection();
+
   const [areDetailsLoading, setAreDetailsLoading] = useState<boolean>(false);
   const [details, setDetails] = useState<InglValidator>();
   const [detailNotif, setDetailNotif] = useState<useNotification>();
-  const { validator_program_id } = useParams();
+  const { program_id } = useParams();
 
-  const loadDetails = (validator_program_id: string) => {
+  const validatorService = useMemo(
+    () =>
+      program_id
+        ? new ValidatorService(new PublicKey(program_id), wallet, connection)
+        : null,
+    [connection, program_id, wallet]
+  );
+
+  const loadDetails = async () => {
     setAreDetailsLoading(true);
     const notif = new useNotification();
     if (detailNotif) {
       detailNotif.dismiss();
     }
     setDetailNotif(notif);
-    setTimeout(() => {
-      //TODO: call api here to load validator details with data vote_account_id
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
-        const newDetails: InglValidator = {
-          collection_id: 'sioe',
-          collection_uri:
-            'https://img.bitscoins.net/v7/www.bitscoins.net/wp-content/uploads/2021/06/NFT-Marketplace-Rarible-Raises-Over-14-Million-Plans-to-Launch.jpg',
-          creator_royalties: 2,
-          current_skip_rate: 1.2,
-          default_uri: 'iwoel',
-          governance_expiration_time: 2323,
-          init_commission: 2,
-          initial_redemption_fee: 100,
-          is_validator_id_switchable: false,
-          nft_holders_share: 2,
-          proposal_quorum: 2,
-          redemption_fee_duration: 2,
-          total_delegated_count: 2,
-          max_primary_stake: new BN(2),
-          total_secondary_stake: new BN(2),
-          unit_backing: new BN(2),
-          validator_apy: 1.2,
-          validator_id: 'wiel',
-          validator_name: 'Laine.Sol',
-          vote_account_id: 'soeis',
-          website: 'https://somewhere.com',
-          discord_invite: 'https://discord.gg/9KWvjKV3Ed',
-          twitter_handle: 'https://twitter.com/ingldao',
-          total_minted_count: 50,
-          total_delegated_stake: new BN(50),
-        };
-        setDetails(newDetails);
+
+    validatorService
+      ?.loadValidatorStats()
+      .then((validatorInfo) => {
+        setDetails(validatorInfo);
         setAreDetailsLoading(false);
         notif.dismiss();
         setDetailNotif(undefined);
-      } else {
+      })
+      .catch((err) => {
+        console.log(err);
         notif.notify({
           render: 'Loading validator details...',
         });
@@ -68,7 +55,7 @@ export default function ValidatorStats() {
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => loadDetails(validator_program_id)}
+              retryFunction={() => loadDetails()}
               notification={notif}
               //TODO: message should come from backend
               message="There was an error loading validator details. please retry!!!"
@@ -77,14 +64,13 @@ export default function ValidatorStats() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   };
 
   const { formatNumber } = useIntl();
 
   useEffect(() => {
-    loadDetails(validator_program_id as string);
+    loadDetails();
     return () => {
       //TODO: CLEANUP fetch above
     };
@@ -178,12 +164,12 @@ export default function ValidatorStats() {
               value={
                 areDetailsLoading || !details
                   ? ''
-                  : `${details.init_commission}`
+                  : `${details.init_commission} %`
               }
               title="Vote account commission"
               skeleton={areDetailsLoading || !details}
             />
-            <ValidatorCardContent
+            {/* <ValidatorCardContent
               value={
                 areDetailsLoading || !details
                   ? ''
@@ -191,10 +177,12 @@ export default function ValidatorStats() {
               }
               title="Current skip rate"
               skeleton={areDetailsLoading || !details}
-            />
+            /> */}
             <ValidatorCardContent
               value={
-                areDetailsLoading || !details ? '' : `${details.validator_apy}`
+                areDetailsLoading || !details
+                  ? ''
+                  : `${details.validator_apy} %`
               }
               title="Validator APY"
               skeleton={areDetailsLoading || !details}
@@ -232,7 +220,7 @@ export default function ValidatorStats() {
                   </Typography>
                   <Typography
                     component="a"
-                    href={details.twitter_handle}
+                    href={'https://twitter.com/' + details.twitter_handle}
                     rel="noreferrer"
                     sx={{ display: 'grid', alignItems: 'center' }}
                   >
@@ -273,7 +261,7 @@ export default function ValidatorStats() {
               skeleton={areDetailsLoading || !details}
             />
             <StatCard
-              title_1="Total delegated stake"
+              title_1="Total delegated stake(SOL)"
               upper={
                 areDetailsLoading || !details
                   ? 0
@@ -282,11 +270,11 @@ export default function ValidatorStats() {
               bottom={
                 areDetailsLoading || !details ? 0 : details.max_primary_stake
               }
-              title_2="Total stake requested"
+              title_2="Total stake requested(SOL)"
               skeleton={areDetailsLoading || !details}
             />
             <StatCard
-              title_1="Total secondary stake"
+              title_1="Total secondary stake(SOL)"
               upper={
                 areDetailsLoading || !details
                   ? 0
@@ -340,7 +328,7 @@ export default function ValidatorStats() {
                 value={
                   areDetailsLoading || !details
                     ? ''
-                    : `${details.initial_redemption_fee} SOL`
+                    : `${details.initial_redemption_fee} %`
                 }
                 skeleton={areDetailsLoading || !details}
               />
@@ -360,7 +348,7 @@ export default function ValidatorStats() {
                     ? ''
                     : `${formatNumber(details.governance_expiration_time, {
                         style: 'unit',
-                        unit: 'second',
+                        unit: 'hour',
                         unitDisplay: 'short',
                       })}`
                 }
@@ -402,7 +390,7 @@ export default function ValidatorStats() {
                         style: 'unit',
                         unit: 'day',
                         unitDisplay: 'short',
-                      })} SOL`
+                      })}`
                 }
                 skeleton={areDetailsLoading || !details}
               />

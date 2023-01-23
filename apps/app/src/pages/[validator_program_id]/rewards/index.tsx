@@ -25,12 +25,12 @@ import ConfirmDialog from '../../../components/confirmDialog';
 import { NftReward } from '../../../interfaces';
 import { NftService } from '../../../services/nft.service';
 import theme from '../../../theme/theme';
-import RewardLane from './rewardLane';
+import RewardLine from './rewardLine';
 
 export default function Rewards() {
   const walletContext = useWallet();
   const { connection } = useConnection();
-  const { validator_program_id } = useParams();
+  const { program_id } = useParams();
 
   const [areRewardsLoading, setAreRewardsLoading] = useState<boolean>(false);
   const [rewardNotif, setRewardNotif] = useState<useNotification>();
@@ -38,14 +38,10 @@ export default function Rewards() {
 
   const nftService = useMemo(
     () =>
-      validator_program_id
-        ? new NftService(
-            new PublicKey(validator_program_id),
-            connection,
-            walletContext
-          )
+      program_id
+        ? new NftService(new PublicKey(program_id), walletContext, connection)
         : null,
-    [connection, validator_program_id, walletContext]
+    [connection, program_id, walletContext]
   );
 
   const loadRewards = () => {
@@ -244,7 +240,7 @@ export default function Rewards() {
                 />
               ) : (
                 rewards.map((reward, index) => (
-                  <RewardLane
+                  <RewardLine
                     key={index}
                     reward={reward}
                     isChecked={Boolean(
