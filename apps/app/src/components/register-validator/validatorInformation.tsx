@@ -76,10 +76,10 @@ export default function ValidatorInformation({
 
   const validationSchema = Yup.object().shape({
     validator_id: Yup.string().required('required'),
-    validator_name: Yup.string().required('required'),
-    discord_invite: Yup.string().required('required'),
+    validator_name: Yup.string().required('required').max(32),
+    discord_invite: Yup.string().required('required').max(32),
     twitter_handle: Yup.string().required('required'),
-    website: Yup.string().required('required'),
+    website: Yup.string().required('required').max(64),
   });
 
   const formik = useFormik({

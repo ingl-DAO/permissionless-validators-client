@@ -70,7 +70,7 @@ export default function ValidatorCard({
         >
           <ValidatorCardContent
             title="Total stake requested"
-            value={`${tr_stake} SOL`}
+            value={`${tr_stake.divn(10_000_000_000)} SOL`}
           />
           <ValidatorCardContent title="APY" value={`${apy}%`} />
         </Box>
