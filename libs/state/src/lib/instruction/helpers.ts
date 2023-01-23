@@ -51,10 +51,10 @@ export const forwardLegacyTransaction = async (
   const signature = await connection.sendRawTransaction(
     (signedTransaction as Transaction).serialize()
   );
-  // await connection.confirmTransaction({
-  //   signature,
-  //   ...blockhashObj,
-  // });
+  await connection.confirmTransaction({
+    signature,
+    ...blockhashObj,
+  });
   return signature;
 };
 
