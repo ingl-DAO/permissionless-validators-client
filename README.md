@@ -1,5 +1,5 @@
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-2-blue.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-4-blue.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Technologies Used
@@ -26,9 +26,9 @@
 ```
 git clone https://github.com/ingl-dao/permissionless-validators-client.git
 npm install
-<!-- create a .env file following the .env.skeleton -->
 npx nx serve app
 ```
+<!-- create a .env file following the .env.skeleton -->
 
 # Docker
 
@@ -39,9 +39,9 @@ After executing the steps below, you'll access:
 ```bash
 git clone https://github.com/ingl-dao/permissionless-validators-client.git
 cd permissionless-validators-client
-# create a .env file following the .env.skeleton
 docker-compose up --build --env-file ./.env
 ```
+<!-- create a .env file following the .env.skeleton -->
 
 
 # Wanna join the team?
