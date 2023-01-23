@@ -1,36 +1,32 @@
 import { GitHub, ReportRounded, Twitter } from '@mui/icons-material';
 import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
-import { InglValidator } from '../../../interfaces';
+import { useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import { useEffect, useMemo, useState } from 'react';
-import ValidatorCardContent from '../../../components/validators/validatorCardContent';
-import theme from '../../../theme/theme';
-import StatCard from '../../../components/stats/statCard';
 import { useIntl } from 'react-intl';
-import useNotification from '../../../common/utils/notification';
 import { useParams } from 'react-router';
 import ErrorMessage from '../../../common/components/ErrorMessage';
+import useNotification from '../../../common/utils/notification';
+import StatCard from '../../../components/stats/statCard';
+import ValidatorCardContent from '../../../components/validators/validatorCardContent';
+import { InglValidator } from '../../../interfaces';
 import { ValidatorService } from '../../../services/validator.service';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
+import theme from '../../../theme/theme';
 
 export default function ValidatorStats() {
-  const wallet = useWallet();
-  const { connection } = useConnection();
+  const { validator_program_id } = useParams();
 
   const [areDetailsLoading, setAreDetailsLoading] = useState<boolean>(false);
   const [details, setDetails] = useState<InglValidator>();
   const [detailNotif, setDetailNotif] = useState<useNotification>();
-  const { program_id } = useParams();
 
+  const { connection } = useConnection();
   const validatorService = useMemo(
-    () =>
-      program_id
-        ? new ValidatorService(new PublicKey(program_id), wallet, connection)
-        : null,
-    [connection, program_id, wallet]
+    () => new ValidatorService(connection),
+    [connection]
   );
 
-  const loadDetails = async () => {
+  const loadDetails = async (validator_program_id: string) => {
     setAreDetailsLoading(true);
     const notif = new useNotification();
     if (detailNotif) {
@@ -39,15 +35,14 @@ export default function ValidatorStats() {
     setDetailNotif(notif);
 
     validatorService
-      ?.loadValidatorStats()
+      .loadValidatorStats(new PublicKey(validator_program_id))
       .then((validatorInfo) => {
         setDetails(validatorInfo);
         setAreDetailsLoading(false);
         notif.dismiss();
         setDetailNotif(undefined);
       })
-      .catch((err) => {
-        console.log(err);
+      .catch((error) => {
         notif.notify({
           render: 'Loading validator details...',
         });
@@ -55,10 +50,12 @@ export default function ValidatorStats() {
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => loadDetails()}
+              retryFunction={() => loadDetails(validator_program_id)}
               notification={notif}
-              //TODO: message should come from backend
-              message="There was an error loading validator details. please retry!!!"
+              message={
+                error?.message ||
+                'There was an error loading validator details. please retry!!!'
+              }
             />
           ),
           autoClose: false,
@@ -70,12 +67,12 @@ export default function ValidatorStats() {
   const { formatNumber } = useIntl();
 
   useEffect(() => {
-    loadDetails();
+    if (validator_program_id) loadDetails(validator_program_id);
     return () => {
       //TODO: CLEANUP fetch above
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [validator_program_id]);
 
   return (
     <Box

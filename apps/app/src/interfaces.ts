@@ -6,7 +6,7 @@ export interface Validator {
   validator_website: string;
   vote_account_id: string;
   nft_share: number;
-  total_requested_stake: number;
+  total_requested_stake: BN;
   apy: number;
   image_ref: string;
 }
@@ -63,7 +63,7 @@ export interface InglValidator
   total_secondary_stake: BN; // in lamports (big number)
 }
 // the JSON file format is as followed:
-export interface NftJSON {
+export interface CollectionJson {
   collection_uri: string;
   rarity_names: string[];
   rarities: number[];
