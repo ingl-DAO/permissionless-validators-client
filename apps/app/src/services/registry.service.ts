@@ -1,15 +1,19 @@
-import { serialize } from '@dao-xyz/borsh';
+import { deserialize, serialize } from '@dao-xyz/borsh';
 import {
   COLLECTION_HOLDER_KEY,
+  Config,
   forwardLegacyTransaction,
   GENERAL_ACCOUNT_SEED,
   INGL_CONFIG_SEED,
   INGL_MINT_AUTHORITY_KEY,
   INGL_NFT_COLLECTION_KEY,
   INGL_REGISTRY_PROGRAM_ID,
+  INGL_TEAM_ID,
   Init,
+  MAX_PROGRAMS_PER_STORAGE_ACCOUNT,
   METAPLEX_PROGRAM_ID,
   REGISTRY_PROGRAMS_API_KEY,
+  toBytesInt32,
   URIS_ACCOUNT_SEED,
 } from '@ingl-permissionless/state';
 import {
@@ -42,8 +46,7 @@ export class RegistryService {
         {
           headers: {
             'Content-Type': 'application/json',
-            'api-key':
-              REGISTRY_PROGRAMS_API_KEY,
+            'api-key': REGISTRY_PROGRAMS_API_KEY,
             // 'Access-Control-Request-Headers': '*',
             // 'Access-Control-Allow-Origin': '*'
           },
@@ -87,9 +90,9 @@ export class RegistryService {
       programId
     );
     const configAccount: AccountMeta = {
+      pubkey: inglConfigKey,
       isSigner: false,
       isWritable: true,
-      pubkey: inglConfigKey,
     };
     const [urisAccountKey] = PublicKey.findProgramAddressSync(
       [Buffer.from(URIS_ACCOUNT_SEED)],
@@ -217,6 +220,48 @@ export class RegistryService {
       isSigner: false,
       isWritable: false,
     };
+    const [registryConfigKey] = PublicKey.findProgramAddressSync(
+      [Buffer.from('config')],
+      INGL_REGISTRY_PROGRAM_ID
+    );
+    const registryConfigAccount: AccountMeta = {
+      pubkey: registryConfigKey,
+      isSigner: false,
+      isWritable: true,
+    };
+    const registryAccountInfo = await this.connection.getAccountInfo(
+      registryConfigKey
+    );
+    if (!registryAccountInfo)
+      throw Error('Vlidator registration not possible yet.');
+    const { validation_number } = deserialize(registryAccountInfo.data, Config);
+    const storageNumeration = Math.floor(
+      validation_number / MAX_PROGRAMS_PER_STORAGE_ACCOUNT
+    );
+    console.log({ storageNumeration }, 
+      )
+    const [storageKey] = PublicKey.findProgramAddressSync(
+      [Buffer.from('storage'), toBytesInt32(storageNumeration)],
+      INGL_REGISTRY_PROGRAM_ID
+    );
+    const storageAccount: AccountMeta = {
+      pubkey: storageKey,
+      isSigner: false,
+      isWritable: true
+    }
+
+    const teamAccount: AccountMeta = {
+      pubkey: INGL_TEAM_ID,
+      isSigner: false,
+      isWritable: true
+    }
+
+    const programAccount: AccountMeta = {
+      pubkey: programId,
+      isSigner: false,
+      isWritable: false
+    }
+
     const log_level = 0;
     const initProgramPayload = new Init({
       ...registrationData,
@@ -251,6 +296,11 @@ export class RegistryService {
         collectionEditionAccount,
         splTokenProgramAccount,
         systemProgramAccount,
+        registryConfigAccount,
+        programAccount,
+        teamAccount,
+        storageAccount,
+
 
         systemProgramAccount,
         splTokenProgramAccount,
@@ -266,7 +316,10 @@ export class RegistryService {
         400_000
       );
     } catch (error) {
-      throw new Error('Nft Minting transaction failed with error ' + error);
+      throw new Error(
+        'Validator program registration failed with the following errors:' +
+          error
+      );
     }
   }
 }

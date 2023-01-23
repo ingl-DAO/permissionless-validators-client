@@ -1,7 +1,7 @@
 import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
+import { Keypair, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -119,12 +119,12 @@ export default function Register() {
       />
     ),
   };
-  const [programId, setProgramId] = useState();
+  const [programId, setProgramId] = useState<PublicKey>();
   useEffect(() => {
     registryService
       .findPrograms()
       .then(({ program: programId }) => {
-        setProgramId(programId);
+        setProgramId(new PublicKey(programId));
       })
       .catch((error) => {
         console.log(error);
@@ -135,6 +135,7 @@ export default function Register() {
 
   const [validatorNotif, setValidatorNotif] = useState<useNotification>();
 
+  console.log(Keypair.generate().publicKey.toBase58())
   function createValidator(
     validatorId: string,
     validator: ValidatorRegistration
@@ -146,7 +147,6 @@ export default function Register() {
     notif.notify({
       render: 'Creating Validator...',
     });
-
     registryService
       .registerProgram(
         programId ??
@@ -155,7 +155,6 @@ export default function Register() {
         validator
       )
       .then((signature) => {
-        setIsCreating(false);
         notif.update({
           render: `Created validator successfully. Signature: ${signature}`,
         });
@@ -169,7 +168,7 @@ export default function Register() {
               retryFunction={() => createValidator(validatorId, validator)}
               notification={notif}
               message={
-                error?.mesage ||
+                error?.message ||
                 'There was an error creating validator. Please try again!!!'
               }
             />
@@ -177,7 +176,8 @@ export default function Register() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      });
+      })
+      .finally(() => setIsCreating(false));
   }
 
   return (
