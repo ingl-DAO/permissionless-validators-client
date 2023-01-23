@@ -70,7 +70,6 @@ export default function ValidatorStats() {
   const { formatNumber } = useIntl();
 
   useEffect(() => {
-    console.log('program_id', program_id);
     loadDetails();
     return () => {
       //TODO: CLEANUP fetch above
@@ -221,7 +220,7 @@ export default function ValidatorStats() {
                   </Typography>
                   <Typography
                     component="a"
-                    href={details.twitter_handle}
+                    href={'https://twitter.com/' + details.twitter_handle}
                     rel="noreferrer"
                     sx={{ display: 'grid', alignItems: 'center' }}
                   >

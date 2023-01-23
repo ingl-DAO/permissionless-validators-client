@@ -1,5 +1,5 @@
 import { field, variant, vec } from '@dao-xyz/borsh';
-import { GovernanceType } from './gov-type';
+// import { GovernanceType } from './gov-type';
 
 export * from './helpers';
 
@@ -164,82 +164,82 @@ export class CreateVoteAccount extends Instruction {
     super({ log_level, instruction: 12 });
   }
 }
-@variant(13)
-export class InitGovernance {
-  @field({ type: 'u8' })
-  public instruction!: number;
+// @variant(13)
+// export class InitGovernance {
+//   @field({ type: 'u8' })
+//   public instruction!: number;
 
-  @field({ type: GovernanceType })
-  public governance_tpe!: GovernanceType;
+//   @field({ type: GovernanceType })
+//   public governance_tpe!: GovernanceType;
 
-  @field({ type: 'string' })
-  public title!: string;
+//   @field({ type: 'string' })
+//   public title!: string;
 
-  @field({ type: 'string' })
-  public description!: string;
+//   @field({ type: 'string' })
+//   public description!: string;
 
-  @field({ type: 'u8' })
-  public log_level!: number;
+//   @field({ type: 'u8' })
+//   public log_level!: number;
 
-  constructor(properties: Omit<InitGovernance, 'instruction'>) {
-    this.instruction = 13;
-    Object.assign(this, properties);
-  }
-}
+//   constructor(properties: Omit<InitGovernance, 'instruction'>) {
+//     this.instruction = 13;
+//     Object.assign(this, properties);
+//   }
+// }
 
-@variant(14)
-export class VoteGovernance {
-  @field({ type: 'u8' })
-  public instruction!: number;
+// @variant(14)
+// export class VoteGovernance {
+//   @field({ type: 'u8' })
+//   public instruction!: number;
 
-  @field({ type: 'u32' })
-  public numeration!: number;
+//   @field({ type: 'u32' })
+//   public numeration!: number;
 
-  @field({ type: 'bool' })
-  public vote!: boolean;
+//   @field({ type: 'bool' })
+//   public vote!: boolean;
 
-  @field({ type: 'u8' })
-  public cnt!: number;
+//   @field({ type: 'u8' })
+//   public cnt!: number;
 
-  @field({ type: 'u8' })
-  public log_level!: number;
+//   @field({ type: 'u8' })
+//   public log_level!: number;
 
-  constructor(properties: Omit<VoteGovernance, 'instruction'>) {
-    this.instruction = 14;
-    Object.assign(this, properties);
-  }
-}
+//   constructor(properties: Omit<VoteGovernance, 'instruction'>) {
+//     this.instruction = 14;
+//     Object.assign(this, properties);
+//   }
+// }
 
-@variant(15)
-export class FinalizeGovernance {
-  @field({ type: 'u8' })
-  public instruction!: number;
+// @variant(15)
+// export class FinalizeGovernance {
+//   @field({ type: 'u8' })
+//   public instruction!: number;
 
-  @field({ type: 'u32' })
-  public numeration!: number;
+//   @field({ type: 'u32' })
+//   public numeration!: number;
 
-  @field({ type: 'u8' })
-  public log_level!: number;
+//   @field({ type: 'u8' })
+//   public log_level!: number;
 
-  constructor(properties: Omit<FinalizeGovernance, 'instruction'>) {
-    this.instruction = 15;
-    Object.assign(this, properties);
-  }
-}
+//   constructor(properties: Omit<FinalizeGovernance, 'instruction'>) {
+//     this.instruction = 15;
+//     Object.assign(this, properties);
+//   }
+// }
 
-@variant(16)
-export class ExecuteGovernance {
-  @field({ type: 'u8' })
-  public instruction!: number;
+// @variant(16)
+// export class ExecuteGovernance {
+//   @field({ type: 'u8' })
+//   public instruction!: number;
 
-  @field({ type: 'u32' })
-  public numeration!: number;
+//   @field({ type: 'u32' })
+//   public numeration!: number;
 
-  @field({ type: 'u8' })
-  public log_level!: number;
+//   @field({ type: 'u8' })
+//   public log_level!: number;
 
-  constructor(properties: Omit<ExecuteGovernance, 'instruction'>) {
-    this.instruction = 16;
-    Object.assign(this, properties);
-  }
-}
+//   constructor(properties: Omit<ExecuteGovernance, 'instruction'>) {
+//     this.instruction = 16;
+//     Object.assign(this, properties);
+//   }
+// }

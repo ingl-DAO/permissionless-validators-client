@@ -12,7 +12,6 @@ import {
   TransactionMessage,
   TransactionSignature,
   VersionedTransaction,
-  VoteAccount,
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import { GeneralData, ValidatorConfig } from '../state';
@@ -51,7 +50,10 @@ export const forwardLegacyTransaction = async (
     signedTransaction as Transaction,
     connection
   );
-  await connection.confirmTransaction({ ...blockhashObj, signature });
+  await connection.confirmTransaction({
+    signature,
+    ...blockhashObj,
+  });
   return signature;
 };
 
@@ -111,9 +113,10 @@ export async function forwardV0Transaction(
   await connection.confirmTransaction(
     {
       ...blockhashObj,
+      abortSignal: void 0,
       signature,
     },
-    options?.commitment || 'confirmed'
+    'confirmed'
   );
   return signature;
 }

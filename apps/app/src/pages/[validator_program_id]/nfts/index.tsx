@@ -199,7 +199,7 @@ export default function ValidatorNFTs() {
         setNfts(
           nfts.map((nft) => {
             const { numeration: n } = nft;
-            if (n !== actionnedNft.numeration)
+            if (n === actionnedNft.numeration)
               return { ...nft, is_delegated: true };
             return nft;
           })
@@ -246,7 +246,7 @@ export default function ValidatorNFTs() {
         setNfts(
           nfts.map((nft) => {
             const { numeration: n } = nft;
-            if (n !== actionnedNft.numeration)
+            if (n === actionnedNft.numeration)
               return { ...nft, is_delegated: false };
             return nft;
           })
@@ -337,7 +337,7 @@ export default function ValidatorNFTs() {
               "You are about to reveal your NFT's rarity. Click confirm to continue!"
             }
             isDialogOpen={isConfirmRevealRarityDialogOpen}
-            dialogTitle={'Confirm NFT Rarity'}
+            dialogTitle={'Confirm NFT Rarity Revelation'}
             confirmButton="Reveal"
             confirm={() => (actionnedNft ? revealRarity(actionnedNft) : null)}
           />
@@ -446,7 +446,10 @@ export default function ValidatorNFTs() {
                     setActionnedNft(nft);
                     setIsConfirmRevealRarityDialogOpen(true);
                   }}
-                  undelegateNft={() => setIsConfirmUndelegateDialogOpen}
+                  undelegateNft={() => {
+                    console.log(true);
+                    setIsConfirmUndelegateDialogOpen(true);
+                  }}
                   setActionnedNft={setActionnedNft}
                   disabled={
                     isRedeeming || isDelegating || isUndelegating || isRevealing

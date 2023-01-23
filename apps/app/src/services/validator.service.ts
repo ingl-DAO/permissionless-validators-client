@@ -1,14 +1,10 @@
 import { deserialize } from '@dao-xyz/borsh';
 import {
-  AUTHORIZED_WITHDRAWER_KEY,
   computeVoteAccountRewardAPY,
   GeneralData,
   GENERAL_ACCOUNT_SEED,
   INGL_CONFIG_SEED,
-  INGL_MINT_AUTHORITY_KEY,
   INGL_NFT_COLLECTION_KEY,
-  PD_POOL_ACCOUNT_KEY,
-  URIS_ACCOUNT_SEED,
   ValidatorConfig,
   VOTE_ACCOUNT_KEY,
 } from '@ingl-permissionless/state';
@@ -40,24 +36,8 @@ export class ValidatorService {
       [Buffer.from(GENERAL_ACCOUNT_SEED)],
       programId
     ),
-    private readonly mintingPoolPDA = PublicKey.findProgramAddressSync(
-      [Buffer.from(PD_POOL_ACCOUNT_KEY)],
-      programId
-    ),
     private readonly voteAccountPDA = PublicKey.findProgramAddressSync(
       [Buffer.from(VOTE_ACCOUNT_KEY)],
-      programId
-    ),
-    private readonly urisAccountPDA = PublicKey.findProgramAddressSync(
-      [Buffer.from(URIS_ACCOUNT_SEED)],
-      programId
-    ),
-    private readonly mintAuthorityPDA = PublicKey.findProgramAddressSync(
-      [Buffer.from(INGL_MINT_AUTHORITY_KEY)],
-      programId
-    ),
-    private readonly authorizedWithdrawerPDA = PublicKey.findProgramAddressSync(
-      [Buffer.from(AUTHORIZED_WITHDRAWER_KEY)],
       programId
     ),
     private readonly collectionPDA = PublicKey.findProgramAddressSync(
@@ -96,7 +76,6 @@ export class ValidatorService {
       console.log('error: ', e);
       throw new Error('Failed to config account info and general account info');
     }
-    // console.log('voteAccountData: ', voteAccountInfo);
     if (
       !validatorConfigAccountInfo ||
       !generalAccountInfo ||
