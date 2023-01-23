@@ -6,7 +6,7 @@ export interface Validator {
   validator_website: string;
   vote_account_id: string;
   nft_share: number;
-  total_requested_stake: number;
+  total_requested_stake: BN;
   apy: number;
   image_ref: string;
 }

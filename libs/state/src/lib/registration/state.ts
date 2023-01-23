@@ -25,14 +25,14 @@ export class Config {
   }
 }
 
-export class Storage {
+export class ProgramStorage {
   @field({ type: 'u32' })
   public validation_phrase!: number;
 
   @field({ type: vec(fixedArray('u8', 32)) })
   public programs!: PublicKey[];
 
-  constructor(properties: Storage) {
+  constructor(properties: ProgramStorage) {
     Object.assign(this, properties);
   }
 }

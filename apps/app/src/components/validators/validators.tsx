@@ -1,9 +1,11 @@
-import { Box, Typography } from '@mui/material';
-import { Validator } from '../../interfaces';
-import { useState, useEffect } from 'react';
-import useNotification from '../../common/utils/notification';
-import ErrorMessage from '../../common/components/ErrorMessage';
 import { ReportRounded } from '@mui/icons-material';
+import { Box, Typography } from '@mui/material';
+import { useConnection } from '@solana/wallet-adapter-react';
+import { useEffect, useMemo, useState } from 'react';
+import ErrorMessage from '../../common/components/ErrorMessage';
+import useNotification from '../../common/utils/notification';
+import { Validator } from '../../interfaces';
+import { ValidatorService } from '../../services/validator.service';
 import ValidatorCard, { ValidatorSkeleton } from './validatorCard';
 
 export default function AllValidators({
@@ -16,6 +18,12 @@ export default function AllValidators({
     useState<boolean>(false);
   const [validatorsNotif, setValidatorsNotif] = useState<useNotification>();
 
+  const { connection } = useConnection();
+  const validatorService = useMemo(
+    () => new ValidatorService(connection),
+    [connection]
+  );
+
   const loadValidators = () => {
     setAreValidatorsLoading(true);
     const notif = new useNotification();
@@ -23,28 +31,16 @@ export default function AllValidators({
       validatorsNotif.dismiss();
     }
     setValidatorsNotif(notif);
-    setTimeout(() => {
-      //TODO: call api here to load validators
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
-        const newValidators: Validator[] = [
-          {
-            apy: 20,
-            image_ref:
-              'https://img.bitscoins.net/v7/www.bitscoins.net/wp-content/uploads/2021/06/NFT-Marketplace-Rarible-Raises-Over-14-Million-Plans-to-Launch.jpg',
-            nft_share: 20,
-            total_requested_stake: 4000,
-            validator_name: 'Lane.SOL',
-            validator_website: 'https://make.com',
-            vote_account_id: '5Jkv2mQeoBDhByhgVamWJZEnWd8JkvCb1EhaStMYFEP',
-            validator_program_id: '5Jkv2mQeoBDhByhgVamWJZEnWd8JkvCb1EhaStMYFEP',
-          },
-        ];
-        setValidators(newValidators);
+    validatorService
+      .loadValidators()
+      .then((validators) => {
+        setValidators(validators);
         setAreValidatorsLoading(false);
         notif.dismiss();
         setValidatorsNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
+        console.log(error)
         notif.notify({
           render: 'Loading validators...',
         });
@@ -54,15 +50,16 @@ export default function AllValidators({
             <ErrorMessage
               retryFunction={loadValidators}
               notification={notif}
-              //TODO: message should come from backend
-              message={'There was an error loading validators. please retry!!!'}
+              message={
+                error?.message ||
+                'There was an error loading validators. please retry!!!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   };
 
   const [displayValidators, setDisplayValidators] = useState<Validator[]>([]);
