@@ -72,7 +72,7 @@ export default function ValidatorStats() {
       //TODO: CLEANUP fetch above
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [validator_program_id]);
 
   return (
     <Box
