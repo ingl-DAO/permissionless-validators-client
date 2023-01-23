@@ -1,7 +1,9 @@
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
   AddressLookupTableAccount,
   AddressLookupTableProgram,
+  clusterApiUrl,
   Commitment,
   ComputeBudgetProgram,
   Connection,
@@ -10,7 +12,6 @@ import {
   Transaction,
   TransactionInstruction,
   TransactionMessage,
-  TransactionSignature,
   VersionedTransaction,
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
@@ -19,12 +20,13 @@ import { GeneralData, ValidatorConfig } from '../state';
 export const forwardLegacyTransaction = async (
   walletConnection: { connection: Connection; wallet: WalletContextState },
   instructions: TransactionInstruction[],
-  signingKeypairs?: Keypair[],
-  additionalUnits?: number
+  additionalUnits?: number,
+  signingKeypairs?: Keypair[]
 ) => {
+  const connection = new Connection(clusterApiUrl(WalletAdapterNetwork.Devnet));
+  console.log('forwarding legacy transaction...');
   const {
-    connection,
-    wallet: { publicKey: payerKey, signTransaction, sendTransaction },
+    wallet: { publicKey: payerKey, signTransaction },
   } = walletConnection;
 
   const transaction = new Transaction();
@@ -37,18 +39,17 @@ export const forwardLegacyTransaction = async (
   }
   transaction.add(...instructions).feePayer = payerKey as PublicKey;
 
-  const blockhashObj = await connection.getLatestBlockhash();
-  transaction.recentBlockhash = blockhashObj.blockhash;
-
   if (signingKeypairs && signingKeypairs.length > 0)
     transaction.sign(...signingKeypairs);
+
   const signedTransaction = signTransaction
     ? await signTransaction(transaction)
     : null;
 
-  const signature = await sendTransaction(
-    signedTransaction as Transaction,
-    connection
+  const blockhashObj = await connection.getLatestBlockhash();
+  transaction.recentBlockhash = blockhashObj.blockhash;
+  const signature = await connection.sendRawTransaction(
+    (signedTransaction as Transaction).serialize()
   );
   await connection.confirmTransaction({
     signature,
@@ -59,7 +60,6 @@ export const forwardLegacyTransaction = async (
 
 export async function forwardV0Transaction(
   {
-    connection,
     wallet: { publicKey, signTransaction },
   }: {
     connection: Connection;
@@ -73,6 +73,8 @@ export async function forwardV0Transaction(
     lookupTableAddresses?: PublicKey[];
   }
 ) {
+  const connection = new Connection(clusterApiUrl(WalletAdapterNetwork.Devnet));
+
   const lookupTableAccounts: AddressLookupTableAccount[] = [];
   if (options?.lookupTableAddresses) {
     for (let i = 0; i < options.lookupTableAddresses.length; i++) {
@@ -106,18 +108,15 @@ export async function forwardV0Transaction(
   const signedTransaction = signTransaction
     ? await signTransaction(transactionV0)
     : null;
+
   const signature = await connection.sendTransaction(
     signedTransaction as VersionedTransaction
   );
-  console.log(blockhashObj, signature);
-  await connection.confirmTransaction(
-    {
-      ...blockhashObj,
-      abortSignal: void 0,
-      signature,
-    },
-    'confirmed'
-  );
+  await connection.confirmTransaction({
+    signature,
+    blockhash: blockhashObj.blockhash,
+    lastValidBlockHeight: blockhashObj.lastValidBlockHeight,
+  });
   return signature;
 }
 
@@ -147,9 +146,10 @@ export async function createLookupTable(
   wallet: WalletContextState,
   addresses: PublicKey[]
 ) {
+  connection = new Connection(clusterApiUrl(WalletAdapterNetwork.Devnet));
   const { publicKey: payerPubkey } = wallet;
   const lookupTableAddresses: PublicKey[] = [];
-  let signature: TransactionSignature | null = null;
+  let signature: string | null = null;
   while (addresses.length > 0) {
     const [lookupTableInst, lookupTableAddress] =
       AddressLookupTableProgram.createLookupTable({

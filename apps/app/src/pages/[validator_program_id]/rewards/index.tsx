@@ -28,7 +28,7 @@ import theme from '../../../theme/theme';
 import RewardLine from './rewardLine';
 
 export default function Rewards() {
-  const wallet = useWallet();
+  const walletContext = useWallet();
   const { connection } = useConnection();
   const { program_id } = useParams();
 
@@ -39,9 +39,9 @@ export default function Rewards() {
   const nftService = useMemo(
     () =>
       program_id
-        ? new NftService(new PublicKey(program_id), wallet, connection)
+        ? new NftService(new PublicKey(program_id), walletContext, connection)
         : null,
-    [connection, program_id, wallet]
+    [connection, program_id, walletContext]
   );
 
   const loadRewards = () => {

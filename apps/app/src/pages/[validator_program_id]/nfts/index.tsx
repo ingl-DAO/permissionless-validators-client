@@ -14,7 +14,7 @@ import { NftService } from '../../../services/nft.service';
 import theme from '../../../theme/theme';
 
 export default function ValidatorNFTs() {
-  const wallet = useWallet();
+  const walletContext = useWallet();
   const { connection } = useConnection();
   const { program_id } = useParams();
 
@@ -24,9 +24,9 @@ export default function ValidatorNFTs() {
   const nftService = useMemo(
     () =>
       program_id
-        ? new NftService(new PublicKey(program_id), wallet, connection)
+        ? new NftService(new PublicKey(program_id), walletContext, connection)
         : null,
-    [connection, program_id, wallet]
+    [connection, program_id, walletContext]
   );
   const [nfts, setNfts] = useState<InglNft[]>([]);
 
@@ -48,21 +48,23 @@ export default function ValidatorNFTs() {
         notif.update({
           render: 'NFT minted successfully',
         });
-        nftService
-          ?.loadNFT(tokenMint)
-          .then((newNft) => {
-            if (newNft) setNfts([newNft, ...nfts]);
-            setNftNotif(undefined);
-          })
-          .catch((error) => {
-            notif.update({
-              type: 'ERROR',
-              render:
-                error?.message ||
-                'An error occured while fetching new token data.',
-              icon: () => <ReportRounded fontSize="medium" color="error" />,
+        setTimeout(() => {
+          nftService
+            ?.loadNFT(tokenMint)
+            .then((newNft) => {
+              if (newNft) setNfts([newNft, ...nfts]);
+              setNftNotif(undefined);
+            })
+            .catch((error) => {
+              notif.update({
+                type: 'ERROR',
+                render:
+                  error?.message ||
+                  'An error occured while fetching new token data.',
+                icon: () => <ReportRounded fontSize="medium" color="error" />,
+              });
             });
-          });
+        }, 3000);
       })
       .catch((error) => {
         notif.update({
@@ -446,10 +448,7 @@ export default function ValidatorNFTs() {
                     setActionnedNft(nft);
                     setIsConfirmRevealRarityDialogOpen(true);
                   }}
-                  undelegateNft={() => {
-                    console.log(true);
-                    setIsConfirmUndelegateDialogOpen(true);
-                  }}
+                  undelegateNft={() => setIsConfirmUndelegateDialogOpen(true)}
                   setActionnedNft={setActionnedNft}
                   disabled={
                     isRedeeming || isDelegating || isUndelegating || isRevealing
