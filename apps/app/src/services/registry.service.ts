@@ -11,15 +11,13 @@ import {
   INGL_TEAM_ID,
   Init,
   MAX_PROGRAMS_PER_STORAGE_ACCOUNT,
-  METAPLEX_PROGRAM_ID,
-  REGISTRY_PROGRAMS_API_KEY,
-  toBytesInt32,
-  URIS_ACCOUNT_SEED,
+  METAPLEX_PROGRAM_ID, toBytesInt32,
+  URIS_ACCOUNT_SEED
 } from '@ingl-permissionless/state';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID
 } from '@solana/spl-token';
 import { WalletNotConnectedError } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
@@ -29,40 +27,19 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionInstruction,
+  TransactionInstruction
 } from '@solana/web3.js';
 import { ValidatorRegistration } from '../interfaces';
 
+export const BACKEND_API = "http://localhost:4000"
 export class RegistryService {
   constructor(
     private readonly connection: Connection,
     private readonly walletContext: WalletContextState
   ) {}
 
-  async findPrograms() {
-    return await (
-      await fetch(
-        'https://data.mongodb-api.com/app/data-ywjjx/endpoint/data/v1/action/findOne',
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'api-key': REGISTRY_PROGRAMS_API_KEY,
-            // 'Access-Control-Request-Headers': '*',
-            // 'Access-Control-Allow-Origin': '*'
-          },
-          mode: 'no-cors',
-          method: 'POST',
-          body: JSON.stringify({
-            collection: 'program_list',
-            database: 'programs',
-            dataSource: 'Cluster0',
-            filter: {
-              Is_used: false,
-            },
-          }),
-        }
-      )
-    ).json();
+  async getProgramId() {
+    return await (await fetch(`${BACKEND_API}/program-id`)).json();
   }
 
   async registerProgram(
@@ -238,8 +215,7 @@ export class RegistryService {
     const storageNumeration = Math.floor(
       validation_number / MAX_PROGRAMS_PER_STORAGE_ACCOUNT
     );
-    console.log({ storageNumeration }, 
-      )
+    console.log({ storageNumeration });
     const [storageKey] = PublicKey.findProgramAddressSync(
       [Buffer.from('storage'), toBytesInt32(storageNumeration)],
       INGL_REGISTRY_PROGRAM_ID
@@ -247,20 +223,20 @@ export class RegistryService {
     const storageAccount: AccountMeta = {
       pubkey: storageKey,
       isSigner: false,
-      isWritable: true
-    }
+      isWritable: true,
+    };
 
     const teamAccount: AccountMeta = {
       pubkey: INGL_TEAM_ID,
       isSigner: false,
-      isWritable: true
-    }
+      isWritable: true,
+    };
 
     const programAccount: AccountMeta = {
       pubkey: programId,
       isSigner: false,
-      isWritable: false
-    }
+      isWritable: false,
+    };
 
     const log_level = 0;
     const initProgramPayload = new Init({
@@ -300,7 +276,6 @@ export class RegistryService {
         programAccount,
         teamAccount,
         storageAccount,
-
 
         systemProgramAccount,
         splTokenProgramAccount,

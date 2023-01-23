@@ -9,13 +9,13 @@ import ErrorMessage from '../../common/components/ErrorMessage';
 import useNotification from '../../common/utils/notification';
 import CollectionInformation from '../../components/register-validator/collectionInformation';
 import DaoInformation, {
-  DaoInfo
+  DaoInfo,
 } from '../../components/register-validator/daoInformation';
 import ValidatorInformation, {
-  ValidatorInfo
+  ValidatorInfo,
 } from '../../components/register-validator/validatorInformation';
 import VoteAccountInformation, {
-  VoteAccountInfo
+  VoteAccountInfo,
 } from '../../components/register-validator/voteAccountInformation';
 import { CollectionJson, ValidatorRegistration } from '../../interfaces';
 import { RegistryService } from '../../services/registry.service';
@@ -122,9 +122,9 @@ export default function Register() {
   const [programId, setProgramId] = useState<PublicKey>();
   useEffect(() => {
     registryService
-      .findPrograms()
-      .then(({ program: programId }) => {
-        setProgramId(new PublicKey(programId));
+      .getProgramId()
+      .then(({ program_id }) => {
+        setProgramId(new PublicKey(program_id));
       })
       .catch((error) => {
         console.log(error);
