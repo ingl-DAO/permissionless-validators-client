@@ -92,9 +92,9 @@ export default function ValidatorNFTs() {
       nftNotif.dismiss();
     }
     setNftNotif(notif);
-    // notif.notify({
-    //   render: 'Loading nfts...',
-    // });
+    notif.notify({
+      render: 'Loading nfts...',
+    });
     nftService
       ?.loadNFTs()
       .then((nfts) => {

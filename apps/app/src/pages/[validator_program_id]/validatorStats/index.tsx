@@ -34,6 +34,9 @@ export default function ValidatorStats() {
     }
     setDetailNotif(notif);
 
+    notif.notify({
+      render: 'Loading validator details...',
+    });
     validatorService
       .loadValidatorStats(new PublicKey(validator_program_id))
       .then((validatorInfo) => {
@@ -43,9 +46,6 @@ export default function ValidatorStats() {
         setDetailNotif(undefined);
       })
       .catch((error) => {
-        notif.notify({
-          render: 'Loading validator details...',
-        });
         notif.update({
           type: 'ERROR',
           render: (
