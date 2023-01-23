@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
-import BN from 'bn.js';
 import Scrollbars from 'rc-scrollbars';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
@@ -30,7 +29,7 @@ import RewardLine from './rewardLine';
 export default function Rewards() {
   const walletContext = useWallet();
   const { connection } = useConnection();
-  const { program_id } = useParams();
+  const { validator_program_id } = useParams();
 
   const [areRewardsLoading, setAreRewardsLoading] = useState<boolean>(false);
   const [rewardNotif, setRewardNotif] = useState<useNotification>();
@@ -38,10 +37,14 @@ export default function Rewards() {
 
   const nftService = useMemo(
     () =>
-      program_id
-        ? new NftService(new PublicKey(program_id), connection, walletContext)
+      validator_program_id
+        ? new NftService(
+            new PublicKey(validator_program_id),
+            connection,
+            walletContext
+          )
         : null,
-    [connection, program_id, walletContext]
+    [connection, validator_program_id, walletContext]
   );
 
   const loadRewards = () => {

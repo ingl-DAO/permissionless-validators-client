@@ -32,10 +32,10 @@ export const MAINNET_PRICE_FEEDS = [
 export const INITIALIZER_ID = new PublicKey(
   '62uPowNXr22WPw7XghajJkWMBJ2fnv1oGthxqHYYPHie'
 );
-export const PROGRAM_REGISTRY_ID = new PublicKey(
+export const INGL_REGISTRY_PROGRAM_ID = new PublicKey(
   '38pfsot7kCZkrttx1THEDXEz4JJXmCCcaDoDieRtVuy5'
 );
-export const SYSVAR_STAKE_HISTORY_ID = new PublicKey(
+export const INGL_TEAM_ID = new PublicKey(
   'Team111111111111111111111111111111111111111'
 );
 export const METAPLEX_PROGRAM_ID = new PublicKey(

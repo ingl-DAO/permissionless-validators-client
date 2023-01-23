@@ -1,4 +1,5 @@
-import { field, vec, variant } from '@dao-xyz/borsh';
+import { field, vec } from '@dao-xyz/borsh';
+import * as BN from 'bn.js';
 import { GovernanceType } from './gov-type';
 
 export * from './helpers';
@@ -32,7 +33,7 @@ export class Init extends Instruction {
   public init_commission!: number;
 
   @field({ type: 'u64' })
-  public max_primary_stake!: number;
+  public max_primary_stake!: BN;
 
   @field({ type: 'u8' })
   public nft_holders_share!: number;
@@ -44,7 +45,7 @@ export class Init extends Instruction {
   public is_validator_id_switchable!: boolean;
 
   @field({ type: 'u64' })
-  public unit_backing!: number;
+  public unit_backing!: BN;
 
   @field({ type: 'u32' })
   public redemption_fee_duration!: number;
@@ -80,7 +81,7 @@ export class Init extends Instruction {
   public website!: string;
 
   @field({ type: 'string' })
-  public default_ui!: string;
+  public default_uri!: string;
 
   constructor({ log_level, ...properties }: Omit<Init, 'instruction'>) {
     super({ log_level, instruction: 2 });
@@ -122,9 +123,22 @@ export class FinalizeRebalance extends Instruction {
   }
 }
 
-export class UploadUris extends Instruction {
-  constructor(log_level: number) {
-    super({ log_level, instruction: 8 });
+export class UploadUris {
+  @field({ type: 'u8' })
+  public instruction!: number;
+
+  @field({ type: vec('string') })
+  public uris!: string[];
+
+  @field({ type: 'u8' })
+  public rarity!: number;
+
+  @field({ type: 'u8' })
+  public log_level!: number;
+
+  constructor(properties: Omit<UploadUris, 'instruction'>) {
+    this.instruction = 8;
+    Object.assign(this, properties);
   }
 }
 
@@ -151,7 +165,6 @@ export class CreateVoteAccount extends Instruction {
     super({ log_level, instruction: 12 });
   }
 }
-@variant(13)
 export class InitGovernance {
   @field({ type: 'u8' })
   public instruction!: number;
@@ -174,7 +187,6 @@ export class InitGovernance {
   }
 }
 
-@variant(14)
 export class VoteGovernance {
   @field({ type: 'u8' })
   public instruction!: number;
@@ -197,7 +209,6 @@ export class VoteGovernance {
   }
 }
 
-@variant(15)
 export class FinalizeGovernance {
   @field({ type: 'u8' })
   public instruction!: number;
@@ -214,7 +225,6 @@ export class FinalizeGovernance {
   }
 }
 
-@variant(16)
 export class ExecuteGovernance {
   @field({ type: 'u8' })
   public instruction!: number;

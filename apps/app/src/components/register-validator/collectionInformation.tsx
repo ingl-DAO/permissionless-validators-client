@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { NftJSON } from '../../interfaces';
+import { CollectionJson } from '../../interfaces';
 import theme from '../../theme/theme';
 
 interface JsonNft {
@@ -93,12 +93,12 @@ export default function CollectionInformation({
   creatorRoyalties:cr,
 }: {
   solBacking: number;
-  jsonFileData?: NftJSON;
+  jsonFileData?: CollectionJson;
   creatorRoyalties: number;
-  onPrev: (val: { jsonFileData: NftJSON|undefined; solBacking: number, creatorRoyalties:number }) => void;
-  onNext: (val: { jsonFileData: NftJSON; solBacking: number, creatorRoyalties:number }) => void;
+  onPrev: (val: { jsonFileData: CollectionJson|undefined; solBacking: number, creatorRoyalties:number }) => void;
+  onNext: (val: { jsonFileData: CollectionJson; solBacking: number, creatorRoyalties:number }) => void;
 }) {
-  const [jsonFileData, setJsonFileData] = useState<NftJSON | undefined>(jfd);
+  const [jsonFileData, setJsonFileData] = useState<CollectionJson | undefined>(jfd);
   const [solBacking, setSolBacking] = useState<number>(sb);
   const [creatorRoyalties, setCreatorRoyalties] = useState<number>(cr)
   const [jsonNfts, setJsonNfts] = useState<JsonNft[]>([]);
@@ -109,14 +109,14 @@ export default function CollectionInformation({
     const nfts: JsonNft[] = [];
 
     for (let index = 0; index < rarity_names.length; index++) {
-      for (let i = 0; i < uris[index].length; i++) {
-        const uriData = await (await fetch(uris[index][i])).json();
+      // for (let i = 0; i < uris[index].length; i++) {
+        const uriData = await (await fetch(uris[index][0])).json();
         nfts.push({
           image_ref: uriData.image,
           is_delegated: true,
           rarity: rarity_names[index],
         });
-      }
+      // }
     }
     return nfts;
   };
@@ -429,7 +429,7 @@ export default function CollectionInformation({
           </Box>
           <Box>
             <Box>
-              <Typography variant="h6">Creator royalties</Typography>
+              <Typography variant="h6">Creator royalties(%)</Typography>
               {/* eslint-disable-next-line jsx-a11y/accessible-emoji */}
               <Typography variant="caption" sx={{ color: 'wheat' }}>
                 Profit gotten by nft creator when it's sold!

@@ -16,17 +16,17 @@ import theme from '../../../theme/theme';
 export default function ValidatorNFTs() {
   const walletContext = useWallet();
   const { connection } = useConnection();
-  const { program_id } = useParams();
+  const { validator_program_id } = useParams();
 
   const [isConfirmMintDialogOpen, setIsConfirmMintDialogOpen] =
     useState<boolean>(false);
 
   const nftService = useMemo(
     () =>
-      program_id
-        ? new NftService(new PublicKey(program_id), connection, walletContext)
+      validator_program_id
+        ? new NftService(new PublicKey(validator_program_id), connection, walletContext)
         : null,
-    [connection, program_id, walletContext]
+    [connection, validator_program_id, walletContext]
   );
   const [nfts, setNfts] = useState<InglNft[]>([]);
 
@@ -41,30 +41,27 @@ export default function ValidatorNFTs() {
     notif.notify({
       render: 'Minting your awesome NFT...',
     });
-
     nftService
       ?.mintNft()
       .then((tokenMint) => {
         notif.update({
           render: 'NFT minted successfully',
         });
-        setTimeout(() => {
-          nftService
-            ?.loadNFT(tokenMint)
-            .then((newNft) => {
-              if (newNft) setNfts([newNft, ...nfts]);
-              setNftNotif(undefined);
-            })
-            .catch((error) => {
-              notif.update({
-                type: 'ERROR',
-                render:
-                  error?.message ||
-                  'An error occured while fetching new token data.',
-                icon: () => <ReportRounded fontSize="medium" color="error" />,
-              });
+        nftService
+          ?.loadNFT(tokenMint)
+          .then((newNft) => {
+            if (newNft) setNfts([newNft, ...nfts]);
+            setNftNotif(undefined);
+          })
+          .catch((error) => {
+            notif.update({
+              type: 'ERROR',
+              render:
+                error?.message ||
+                'An error occured while fetching new token data.',
+              icon: () => <ReportRounded fontSize="medium" color="error" />,
             });
-        }, 3000);
+          });
       })
       .catch((error) => {
         notif.update({
@@ -95,9 +92,9 @@ export default function ValidatorNFTs() {
       nftNotif.dismiss();
     }
     setNftNotif(notif);
-    // notif.notify({
-    //   render: 'Loading nfts...',
-    // });
+    notif.notify({
+      render: 'Loading nfts...',
+    });
     nftService
       ?.loadNFTs()
       .then((nfts) => {

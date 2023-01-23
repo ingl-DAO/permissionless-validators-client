@@ -41,7 +41,6 @@ export const forwardLegacyTransaction = async (
 
   const blockhashObj = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhashObj.blockhash;
-
   if (signingKeypairs && signingKeypairs.length > 0)
     transaction.sign(...signingKeypairs);
 
@@ -178,9 +177,9 @@ export async function createLookupTable(
 }
 
 export async function computeVoteAccountRewardAPY(
+  connection: Connection,
   generalData: GeneralData,
-  validatorConfig: ValidatorConfig,
-  connection: Connection
+  validatorConfig: ValidatorConfig
 ) {
   const latestVoteRewards =
     generalData?.vote_rewards.length <= 10
