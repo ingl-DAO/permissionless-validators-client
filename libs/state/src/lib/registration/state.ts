@@ -2,6 +2,9 @@ import { field, fixedArray, vec } from '@dao-xyz/borsh';
 import { PublicKey } from '@solana/web3.js';
 import { BN } from 'bn.js';
 
+export const REGISTRY_PROGRAMS_API_KEY =
+  'nXOsAx6ZERuczUFJnBXADJWjlkuPcHiLyM2VUDbSMc3BMl4UX1TdvK9p41ju0Ep5';
+export const REGISTRY_PROGRAMS_API_ID = '63cd5e0fafdfb84e6a0914e4';
 export const VALIDATOR_REGISTRY_PROGRAM_ID = new PublicKey(
   '38pfsot7kCZkrttx1THEDXEz4JJXmCCcaDoDieRtVuy5'
 );
@@ -24,12 +27,12 @@ export class Config {
 
 export class Storage {
   @field({ type: 'u32' })
-  public validation_phrase: number;
+  public validation_phrase!: number;
 
   @field({ type: vec(fixedArray('u8', 32)) })
-  public programs: number;
+  public programs!: PublicKey[];
 
   constructor(properties: Storage) {
-    Object.assign(this, properties)
+    Object.assign(this, properties);
   }
 }
