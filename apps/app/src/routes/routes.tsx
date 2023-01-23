@@ -4,6 +4,7 @@ import Home from '../pages';
 import Layout from '../pages/layout';
 import Register from '../pages/register-validator';
 import ValidatorLayout from '../pages/[vote_account_id]';
+import Dao from '../pages/[vote_account_id]/dao';
 import ValidatorNFTs from '../pages/[vote_account_id]/nfts';
 import Rewards from '../pages/[vote_account_id]/rewards';
 import ValidatorStats from '../pages/[vote_account_id]/validatorStats';
@@ -23,6 +24,7 @@ export const routes = [
           { path: 'nfts', element: <ValidatorNFTs /> },
           { path: 'rewards', element: <Rewards /> },
           { path: 'details', element: <ValidatorStats /> },
+          { path: 'dao', element: <Dao /> },
         ],
       },
       {
