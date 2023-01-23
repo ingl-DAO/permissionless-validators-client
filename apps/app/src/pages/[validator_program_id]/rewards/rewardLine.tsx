@@ -1,4 +1,5 @@
 import { Checkbox, TableCell, TableRow } from '@mui/material';
+import BN from 'bn.js';
 import { NftReward } from '../../../interfaces';
 import theme from '../../../theme/theme';
 
@@ -46,7 +47,7 @@ export default function RewardLine({
       <TableCell sx={{ color: 'white' }}>{`#${numeration}`}</TableCell>
       <TableCell sx={{ color: 'white' }}>{nft_mint_id}</TableCell>
       <TableCell sx={{ color: 'white' }} align="right">
-        {rewards.divn(10_000_000_000).toString(10)}
+        {new BN(rewards).div(new BN(10_000_000_000)).toString(10)}
       </TableCell>
     </TableRow>
   );

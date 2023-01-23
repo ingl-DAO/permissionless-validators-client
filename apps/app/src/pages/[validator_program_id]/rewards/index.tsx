@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
+import CopyTransactionId from '../../../common/components/copyTransactionId';
 import BN from 'bn.js';
 import Scrollbars from 'rc-scrollbars';
 import { useEffect, useMemo, useState } from 'react';
@@ -39,7 +40,11 @@ export default function Rewards() {
   const nftService = useMemo(
     () =>
       validator_program_id
-        ? new NftService(new PublicKey(validator_program_id), connection, walletContext)
+        ? new NftService(
+            new PublicKey(validator_program_id),
+            connection,
+            walletContext
+          )
         : null,
     [connection, validator_program_id, walletContext]
   );
@@ -51,9 +56,9 @@ export default function Rewards() {
       rewardNotif.dismiss();
     }
     setRewardNotif(notif);
-    notif.notify({
-      render: 'Loading rewards...',
-    });
+    // notif.notify({
+    //   render: 'Loading rewards...',
+    // });
     nftService
       ?.loadRewards()
       .then((rewards) => {
@@ -98,7 +103,7 @@ export default function Rewards() {
     });
     nftService
       ?.claimRewards(actionnedNfts.map((address) => new PublicKey(address)))
-      .then(() => {
+      .then((signature) => {
         setRewards(
           rewards.map((reward) => {
             const { nft_mint_id: nft_pubkey } = reward;
@@ -108,7 +113,12 @@ export default function Rewards() {
           })
         );
         notif.update({
-          render: 'Claimed rewards successfully',
+          render: (
+            <CopyTransactionId
+              transaction_id={signature}
+              message="Claimed rewards successfully"
+            />
+          ),
         });
         setRewardNotif(undefined);
       })
@@ -179,8 +189,9 @@ export default function Rewards() {
               variant="h6"
               component="span"
               sx={{ color: theme.palette.primary.main }}
-            >{`${(rewards
-              .reduce((total, { rewards }) => total.add(rewards), new BN(0))).divn(10_000_000_000)
+            >{`${rewards
+              .reduce((total, { rewards }) => total.add(rewards), new BN(0))
+              .div(new BN(10_000_000_000))
               .toString(10)} SOL`}</Typography>
           </Typography>
         </Box>

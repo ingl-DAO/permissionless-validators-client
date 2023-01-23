@@ -31,9 +31,9 @@ export default function AllValidators({
       validatorsNotif.dismiss();
     }
     setValidatorsNotif(notif);
-    notif.notify({
-      render: 'Loading validators...',
-    });
+    // notif.notify({
+    //   render: 'Loading validators...',
+    // });
     validatorService
       .loadValidators()
       .then((validators) => {

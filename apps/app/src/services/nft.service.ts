@@ -282,13 +282,13 @@ export class NftService {
         data: Buffer.from(serialize(new MintNft(2))),
         keys: instructionAccounts,
       });
-      await forwardLegacyTransaction(
+      const signature = await forwardLegacyTransaction(
         { connection: this.connection, wallet: this.walletContext },
         [mintNftInstruction],
         1_000_000,
         [mintKeyPair]
       );
-      return mintKeyPair.publicKey;
+      return { tokenMint: mintKeyPair.publicKey, signature };
     } catch (error) {
       throw new Error('NFT Minting transaction failed with error ' + error);
     }
@@ -531,7 +531,7 @@ export class NftService {
     });
 
     try {
-      await forwardLegacyTransaction(
+      return await forwardLegacyTransaction(
         { connection: this.connection, wallet: this.walletContext },
         [delegateSolInstruction]
       );
@@ -620,7 +620,7 @@ export class NftService {
       ],
     });
     try {
-      await forwardLegacyTransaction(
+      return await forwardLegacyTransaction(
         { connection: this.connection, wallet: this.walletContext },
         [undelegateSolInstruction]
       );
@@ -761,7 +761,7 @@ export class NftService {
     });
 
     try {
-      await forwardLegacyTransaction(
+      return await forwardLegacyTransaction(
         { connection: this.connection, wallet: this.walletContext },
         [claimRewardInstruction]
       );
@@ -907,7 +907,7 @@ export class NftService {
       //     this.walletContext.publicKey as PublicKey,
       //     lookupTableAddresses
       //   );
-      return await new Promise((resolve, reject) => {
+      return await new Promise<string>((resolve, reject) => {
         setTimeout(async () => {
           try {
             const transactionId = await forwardV0Transaction(
