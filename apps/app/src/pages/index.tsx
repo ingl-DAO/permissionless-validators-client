@@ -22,7 +22,7 @@ export default function Home() {
         searchValue={searchValue}
         setSearchValue={setSearchValue}
       />
-      <Typography variant="h5">Permissionless Validators</Typography>
+      <Typography variant="h5">Validators</Typography>
       <Scrollbars autoHide>
         <AllValidators searchValue={searchValue} />
       </Scrollbars>

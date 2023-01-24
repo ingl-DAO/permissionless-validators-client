@@ -13,14 +13,14 @@ import {
   ValidatorConfig,
   VOTE_ACCOUNT_KEY,
 } from '@ingl-permissionless/state';
-import { Metaplex } from '@metaplex-foundation/js';
+import { Metaplex, Nft, Sft, SftWithToken } from '@metaplex-foundation/js';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import {
   AccountInfo,
   clusterApiUrl,
   Connection,
-  LAMPORTS_PER_SOL,
   PublicKey,
+  VoteAccountInfo,
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import { InglValidator, Validator } from '../interfaces';
@@ -51,10 +51,10 @@ export class ValidatorService {
       programId
     );
 
-    let validatorConfigAccountInfo,
-      generalAccountInfo,
-      collectionMetadata,
-      voteAccountInfo;
+    let validatorConfigAccountInfo: AccountInfo<Buffer> | null,
+      generalAccountInfo: AccountInfo<Buffer> | null,
+      collectionMetadata: Sft | SftWithToken | Nft,
+      voteAccountInfo: VoteAccountInfo | null;
     try {
       const response = await Promise.all([
         this.connection.getAccountInfo(configAccountKey),
@@ -62,17 +62,17 @@ export class ValidatorService {
         this.metaplex.nfts().findByMint({ mintAddress: collectionkey }),
         this.connection.getVoteAccounts(),
       ]);
+
       validatorConfigAccountInfo = response[0];
       generalAccountInfo = response[1];
       collectionMetadata = response[2];
       // eslint-disable-next-line prefer-const
       let { current, delinquent } = response[3];
       current = current.concat(delinquent);
-
-      voteAccountInfo = current.find((voteAccount) => {
-        return voteAccount.votePubkey === voteAccountKey.toString();
-      });
-      voteAccountInfo = voteAccountInfo ?? null;
+      voteAccountInfo =
+        current.find((voteAccount) => {
+          return voteAccount.votePubkey === voteAccountKey.toString();
+        }) ?? null;
     } catch (e) {
       console.log(
         "message: 'Failed to config account info and general account info"
@@ -101,9 +101,11 @@ export class ValidatorService {
       GeneralData,
       { unchecked: true }
     );
-
     if (!voteAccountInfo) {
-      console.log('Error: Vote account info is null');
+      console.log(' No vote account data found');
+      // throw new Error(
+      //   'Error: Vote account info not created yet. Please if your are the owner of this validator use the ingl cli to create one.'
+      // );
     }
     const { uri, json, jsonLoaded } = collectionMetadata;
     let jsonData = json;
@@ -133,15 +135,9 @@ export class ValidatorService {
           .div(new BN(validatorConfigAccountData.unit_backing))
           .toString(10)
       ),
-      max_primary_stake: new BN(
-        Number(validatorConfigAccountData.max_primary_stake.toString(10)) /
-          LAMPORTS_PER_SOL
-      ),
+      max_primary_stake: new BN(validatorConfigAccountData.max_primary_stake),
       total_secondary_stake: new BN(voteAccountInfo?.activatedStake ?? 0),
-      unit_backing: new BN(
-        Number(validatorConfigAccountData.unit_backing.toString(10)) /
-          LAMPORTS_PER_SOL
-      ),
+      unit_backing: new BN(validatorConfigAccountData.unit_backing),
       validator_apy: await computeVoteAccountRewardAPY(
         this.connection,
         generalAccountData,
@@ -156,12 +152,8 @@ export class ValidatorService {
       discord_invite: validatorConfigAccountData.discord_invite,
       twitter_handle: validatorConfigAccountData.twitter_handle,
       total_minted_count: generalAccountData.mint_numeration,
-      total_delegated_stake: new BN(
-        Number(generalAccountData.total_delegated.toString(10)) /
-          LAMPORTS_PER_SOL
-      ),
+      total_delegated_stake: generalAccountData.total_delegated,
     };
-
     return result;
   }
 
@@ -243,7 +235,6 @@ export class ValidatorService {
       configAccountInfos.map(async (accountInfo, index) => {
         const {
           validator_name,
-          validator_id,
           website,
           nft_holders_share,
           max_primary_stake,
@@ -266,6 +257,10 @@ export class ValidatorService {
         if (!jsonLoaded) {
           jsonData = await (await fetch(uri)).json();
         }
+        const [voteAccountKey] = PublicKey.findProgramAddressSync(
+          [Buffer.from(VOTE_ACCOUNT_KEY)],
+          new PublicKey(programIds[index])
+        );
         return {
           apy: await computeVoteAccountRewardAPY(
             this.connection,
@@ -277,7 +272,7 @@ export class ValidatorService {
           nft_share: nft_holders_share,
           image_ref: jsonData?.image as string,
           total_requested_stake: max_primary_stake,
-          vote_account_id: new PublicKey(validator_id).toBase58(),
+          vote_account_id: new PublicKey(voteAccountKey).toBase58(),
           validator_program_id: new PublicKey(programIds[index]).toBase58(),
           unit_backing: new BN(unit_backing),
         };

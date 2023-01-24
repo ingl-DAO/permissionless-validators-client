@@ -102,9 +102,9 @@ export default function ValidatorNFTs() {
       nftNotif.dismiss();
     }
     setNftNotif(notif);
-    // notif.notify({
-    //   render: 'Loading nfts...',
-    // });
+    notif.notify({
+      render: 'Loading nfts...',
+    });
     nftService
       ?.loadNFTs()
       .then((nfts) => {
@@ -164,7 +164,9 @@ export default function ValidatorNFTs() {
       ?.redeemNft(new PublicKey(actionnedNft.nft_mint_id))
       .then((signature) => {
         setNfts(
-          nfts.filter(({ numeration: n }) => n !== actionnedNft.numeration)
+          nfts.filter(
+            ({ nft_mint_id }) => nft_mint_id !== actionnedNft.nft_mint_id
+          )
         );
         setActionnedNft(undefined);
         notif.update({
@@ -212,8 +214,8 @@ export default function ValidatorNFTs() {
       .then((signature) => {
         setNfts(
           nfts.map((nft) => {
-            const { numeration: n } = nft;
-            if (n === actionnedNft.numeration)
+            const { nft_mint_id } = nft;
+            if (nft_mint_id === actionnedNft.nft_mint_id)
               return { ...nft, is_delegated: true };
             return nft;
           })
@@ -264,8 +266,8 @@ export default function ValidatorNFTs() {
       .then((signature) => {
         setNfts(
           nfts.map((nft) => {
-            const { numeration: n } = nft;
-            if (n === actionnedNft.numeration)
+            const { nft_mint_id } = nft;
+            if (nft_mint_id === actionnedNft.nft_mint_id)
               return { ...nft, is_delegated: false };
             return nft;
           })
@@ -317,14 +319,28 @@ export default function ValidatorNFTs() {
         WalletAdapterNetwork.Devnet
       )
       .then((signature) => {
-        setNfts(
-          nfts.map((nft) => {
-            const { numeration: n } = nft;
-            if (n !== actionnedNft.numeration)
-              return { ...nft, rarity: 'benetoite' };
-            return nft;
+        nftService
+          ?.loadNFT(new PublicKey(actionnedNft.nft_mint_id))
+          .then((newNft) => {
+            if (newNft)
+              setNfts(
+                nfts.map((nft) => {
+                  const { nft_mint_id } = nft;
+                  if (nft_mint_id === actionnedNft.nft_mint_id) return newNft;
+                  return nft;
+                })
+              );
+            setNftNotif(undefined);
           })
-        );
+          .catch((error) => {
+            notif.update({
+              type: 'ERROR',
+              render:
+                error?.message ||
+                'An error occured while fetching new token data.',
+              icon: () => <ReportRounded fontSize="medium" color="error" />,
+            });
+          });
         notif.update({
           render: (
             <CopyTransactionId
@@ -454,7 +470,7 @@ export default function ValidatorNFTs() {
             </Box>
           ) : nfts.length === 0 ? (
             <Typography variant="h6" sx={{ textAlign: 'center' }}>
-              'You own no NFT's
+              You own no NFT's
             </Typography>
           ) : (
             <Box

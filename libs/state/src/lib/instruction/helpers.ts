@@ -220,10 +220,3 @@ export async function computeVoteAccountRewardAPY(
   // console.log('APY', apy);
   return apy;
 }
-
-export const divideTwoBNtoNumber = (a: BN, b: BN) => {
-  const aInNumber = Number(a.divn(1000).toString(10));
-  const bInNumber = Number(b.divn(1000).toString(10));
-
-  return aInNumber / bInNumber;
-};

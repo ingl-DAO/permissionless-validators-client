@@ -905,7 +905,6 @@ export class NftService {
       this.walletContext,
       instructionAccounts.map((_) => _.pubkey)
     );
-    console.log(this.programId.toBase58());
     const imprintRarityInstruction = new TransactionInstruction({
       programId: this.programId,
       data: Buffer.from(serialize(new ImprintRarity(0))),
