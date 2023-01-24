@@ -11,13 +11,14 @@ import {
   INGL_TEAM_ID,
   Init,
   MAX_PROGRAMS_PER_STORAGE_ACCOUNT,
-  METAPLEX_PROGRAM_ID, toBytesInt32,
-  URIS_ACCOUNT_SEED
+  METAPLEX_PROGRAM_ID,
+  toBytesInt32,
+  URIS_ACCOUNT_SEED,
 } from '@ingl-permissionless/state';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID
+  TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { WalletNotConnectedError } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
@@ -27,11 +28,11 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionInstruction
+  TransactionInstruction,
 } from '@solana/web3.js';
 import { ValidatorRegistration } from '../interfaces';
 
-export const BACKEND_API = "http://localhost:4000"
+export const BACKEND_API = 'http://localhost:4000';
 export class RegistryService {
   constructor(
     private readonly connection: Connection,
@@ -39,7 +40,74 @@ export class RegistryService {
   ) {}
 
   async getProgramId() {
-    return await (await fetch(`${BACKEND_API}/program-id`)).json();
+    // return await (await fetch(`${BACKEND_API}/program-id`)).json();
+    const programs = [
+      {
+        _id: '63cd4b17f4dffb97f65707e2',
+        program: '52xjVDELdiFhu9AdHJZ7kfyYBtjgoffcxifxBPaDp2Pe',
+        Is_used: false,
+      },
+      {
+        _id: '63cd4b36f4dffb97f65707e3',
+        program: '7jswubBqH9BXgU1YA5AX7AzhiK9pv3rGbNgKLB4sZngT',
+        Is_used: false,
+      },
+      {
+        _id: '63cd4b52f4dffb97f65707e4',
+        program: '8rx7cqvbK9CHCWBfXwxk8iUjjjeMkmZhtdhUFCMYJfBK',
+        Is_used: false,
+      },
+      {
+        _id: '63cd4b6ff4dffb97f65707e5',
+        program: '8xZEbZ9ZJAtxnJcxEhMGirwF36ATMoe6xQrf6yrVdEyD',
+        Is_used: false,
+      },
+      {
+        _id: '63cd4b8af4dffb97f65707e6',
+        program: '2eTZtVbsHnWW2iMCngpMLD3dd6x8aUDDwZcXyTpQnjhb',
+        Is_used: false,
+      },
+      {
+        _id: '63cd4ba6f4dffb97f65707e7',
+        program: 'D1RNqXaYeqoyZ3LXEA18B75Q4Qde89hThr1Y1frcpQuY',
+        Is_used: false,
+      },
+      {
+        _id: '63cd4bc7f4dffb97f65707e8',
+        program: '6yzECyhywtCSf2Lgp98HKaCskuUiwTGjqfZf7zYjVZWQ',
+        Is_used: false,
+      },
+      {
+        _id: '63cd4beef4dffb97f65707e9',
+        program: '3qwuY7MixqJ3vNc7TnGXqeceTNMkRyCKsd59YNXDVxZu',
+        Is_used: false,
+      },
+      {
+        _id: '63cd4c14f4dffb97f65707ea',
+        program: '4aUetNrxhGJFL1nGtduK3n97Yyqa25QiSMwEM2eXvCUo',
+        Is_used: false,
+      },
+      {
+        _id: '63cd4c31f4dffb97f65707eb',
+        program: 'GBMra9nmH99QRaFXgAQyLMTNDd34NyZpUffAMhtnp8CS',
+        Is_used: false,
+      },
+    ];
+    let i = 0;
+    while (i < programs.length) {
+      const programId = programs[i].program;
+      const [configAccountKey] = PublicKey.findProgramAddressSync(
+        [Buffer.from(INGL_CONFIG_SEED)],
+        new PublicKey(programId)
+      );
+      const accountInfo = await this.connection.getAccountInfo(
+        new PublicKey(configAccountKey)
+      );
+      if (!accountInfo) break;
+      i++;
+    }
+    if (i < programs.length) return { program_id: programs[i].program };
+    else throw new Error('No deployed program is available');
   }
 
   async registerProgram(
