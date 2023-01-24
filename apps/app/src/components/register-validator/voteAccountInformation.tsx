@@ -1,5 +1,4 @@
 import { Box, Button, Checkbox, Typography } from '@mui/material';
-import BN from 'bn.js';
 import { useFormik } from 'formik';
 import Scrollbars from 'rc-scrollbars';
 import * as Yup from 'yup';
@@ -117,7 +116,7 @@ export default function VoteAccountInformation({
               {
                 label: 'Initial commission',
                 description:
-                  'Initial commission to be charged from secondary stakers',
+                  'Initial commission to be charged from secondary stakers (%)',
                 formikKey: 'init_commission',
               },
             ].map(({ description, formikKey, label }, index) => (

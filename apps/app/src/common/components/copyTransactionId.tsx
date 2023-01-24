@@ -20,7 +20,11 @@ export default function CopyTransactionId({
     >
       <Box>
         <Typography variant="body2">{message}</Typography>
-        <Typography variant="caption">{transaction_id}</Typography>
+        <Typography variant="caption">
+          {`Transaction Id: ${
+            transaction_id.slice(0, 5) + '...' + transaction_id.slice(-4)
+          }`}
+        </Typography>
       </Box>
       <label onClick={() => navigator.clipboard.writeText(transaction_id)}>
         <ContentCopyRounded

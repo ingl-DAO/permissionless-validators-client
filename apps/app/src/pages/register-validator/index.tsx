@@ -5,17 +5,18 @@ import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
+import CopyTransactionId from '../../common/components/copyTransactionId';
 import ErrorMessage from '../../common/components/ErrorMessage';
 import useNotification from '../../common/utils/notification';
 import CollectionInformation from '../../components/register-validator/collectionInformation';
 import DaoInformation, {
-  DaoInfo,
+  DaoInfo
 } from '../../components/register-validator/daoInformation';
 import ValidatorInformation, {
-  ValidatorInfo,
+  ValidatorInfo
 } from '../../components/register-validator/validatorInformation';
 import VoteAccountInformation, {
-  VoteAccountInfo,
+  VoteAccountInfo
 } from '../../components/register-validator/voteAccountInformation';
 import { CollectionJson, ValidatorRegistration } from '../../interfaces';
 import { RegistryService } from '../../services/registry.service';
@@ -59,7 +60,7 @@ export default function Register() {
             jsonFileData &&
             validatorInfo &&
             voteAccountInfo &&
-            solBacking >= 1 &&
+            solBacking >= 1.05 &&
             creatorRoyalties <= 2
           ) {
             const validator: ValidatorRegistration = {
@@ -88,7 +89,7 @@ export default function Register() {
             createValidator(validatorInfo.validator_id, validator);
           } else
             alert(
-              'Unit backing must be greater than 1 and creator royalties less than 2%'
+              'Unit backing must be greater than 1.05 and creator royalties less than 2%'
             );
         }}
         daoInfo={daoInfo}
@@ -174,7 +175,20 @@ export default function Register() {
       )
       .then((signature) => {
         notif.update({
-          render: `Created validator successfully. Signature: ${signature}`,
+          render: (
+            <>
+              <CopyTransactionId
+                transaction_id={signature}
+                message="Registered validator successfully !!"
+              />
+              <a
+                style={{ color: 'white' }}
+                href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
+              >
+                See what's next
+              </a>
+            </>
+          ),
         });
         setValidatorNotif(undefined);
       })
