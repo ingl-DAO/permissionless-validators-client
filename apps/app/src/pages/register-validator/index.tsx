@@ -55,7 +55,13 @@ export default function Register() {
           setStep(3);
         }}
         handleSubmit={(val: DaoInfo) => {
-          if (jsonFileData && validatorInfo && voteAccountInfo && solBacking>1 && creatorRoyalties<=2) {
+          if (
+            jsonFileData &&
+            validatorInfo &&
+            voteAccountInfo &&
+            solBacking >= 1 &&
+            creatorRoyalties <= 2
+          ) {
             const validator: ValidatorRegistration = {
               nft_holders_share: voteAccountInfo.nft_holders_share,
               proposal_quorum: val.proposal_quorum,
@@ -71,7 +77,7 @@ export default function Register() {
               validator_name: validatorInfo.validator_name,
               initial_redemption_fee: voteAccountInfo.initial_redemption_fee,
               max_primary_stake: new BN(
-                voteAccountInfo.max_primary_stake.toNumber() * 10_000_000_000
+                voteAccountInfo.max_primary_stake * 10_000_000_000
               ),
               redemption_fee_duration: voteAccountInfo.redemption_fee_duration,
               init_commission: voteAccountInfo.init_commission,
