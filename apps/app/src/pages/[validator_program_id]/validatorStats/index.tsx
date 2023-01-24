@@ -1,7 +1,8 @@
 import { GitHub, ReportRounded, Twitter } from '@mui/icons-material';
 import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
+import { BN } from 'bn.js';
 import { useEffect, useMemo, useState } from 'react';
 import { useIntl } from 'react-intl';
 import { useParams } from 'react-router';
@@ -34,9 +35,9 @@ export default function ValidatorStats() {
     }
     setDetailNotif(notif);
 
-    // notif.notify({
-    //   render: 'Loading validator details...',
-    // });
+    notif.notify({
+      render: 'Loading validator details...',
+    });
     validatorService
       .loadValidatorStats(new PublicKey(validator_program_id))
       .then((validatorInfo) => {
@@ -262,10 +263,14 @@ export default function ValidatorStats() {
               upper={
                 areDetailsLoading || !details
                   ? 0
-                  : details.total_delegated_stake
+                  : new BN(details.total_delegated_stake).toNumber() /
+                    LAMPORTS_PER_SOL
               }
               bottom={
-                areDetailsLoading || !details ? 0 : details.max_primary_stake
+                areDetailsLoading || !details
+                  ? 0
+                  : new BN(details.max_primary_stake).toNumber() /
+                    LAMPORTS_PER_SOL
               }
               title_2="Total stake requested(SOL)"
               skeleton={areDetailsLoading || !details}
@@ -275,7 +280,8 @@ export default function ValidatorStats() {
               upper={
                 areDetailsLoading || !details
                   ? 0
-                  : details.total_secondary_stake
+                  : new BN(details.total_secondary_stake).toNumber() /
+                    LAMPORTS_PER_SOL
               }
               skeleton={areDetailsLoading || !details}
             />
@@ -387,7 +393,10 @@ export default function ValidatorStats() {
                 value={
                   areDetailsLoading || !details
                     ? ''
-                    : `${details.unit_backing} SOL`
+                    : `${
+                        new BN(details.unit_backing).toNumber() /
+                        LAMPORTS_PER_SOL
+                      } SOL`
                 }
                 skeleton={areDetailsLoading || !details}
               />

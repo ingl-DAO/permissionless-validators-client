@@ -1,3 +1,4 @@
+import { ContentCopyRounded } from '@mui/icons-material';
 import { Skeleton } from '@mui/material';
 import { Box } from '@mui/system';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
@@ -17,15 +18,20 @@ export default function ValidatorCard({
     validator_website: website,
     vote_account_id: va_id,
     validator_program_id: vp_id,
-    unit_backing: unit_backing,
+    unit_backing,
   },
   searchValue,
 }: {
   validator: Validator;
   searchValue: string;
 }) {
-  console.log(tr_stake);
   const navigate = useNavigate();
+
+  const handleOnClick = (type: 'open' | 'copy') => {
+    if (type === 'open') navigate(vp_id);
+    navigator.clipboard.writeText(va_id);
+  };
+
   return (
     <Box
       sx={{
@@ -37,13 +43,13 @@ export default function ValidatorCard({
         width: '100%',
         cursor: 'pointer',
       }}
-      onClick={() => navigate(vp_id)}
     >
       <img
         src={image_ref}
         width="100%"
         alt={name}
         style={{ borderRadius: theme.spacing(1) }}
+        onClick={() => handleOnClick('open')}
       />
       <Box
         sx={{
@@ -52,18 +58,34 @@ export default function ValidatorCard({
           rowGap: theme.spacing(1.75),
         }}
       >
-        <ValidatorCardContent
-          title={website}
-          value={name}
-          revert
-          searchValue={searchValue}
-        />
-        <ValidatorCardContent
-          title="Vote account ID"
-          value={va_id.slice(0, 4) + '...' + va_id.slice(-4)}
-          searchValue={searchValue}
-          trim
-        />
+        <div onClick={() => handleOnClick('open')}>
+          <ValidatorCardContent
+            title={website}
+            value={name}
+            revert
+            searchValue={searchValue}
+          />
+        </div>
+        <label
+          onClick={() => handleOnClick('copy')}
+          style={{ display: 'grid', gridAutoFlow: 'column' }}
+        >
+          <ValidatorCardContent
+            title="Vote account ID"
+            value={va_id.slice(0, 10) + '...' + va_id.slice(-4)}
+            searchValue={searchValue}
+            trim
+          />
+          <ContentCopyRounded
+            fontSize="small"
+            sx={{
+              color: 'white',
+              '&:hover': { color: `#EF233C` },
+              justifySelf: 'start',
+              cursor: 'pointer',
+            }}
+          />
+        </label>
         <Box
           sx={{
             display: 'grid',
@@ -74,9 +96,9 @@ export default function ValidatorCard({
           <ValidatorCardContent title="NFTs share" value={`${nft_share}%`} />
           <ValidatorCardContent
             title="Unit backing"
-            value={`${new BN(unit_backing ?? 0).div(
-              new BN(LAMPORTS_PER_SOL)
-            )} SOL`}
+            value={`${
+              new BN(unit_backing ?? 0).toNumber() / LAMPORTS_PER_SOL
+            } SOL`}
             right
           />
         </Box>
@@ -89,7 +111,7 @@ export default function ValidatorCard({
         >
           <ValidatorCardContent
             title="Total stake requested"
-            value={`${new BN(tr_stake).div(new BN(LAMPORTS_PER_SOL))} SOL`}
+            value={`${new BN(tr_stake ?? 0).toNumber() / LAMPORTS_PER_SOL} SOL`}
           />
           <ValidatorCardContent title="APY" value={`${apy}%`} right />
         </Box>
