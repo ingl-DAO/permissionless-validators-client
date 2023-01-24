@@ -77,7 +77,8 @@ export default function Register() {
               validator_name: validatorInfo.validator_name,
               initial_redemption_fee: voteAccountInfo.initial_redemption_fee,
               max_primary_stake: new BN(
-                voteAccountInfo.max_primary_stake.toNumber() * 10_000_000_000
+                new BN(voteAccountInfo.max_primary_stake).toNumber() *
+                  10_000_000_000
               ),
               redemption_fee_duration: voteAccountInfo.redemption_fee_duration,
               init_commission: voteAccountInfo.init_commission,
