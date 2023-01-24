@@ -9,14 +9,14 @@ import ValidatorStats from '../pages/[validator_program_id]/validatorStats';
 import Dao from '../pages/[validator_program_id]/dao';
 
 export const routes = [
-  { path: '/', element:  <Navigate to="/validators" /> },
+  { path: '/', element: <Navigate to="/programs" /> },
   {
     path: '',
     element: <Layout />,
     children: [
-      { path: 'validators', element: <Home /> },
+      { path: 'programs', element: <Home /> },
       {
-        path: 'validators/:validator_program_id',
+        path: 'programs/:validator_program_id',
         element: <ValidatorLayout />,
         children: [
           { path: '', element: <Navigate to="nfts" /> },

@@ -454,7 +454,7 @@ export default function ValidatorNFTs() {
             </Box>
           ) : nfts.length === 0 ? (
             <Typography variant="h6" sx={{ textAlign: 'center' }}>
-              'You own no NFT's
+              You own no NFT's
             </Typography>
           ) : (
             <Box
