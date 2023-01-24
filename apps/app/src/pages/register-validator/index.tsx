@@ -59,8 +59,8 @@ export default function Register() {
             jsonFileData &&
             validatorInfo &&
             voteAccountInfo &&
-            solBacking > 1 &&
-            creatorRoyalties < 2
+            solBacking >= 1 &&
+            creatorRoyalties <= 2
           ) {
             const validator: ValidatorRegistration = {
               nft_holders_share: voteAccountInfo.nft_holders_share,
