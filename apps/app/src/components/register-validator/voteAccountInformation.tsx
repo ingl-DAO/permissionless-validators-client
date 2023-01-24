@@ -7,7 +7,7 @@ import theme from '../../theme/theme';
 import { CustomInput } from './validatorInformation';
 
 export interface VoteAccountInfo {
-  max_primary_stake: BN;
+  max_primary_stake: number;
   init_commission: number;
   nft_holders_share: number;
   initial_redemption_fee: number;
@@ -27,7 +27,7 @@ export default function VoteAccountInformation({
   onPrev: () => void;
 }) {
   const initialValues: VoteAccountInfo = voteAccountInfo ?? {
-    max_primary_stake: new BN(0),
+    max_primary_stake: 0,
     init_commission: 0,
     nft_holders_share: 0,
     initial_redemption_fee: 5,
