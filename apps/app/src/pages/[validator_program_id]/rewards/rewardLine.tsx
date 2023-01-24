@@ -1,5 +1,4 @@
 import { Checkbox, TableCell, TableRow } from '@mui/material';
-import BN from 'bn.js';
 import { NftReward } from '../../../interfaces';
 import theme from '../../../theme/theme';
 

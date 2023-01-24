@@ -13,12 +13,12 @@ import {
   MAX_PROGRAMS_PER_STORAGE_ACCOUNT,
   METAPLEX_PROGRAM_ID,
   toBytesInt32,
-  URIS_ACCOUNT_SEED
+  URIS_ACCOUNT_SEED,
 } from '@ingl-permissionless/state';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID
+  TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import { WalletNotConnectedError } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
@@ -28,7 +28,7 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionInstruction
+  TransactionInstruction,
 } from '@solana/web3.js';
 import { ValidatorRegistration } from '../interfaces';
 
@@ -106,7 +106,8 @@ export class RegistryService {
       if (!accountInfo) break;
       i++;
     }
-    return { program_id: programs[i].program };
+    if (i < programs.length) return { program_id: programs[i].program };
+    else throw new Error('No deployed program is available');
   }
 
   async registerProgram(
