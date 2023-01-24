@@ -9,6 +9,7 @@ export interface Validator {
   total_requested_stake: BN;
   apy: number;
   image_ref: string;
+  unit_backing?: BN;
 }
 
 export interface InglNft {

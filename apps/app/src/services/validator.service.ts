@@ -119,7 +119,7 @@ export class ValidatorService {
       // current_skip_rate: 0,
       default_uri: validatorConfigAccountData.default_uri,
       governance_expiration_time:
-        validatorConfigAccountData.governance_expiration_time / 360, // in hours
+        validatorConfigAccountData.governance_expiration_time / (24 * 3600), // in days
       init_commission: validatorConfigAccountData.commission,
       initial_redemption_fee: validatorConfigAccountData.initial_redemption_fee,
       is_validator_id_switchable:
@@ -247,6 +247,7 @@ export class ValidatorService {
           website,
           nft_holders_share,
           max_primary_stake,
+          unit_backing,
         } = deserialize(accountInfo?.data as Buffer, ValidatorConfig, {
           unchecked: true,
         });
@@ -278,6 +279,7 @@ export class ValidatorService {
           total_requested_stake: max_primary_stake,
           vote_account_id: new PublicKey(validator_id).toBase58(),
           validator_program_id: new PublicKey(programIds[index]).toBase58(),
+          unit_backing: new BN(unit_backing),
         };
       })
     );

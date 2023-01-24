@@ -14,7 +14,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from '@solana/web3.js';
-import { BN } from 'bn.js';
+import * as BN from 'bn.js';
 import { GeneralData, ValidatorConfig } from '../state';
 
 export const forwardLegacyTransaction = async (
@@ -220,3 +220,10 @@ export async function computeVoteAccountRewardAPY(
   // console.log('APY', apy);
   return apy;
 }
+
+export const divideTwoBNtoNumber = (a: BN, b: BN) => {
+  const aInNumber = Number(a.divn(1000).toString(10));
+  const bInNumber = Number(b.divn(1000).toString(10));
+
+  return aInNumber / bInNumber;
+};

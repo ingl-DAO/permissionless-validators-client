@@ -175,7 +175,14 @@ export default function VoteAccountInformation({
                   fontSize: '40px',
                 },
               }}
+              checked={formik.values.is_validator_id_switchable}
               {...formik.getFieldProps('is_validator_id_switchable')}
+              onChange={(e) =>
+                formik.setFieldValue(
+                  'is_validator_id_switchable',
+                  e.target.checked
+                )
+              }
             />
             <Box>
               <Typography variant="h6">

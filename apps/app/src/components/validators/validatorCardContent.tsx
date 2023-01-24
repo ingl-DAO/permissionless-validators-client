@@ -10,6 +10,7 @@ export default function ValidatorCardContent({
   skeleton = false,
   trim = false,
   wrap = false,
+  right = false,
 }: {
   title: string;
   value: string;
@@ -18,6 +19,7 @@ export default function ValidatorCardContent({
   searchValue?: string;
   trim?: boolean;
   wrap?: boolean;
+  right?: boolean;
 }) {
   return (
     <Box
@@ -47,6 +49,7 @@ export default function ValidatorCardContent({
           width: trim ? '250px' : 'initial',
           overflowWrap: wrap ? 'anywhere' : 'initial',
           fontSize: revert ? '1.45rem' : theme.typography.h6.fontSize,
+          textAlign: right ? 'right' : 'initial',
         }}
       >
         {skeleton && !revert ? (
