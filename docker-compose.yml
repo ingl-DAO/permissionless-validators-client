@@ -7,7 +7,7 @@ services:
       context: .
     restart: always
     ports:
-      - "88:3000"
+      - "83:3000"
   app:
     build:
       dockerfile: ./Dockerfile.app
