@@ -179,7 +179,7 @@ export async function createLookupTable(
 export async function computeVoteAccountRewardAPY(
   connection: Connection,
   generalData: GeneralData,
-  validatorConfig: ValidatorConfig,
+  validatorConfig: ValidatorConfig
 ) {
   const latestVoteRewards =
     generalData?.vote_rewards.length <= 10

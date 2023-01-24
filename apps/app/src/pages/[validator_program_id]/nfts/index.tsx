@@ -5,6 +5,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
+import CopyTransactionId from '../../../common/components/copyTransactionId';
 import ErrorMessage from '../../../common/components/ErrorMessage';
 import useNotification from '../../../common/utils/notification';
 import ConfirmDialog from '../../../components/confirmDialog';
@@ -24,7 +25,11 @@ export default function ValidatorNFTs() {
   const nftService = useMemo(
     () =>
       validator_program_id
-        ? new NftService(new PublicKey(validator_program_id), connection, walletContext)
+        ? new NftService(
+            new PublicKey(validator_program_id),
+            connection,
+            walletContext
+          )
         : null,
     [connection, validator_program_id, walletContext]
   );
@@ -43,9 +48,14 @@ export default function ValidatorNFTs() {
     });
     nftService
       ?.mintNft()
-      .then((tokenMint) => {
+      .then(({ tokenMint, signature }) => {
         notif.update({
-          render: 'NFT minted successfully',
+          render: (
+            <CopyTransactionId
+              transaction_id={signature}
+              message="NFT minted successfully"
+            />
+          ),
         });
         nftService
           ?.loadNFT(tokenMint)
@@ -152,13 +162,18 @@ export default function ValidatorNFTs() {
     });
     nftService
       ?.redeemNft(new PublicKey(actionnedNft.nft_mint_id))
-      .then(() => {
+      .then((signature) => {
         setNfts(
           nfts.filter(({ numeration: n }) => n !== actionnedNft.numeration)
         );
         setActionnedNft(undefined);
         notif.update({
-          render: 'NFT redeemed successfully',
+          render: (
+            <CopyTransactionId
+              transaction_id={signature}
+              message="NFT redeemed successfully"
+            />
+          ),
         });
         setNftNotif(undefined);
       })
@@ -194,7 +209,7 @@ export default function ValidatorNFTs() {
     });
     nftService
       ?.delegateNft(new PublicKey(actionnedNft.nft_mint_id))
-      .then(() => {
+      .then((signature) => {
         setNfts(
           nfts.map((nft) => {
             const { numeration: n } = nft;
@@ -204,7 +219,12 @@ export default function ValidatorNFTs() {
           })
         );
         notif.update({
-          render: 'NFT delegated successfully',
+          render: (
+            <CopyTransactionId
+              transaction_id={signature}
+              message="NFT delegated successfully"
+            />
+          ),
         });
         setActionnedNft(undefined);
         setNftNotif(undefined);
@@ -241,7 +261,7 @@ export default function ValidatorNFTs() {
     });
     nftService
       ?.undelegateNft(new PublicKey(actionnedNft.nft_mint_id))
-      .then(() => {
+      .then((signature) => {
         setNfts(
           nfts.map((nft) => {
             const { numeration: n } = nft;
@@ -251,7 +271,12 @@ export default function ValidatorNFTs() {
           })
         );
         notif.update({
-          render: 'NFT undelegated successfully',
+          render: (
+            <CopyTransactionId
+              transaction_id={signature}
+              message="NFT undelegated successfully"
+            />
+          ),
         });
         setActionnedNft(undefined);
         setNftNotif(undefined);
@@ -291,7 +316,7 @@ export default function ValidatorNFTs() {
         new PublicKey(actionnedNft.nft_mint_id),
         WalletAdapterNetwork.Devnet
       )
-      .then(() => {
+      .then((signature) => {
         setNfts(
           nfts.map((nft) => {
             const { numeration: n } = nft;
@@ -301,7 +326,12 @@ export default function ValidatorNFTs() {
           })
         );
         notif.update({
-          render: 'Revealed rarity successfully',
+          render: (
+            <CopyTransactionId
+              transaction_id={signature}
+              message="Revealed rarity successfully"
+            />
+          ),
         });
         setActionnedNft(undefined);
         setNftNotif(undefined);

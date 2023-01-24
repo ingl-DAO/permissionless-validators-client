@@ -31,6 +31,9 @@ export default function AllValidators({
       validatorsNotif.dismiss();
     }
     setValidatorsNotif(notif);
+    // notif.notify({
+    //   render: 'Loading validators...',
+    // });
     validatorService
       .loadValidators()
       .then((validators) => {
@@ -40,10 +43,6 @@ export default function AllValidators({
         setValidatorsNotif(undefined);
       })
       .catch((error) => {
-        console.log(error)
-        notif.notify({
-          render: 'Loading validators...',
-        });
         notif.update({
           type: 'ERROR',
           render: (

@@ -1,13 +1,13 @@
 version: '3.3'
 
 services:
-  # landing:
-  #   build:
-  #     dockerfile: ./Dockerfile.landing
-  #     context: .
-  #   restart: always
-  #   ports:
-  #     - "88:3000"
+  landing:
+    build:
+      dockerfile: ./Dockerfile.landing
+      context: .
+    restart: always
+    ports:
+      - "83:3000"
   app:
     build:
       dockerfile: ./Dockerfile.app

@@ -42,13 +42,16 @@ export default function Faqs() {
         flexDirection: 'column',
         width: '100%',
         position: 'relative',
-        paddingTop: theme.spacing(10),
-        paddingBottom: theme.spacing(40),
-        paddingLeft: theme.spacing(30),
-        paddingRight: theme.spacing(30),
+
         minHeight: '800px',
         height: 'auto',
         overflow: 'hidden',
+      }}
+      sx={{
+        paddingTop: { laptop: theme.spacing(10), mobile: theme.spacing(5) },
+        paddingBottom: { laptop: theme.spacing(40), mobile: theme.spacing(5) },
+        paddingLeft: { laptop: theme.spacing(30), mobile: theme.spacing(5) },
+        paddingRight: { laptop: theme.spacing(30), mobile: theme.spacing(5) },
       }}
     >
       <Box data-aos="zoom-out-down" width={'100%'}>
