@@ -16,7 +16,6 @@ export function Index({ intl: { formatMessage } }: { intl: IntlShape }) {
   return (
     <Box
       sx={{
-        display: 'grid',
         justifyItems: 'center',
         minHeight: '100vh',
         borderTop: '2px solid ' + theme.palette.primary.main,

@@ -24,7 +24,7 @@ export default function SectionTitle({
         sx={{
           color: theme.palette.secondary.main,
           textAlign: 'justify',
-          fontSize: { mobile: '2rem', laptop: center ? '4.5rem' : '6rem' },
+          fontSize: { mobile: '3rem', laptop: center ? '4.5rem' : '6rem' },
         }}
       >
         {title.toUpperCase()}

@@ -10,13 +10,13 @@ AOS.init();
 export default function DaoSection() {
   return (
     <Box
-      // data-aos="flip-down"
+      data-aos="flip-down"
       sx={{
         textAlign: 'center',
         marginTop: theme.spacing(10),
         marginBottom: theme.spacing(10),
         position: 'relative',
-        zIndex: -1,
+        zIndex: 1,
         maxWidth: { laptop: 1500, mobile: '100%' },
         minHeight: { laptop: 1000, mobile: 700 },
         margin: 'auto',

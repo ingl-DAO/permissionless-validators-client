@@ -14,6 +14,7 @@ export default function NftCard({
   return (
     <>
       <Box
+        data-aos="fade-left"
         sx={{
           position: 'relative',
           padding: theme.spacing(1.5),
@@ -26,7 +27,7 @@ export default function NftCard({
               visibility: 'visible',
             },
           },
-          margin: theme.spacing(0, 4),
+          margin: theme.spacing(2, 4),
         }}
       >
         <Tooltip arrow title={'Expand'}>
@@ -57,8 +58,8 @@ export default function NftCard({
             background: 'rgba(9, 44, 76, 0.6)',
             borderRadius: theme.spacing(2.5),
             position: 'relative',
-            height: { laptop: '220px', mobile: '150px' },
-            width: { laptop: '220px', mobile: '150px' },
+            height: { laptop: '220px', mobile: '200px' },
+            width: { laptop: '220px', mobile: '200px' },
           }}
         >
           <Box

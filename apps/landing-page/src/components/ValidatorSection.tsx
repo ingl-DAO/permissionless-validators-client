@@ -1,4 +1,4 @@
-import { Button, Grid, Typography, Box } from '@mui/material';
+import { Button, Grid, Typography, Box, useMediaQuery } from '@mui/material';
 import Validator from '../assets/elec_earth.png';
 import theme from '../theme/theme';
 import SectionTitle from './SectionTitle';
@@ -7,6 +7,7 @@ import 'aos/dist/aos.css';
 AOS.init();
 
 export default function SectionValidator() {
+  const matchless1200 = useMediaQuery('(max-width:1200px)');
   return (
     <Grid
       data-aos={'fade-right'}
@@ -21,32 +22,46 @@ export default function SectionValidator() {
       <Grid
         item
         mobile={0}
-        laptop={5.8}
+        laptop={matchless1200 ? 12 : 5.8}
         tablet={0}
         sx={{
-          display: { mobile: 'none', laptop: 'flex', tablet: 'none' },
           position: 'relative',
         }}
       >
         <Box
-          style={{
-            position: 'absolute',
-            paddingTop: theme.spacing(15),
-          }}
+          sx={
+            matchless1200
+              ? { position: 'relative', paddingTop: theme.spacing(0) }
+              : {
+                  position: { laptop: 'absolute', mobile: 'relative' },
+                  paddingTop: {
+                    laptop: theme.spacing(15),
+                    mobile: theme.spacing(0),
+                  },
+                }
+          }
         >
           <SectionTitle title={'VALIDATORS'} />
         </Box>
-
-        <img
-          src={Validator}
-          alt={`Validators description`}
-          style={{ width: '90%', marginLeft: '-30%' }}
-        />
+        <Box
+          sx={{
+            display: {
+              mobile: 'none',
+              laptop: matchless1200 ? 'none' : 'flex',
+            },
+          }}
+        >
+          <img
+            src={Validator}
+            alt={`Validators description`}
+            style={{ width: '90%', marginLeft: '-30%' }}
+          />
+        </Box>
       </Grid>
       <Grid
         item
         mobile={12}
-        laptop={5.8}
+        laptop={matchless1200 ? 12 : 5.8}
         tablet={12}
         sx={{
           alignSelf: 'center',
@@ -107,6 +122,7 @@ export default function SectionValidator() {
             sx={{
               borderRadius: '90px',
               padding: theme.spacing(1.25, 6),
+              textAlign: 'center',
             }}
           >
             Onboard PC Now
@@ -115,6 +131,7 @@ export default function SectionValidator() {
             sx={{
               borderRadius: '90px',
               padding: theme.spacing(1.25, 6),
+              textAlign: 'center',
             }}
             variant="contained"
             color="primary"

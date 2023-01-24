@@ -106,7 +106,7 @@ export default function Navbar() {
           sx={{
             display: { laptop: 'grid', mobile: 'none' },
             gridTemplateColumns: 'auto auto auto',
-            columnGap: theme.spacing(10),
+            columnGap: theme.spacing(6),
             justifyContent: 'center',
           }}
         >

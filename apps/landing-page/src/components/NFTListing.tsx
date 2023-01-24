@@ -56,13 +56,13 @@ export default function NFTListing() {
         Some NFTs
       </Typography>
       <Box
-        style={{
-          margin: theme.spacing(4, 0, 3, 0),
+        sx={{
+          margin: theme.spacing(3, 0, 1, 0),
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           width: '100%',
-          overflowX: 'auto',
+          flexDirection: { laptop: 'row', mobile: 'column' },
         }}
       >
         {nftsData.map((nft) => (

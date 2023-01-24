@@ -1,4 +1,4 @@
-import { Button, Grid, Typography, Box } from '@mui/material';
+import { Button, Grid, Typography, Box, useMediaQuery } from '@mui/material';
 import NFT from '../assets/nfts.png';
 import theme from '../theme/theme';
 import SectionTitle from './SectionTitle';
@@ -7,6 +7,8 @@ import 'aos/dist/aos.css';
 AOS.init();
 
 export default function SectionNFT() {
+  const matchless1200 = useMediaQuery('(max-width:1200px)');
+
   return (
     <Grid
       data-aos={'fade-left'}
@@ -22,7 +24,7 @@ export default function SectionNFT() {
       <Grid
         item
         mobile={0}
-        laptop={5.5}
+        laptop={matchless1200 ? 12 : 5.5}
         tablet={12}
         sx={{
           position: 'relative',
@@ -31,23 +33,39 @@ export default function SectionNFT() {
         }}
       >
         <Box
-          style={{
-            position: 'absolute',
-            paddingTop: theme.spacing(10),
-          }}
+          sx={
+            matchless1200
+              ? { position: 'relative', paddingTop: theme.spacing(0) }
+              : {
+                  position: { laptop: 'absolute', mobile: 'relative' },
+                  paddingTop: {
+                    laptop: theme.spacing(15),
+                    mobile: theme.spacing(0),
+                  },
+                }
+          }
         >
           <SectionTitle title={'DeFi NFTS'} />
         </Box>
-        <img
-          src={NFT}
-          alt={`NFT description`}
-          style={{ width: '95%', marginRight: '-20%' }}
-        />
+        <Box
+          sx={{
+            display: {
+              mobile: 'none',
+              laptop: matchless1200 ? 'none' : 'flex',
+            },
+          }}
+        >
+          <img
+            src={NFT}
+            alt={`NFT description`}
+            style={{ width: '95%', marginRight: '-20%' }}
+          />
+        </Box>
       </Grid>
       <Grid
         item
         mobile={12}
-        laptop={6}
+        laptop={matchless1200 ? 12 : 6}
         tablet={12}
         sx={{
           alignSelf: 'center',
@@ -87,6 +105,7 @@ export default function SectionNFT() {
             sx={{
               borderRadius: '90px',
               padding: theme.spacing(1.25, 6),
+              textAlign: 'center',
             }}
             variant="contained"
             color="primary"
