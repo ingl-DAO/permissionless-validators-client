@@ -55,7 +55,7 @@ export default function Register() {
           setStep(3);
         }}
         handleSubmit={(val: DaoInfo) => {
-          if (jsonFileData && validatorInfo && voteAccountInfo && solBacking>1 && creatorRoyalties<2) {
+          if (jsonFileData && validatorInfo && voteAccountInfo && solBacking>1 && creatorRoyalties<=2) {
             const validator: ValidatorRegistration = {
               nft_holders_share: voteAccountInfo.nft_holders_share,
               proposal_quorum: val.proposal_quorum,
