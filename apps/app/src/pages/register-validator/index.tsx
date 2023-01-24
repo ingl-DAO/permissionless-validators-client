@@ -1,7 +1,7 @@
 import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -65,7 +65,7 @@ export default function Register() {
             const validator: ValidatorRegistration = {
               nft_holders_share: voteAccountInfo.nft_holders_share,
               proposal_quorum: val.proposal_quorum,
-              unit_backing: new BN(solBacking * 10_000_000_000),
+              unit_backing: new BN(solBacking * LAMPORTS_PER_SOL),
               collection_uri: jsonFileData.collection_uri,
               rarities: jsonFileData.rarities,
               discord_invite: validatorInfo.discord_invite,
@@ -77,7 +77,7 @@ export default function Register() {
               validator_name: validatorInfo.validator_name,
               initial_redemption_fee: voteAccountInfo.initial_redemption_fee,
               max_primary_stake: new BN(
-                voteAccountInfo.max_primary_stake * 10_000_000_000
+                voteAccountInfo.max_primary_stake * LAMPORTS_PER_SOL
               ),
               redemption_fee_duration: voteAccountInfo.redemption_fee_duration,
               init_commission: voteAccountInfo.init_commission,
