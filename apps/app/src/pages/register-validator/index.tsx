@@ -78,7 +78,7 @@ export default function Register() {
               creator_royalties: creatorRoyalties*100,
             };
             createValidator(validatorInfo.validator_id, validator);
-          }else alert('Unit backing must be greater than 1 and creator royalties greater than 2%')
+          }else alert('Unit backing must be greater than 1 and creator royalties less than 2%')
         }}
         daoInfo={daoInfo}
         isCreating={isCreating}

@@ -12,7 +12,7 @@ export interface VoteAccountInfo {
   nft_holders_share: number;
   initial_redemption_fee: number;
   redemption_fee_duration: number;
-  is_validator_id_switchable: false;
+  is_validator_id_switchable: boolean;
 }
 
 export default function VoteAccountInformation({
@@ -30,7 +30,7 @@ export default function VoteAccountInformation({
     max_primary_stake: new BN(0),
     init_commission: 0,
     nft_holders_share: 0,
-    initial_redemption_fee: 10,
+    initial_redemption_fee: 5,
     redemption_fee_duration: 0,
     is_validator_id_switchable: false,
   };
@@ -40,7 +40,9 @@ export default function VoteAccountInformation({
     init_commission: Yup.number().required('required').max(100),
     nft_holders_share: Yup.number().required('required').max(100).min(50),
     initial_redemption_fee: Yup.number().max(25),
-    redemption_fee_duration: Yup.number().required('required').max(2*365*3600),
+    redemption_fee_duration: Yup.number()
+      .required('required')
+      .max(2 * 365 * 3600),
     is_validator_id_switchable: Yup.boolean().required('required'),
   });
 
@@ -140,7 +142,7 @@ export default function VoteAccountInformation({
               {
                 label: 'Initial redemption fee (%)',
                 description:
-                  'Leave empty if no redemption fee else at least 10%',
+                  'Leave empty if no redemption fee recommended is 5%',
                 formikKey: 'initial_redemption_fee',
               },
               {
