@@ -1,4 +1,5 @@
 import { deserialize, serialize } from '@dao-xyz/borsh';
+import { http } from '@ingl-permissionless/axios';
 import {
   COLLECTION_HOLDER_KEY,
   Config,
@@ -32,7 +33,7 @@ import {
 } from '@solana/web3.js';
 import { ValidatorRegistration } from '../interfaces';
 
-export const BACKEND_API = 'http://localhost:4000';
+export const BACKEND_API = process.env['NX_MONITOR_BASE_URL'];
 export class RegistryService {
   constructor(
     private readonly connection: Connection,
@@ -40,99 +41,15 @@ export class RegistryService {
   ) {}
 
   async getProgramId() {
-    // return await (await fetch(`${BACKEND_API}/program-id`)).json();
-    const programs = [
-      {
-        _id: '63d02eddb589c9d22b2b9772',
-        program: '4qCW8PdxMBP5GjseJHqkiN6btj89HQYNEM5V6J95Wy8M',
-        Is_used: false,
-      },
-      {
-        _id: '63d02efcb589c9d22b2b9773',
-        program: 'CMwUFz5UT7UsZuZwcdxnt9MrhuLwmrVddZ6mqygGAtMF',
-        Is_used: false,
-      },
-      {
-        _id: '63d02f18b589c9d22b2b9774',
-        program: 'FSvobSyU9ZuzuG8XK5auY2L7e6TihiVZCeiGjuTiJfvS',
-        Is_used: false,
-      },
-      {
-        _id: '63d02f34b589c9d22b2b9775',
-        program: 'xBHbsuJCRpecsyRtAGFT4JgdprQcbXY9ENMLBviFtPX',
-        Is_used: false,
-      },
-      {
-        _id: '63d02f52b589c9d22b2b9776',
-        program: 'FcJMAbymXUtBThyrLMgCDwgPqVyUTGDvMymju41LaTdG',
-        Is_used: false,
-      },
-      {
-        _id: '63d02f70b589c9d22b2b9777',
-        program: '9NbPygAqWDZcoeyTZH17CASSSDVL3zDiHUrryxBTh7uB',
-        Is_used: false,
-      },
-      {
-        _id: '63d02f8eb589c9d22b2b9778',
-        program: 'Di6aytHkmtv1kynHX3TP3yMi45N2WFr4N1q77P4u1BdA',
-        Is_used: false,
-      },
-      {
-        _id: '63d02fb1b589c9d22b2b9779',
-        program: '3ZesAKgZtpFKaefqMW8uJ8rvhubHpcPGwXFZYJpdxeRh',
-        Is_used: false,
-      },
-      {
-        _id: '63d02fd7b589c9d22b2b977a',
-        program: '6N1BdpgcrG7phZoU83TbiPXp3PLFUhW9tr3nvBNHn98i',
-        Is_used: false,
-      },
-      {
-        _id: '63d03000b589c9d22b2b977b',
-        program: 'Bzb7Lr2y4LPNLfmg4H865VLYSqPna8hwnBPh7H7AEvJt',
-        Is_used: false,
-      },
-      {
-        _id: '63d030584af89d11fd1845bf',
-        program: 'GABTzqQ4pX7FSqbWUjQr75Q5NpWeC8hWRtXMrKsHVWNE',
-        Is_used: false,
-      },
-      {
-        _id: '63d0307e4af89d11fd1845c0',
-        program: '8JDXsSySt8itV3q9EG9Ar2CM6zuhLQBBBV1XVNEs2kKJ',
-        Is_used: false,
-      },
-      {
-        _id: '63d0309f4af89d11fd1845c1',
-        program: '2GBbr2WxvCj9HPMUzPMmVmA9sjwygEueK8AAhAxVgrkM',
-        Is_used: false,
-      },
-      {
-        _id: '63d030c24af89d11fd1845c2',
-        program: 'BrcqvsuVfCSYi4hSpLJn94R2ebXrHiH9E1wdNoS6AUkp',
-        Is_used: false,
-      },
-      {
-        _id: '63d030e94af89d11fd1845c3',
-        program: 'Edi5jHNT7MDJWdnd73PjmUp4pASUYXbwNAfcfZwwaPkP',
-        Is_used: false,
-      },
-    ];
-    let i = 0;
-    while (i < programs.length) {
-      const programId = programs[i].program;
-      const [configAccountKey] = PublicKey.findProgramAddressSync(
-        [Buffer.from(INGL_CONFIG_SEED)],
-        new PublicKey(programId)
-      );
-      const accountInfo = await this.connection.getAccountInfo(
-        new PublicKey(configAccountKey)
-      );
-      if (!accountInfo) break;
-      i++;
-    }
-    if (i < programs.length) return { program_id: programs[i].program };
+    const { data } = await http.get<{ program_id: string } | null>(
+      '/program-id'
+    );
+    if (data) return { program_id: data.program_id };
     else throw new Error('No deployed program is available');
+  }
+
+  async useProgramId(programId: string) {
+    await http.put(`/${programId}/use`);
   }
 
   async registerProgram(
@@ -141,7 +58,8 @@ export class RegistryService {
     registrationData: ValidatorRegistration
   ) {
     const payerPubkey = this.walletContext.publicKey;
-    if (!payerPubkey) throw new WalletNotConnectedError('Please connect your wallet !!!');
+    if (!payerPubkey)
+      throw new WalletNotConnectedError('Please connect your wallet !!!');
 
     const payerAccount: AccountMeta = {
       pubkey: payerPubkey,
@@ -308,7 +226,6 @@ export class RegistryService {
     const storageNumeration = Math.floor(
       validation_number / MAX_PROGRAMS_PER_STORAGE_ACCOUNT
     );
-    console.log({ storageNumeration });
     const [storageKey] = PublicKey.findProgramAddressSync(
       [Buffer.from('storage'), toBytesInt32(storageNumeration)],
       INGL_REGISTRY_PROGRAM_ID
@@ -336,17 +253,6 @@ export class RegistryService {
       ...registrationData,
       log_level,
     });
-    // const uploadUriPayloads = rarities.map(
-    //   (rarity, index) => new TransactionInstruction({
-    //     programId,
-    //     data: Buffer.from(serialize())
-    //   })
-    //     new UploadUris({
-    //       log_level,
-    //       rarity,
-    //       uris: uris[index],
-    //     })
-    // );
     const initProgramInstruction = new TransactionInstruction({
       programId,
       data: Buffer.from(serialize(initProgramPayload)),
@@ -378,11 +284,13 @@ export class RegistryService {
       ],
     });
     try {
-      return await forwardLegacyTransaction(
+      const signature = await forwardLegacyTransaction(
         { connection: this.connection, wallet: this.walletContext },
         [initProgramInstruction],
         400_000
       );
+      this.useProgramId(programId.toBase58());
+      return signature;
     } catch (error) {
       throw new Error(
         'Validator program registration failed with the following errors:' +

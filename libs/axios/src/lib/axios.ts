@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 
 function axiosInstance(): AxiosInstance {
   const axiosInstance = axios.create({
-    baseURL: process.env['NX_API_BASE_URL'],
+    baseURL: process.env['NX_MONITOR_BASE_URL'],
   });
   axiosInstance.interceptors.request.use(
     (request) => {

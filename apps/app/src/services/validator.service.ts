@@ -184,7 +184,6 @@ export class ValidatorService {
     const configAccountInfoPromises: Promise<AccountInfo<Buffer> | null>[] = [];
     let counter = 0;
     while (counter <= storageNumeration) {
-      console.log({ counter });
       const [storageKey] = PublicKey.findProgramAddressSync(
         [Buffer.from('storage'), toBytesInt32(storageNumeration)],
         INGL_REGISTRY_PROGRAM_ID
@@ -195,7 +194,6 @@ export class ValidatorService {
       const { programs } = deserialize(storageAccount.data, ProgramStorage, {
         unchecked: true,
       });
-      // console.log(programs.map(_ => _.toBase58()))
       configAccountInfoPromises.push(
         ...programs.map((programId) => {
           const [configAccountKey] = PublicKey.findProgramAddressSync(
