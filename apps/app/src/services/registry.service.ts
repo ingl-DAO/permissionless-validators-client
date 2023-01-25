@@ -43,53 +43,78 @@ export class RegistryService {
     // return await (await fetch(`${BACKEND_API}/program-id`)).json();
     const programs = [
       {
-        _id: '63cd4b17f4dffb97f65707e2',
-        program: '52xjVDELdiFhu9AdHJZ7kfyYBtjgoffcxifxBPaDp2Pe',
+        _id: '63d02eddb589c9d22b2b9772',
+        program: '4qCW8PdxMBP5GjseJHqkiN6btj89HQYNEM5V6J95Wy8M',
         Is_used: false,
       },
       {
-        _id: '63cd4b36f4dffb97f65707e3',
-        program: '7jswubBqH9BXgU1YA5AX7AzhiK9pv3rGbNgKLB4sZngT',
+        _id: '63d02efcb589c9d22b2b9773',
+        program: 'CMwUFz5UT7UsZuZwcdxnt9MrhuLwmrVddZ6mqygGAtMF',
         Is_used: false,
       },
       {
-        _id: '63cd4b52f4dffb97f65707e4',
-        program: '8rx7cqvbK9CHCWBfXwxk8iUjjjeMkmZhtdhUFCMYJfBK',
+        _id: '63d02f18b589c9d22b2b9774',
+        program: 'FSvobSyU9ZuzuG8XK5auY2L7e6TihiVZCeiGjuTiJfvS',
         Is_used: false,
       },
       {
-        _id: '63cd4b6ff4dffb97f65707e5',
-        program: '8xZEbZ9ZJAtxnJcxEhMGirwF36ATMoe6xQrf6yrVdEyD',
+        _id: '63d02f34b589c9d22b2b9775',
+        program: 'xBHbsuJCRpecsyRtAGFT4JgdprQcbXY9ENMLBviFtPX',
         Is_used: false,
       },
       {
-        _id: '63cd4b8af4dffb97f65707e6',
-        program: '2eTZtVbsHnWW2iMCngpMLD3dd6x8aUDDwZcXyTpQnjhb',
+        _id: '63d02f52b589c9d22b2b9776',
+        program: 'FcJMAbymXUtBThyrLMgCDwgPqVyUTGDvMymju41LaTdG',
         Is_used: false,
       },
       {
-        _id: '63cd4ba6f4dffb97f65707e7',
-        program: 'D1RNqXaYeqoyZ3LXEA18B75Q4Qde89hThr1Y1frcpQuY',
+        _id: '63d02f70b589c9d22b2b9777',
+        program: '9NbPygAqWDZcoeyTZH17CASSSDVL3zDiHUrryxBTh7uB',
         Is_used: false,
       },
       {
-        _id: '63cd4bc7f4dffb97f65707e8',
-        program: '6yzECyhywtCSf2Lgp98HKaCskuUiwTGjqfZf7zYjVZWQ',
+        _id: '63d02f8eb589c9d22b2b9778',
+        program: 'Di6aytHkmtv1kynHX3TP3yMi45N2WFr4N1q77P4u1BdA',
         Is_used: false,
       },
       {
-        _id: '63cd4beef4dffb97f65707e9',
-        program: '3qwuY7MixqJ3vNc7TnGXqeceTNMkRyCKsd59YNXDVxZu',
+        _id: '63d02fb1b589c9d22b2b9779',
+        program: '3ZesAKgZtpFKaefqMW8uJ8rvhubHpcPGwXFZYJpdxeRh',
         Is_used: false,
       },
       {
-        _id: '63cd4c14f4dffb97f65707ea',
-        program: '4aUetNrxhGJFL1nGtduK3n97Yyqa25QiSMwEM2eXvCUo',
+        _id: '63d02fd7b589c9d22b2b977a',
+        program: '6N1BdpgcrG7phZoU83TbiPXp3PLFUhW9tr3nvBNHn98i',
         Is_used: false,
       },
       {
-        _id: '63cd4c31f4dffb97f65707eb',
-        program: 'GBMra9nmH99QRaFXgAQyLMTNDd34NyZpUffAMhtnp8CS',
+        _id: '63d03000b589c9d22b2b977b',
+        program: 'Bzb7Lr2y4LPNLfmg4H865VLYSqPna8hwnBPh7H7AEvJt',
+        Is_used: false,
+      },
+      {
+        _id: '63d030584af89d11fd1845bf',
+        program: 'GABTzqQ4pX7FSqbWUjQr75Q5NpWeC8hWRtXMrKsHVWNE',
+        Is_used: false,
+      },
+      {
+        _id: '63d0307e4af89d11fd1845c0',
+        program: '8JDXsSySt8itV3q9EG9Ar2CM6zuhLQBBBV1XVNEs2kKJ',
+        Is_used: false,
+      },
+      {
+        _id: '63d0309f4af89d11fd1845c1',
+        program: '2GBbr2WxvCj9HPMUzPMmVmA9sjwygEueK8AAhAxVgrkM',
+        Is_used: false,
+      },
+      {
+        _id: '63d030c24af89d11fd1845c2',
+        program: 'BrcqvsuVfCSYi4hSpLJn94R2ebXrHiH9E1wdNoS6AUkp',
+        Is_used: false,
+      },
+      {
+        _id: '63d030e94af89d11fd1845c3',
+        program: 'Edi5jHNT7MDJWdnd73PjmUp4pASUYXbwNAfcfZwwaPkP',
         Is_used: false,
       },
     ];

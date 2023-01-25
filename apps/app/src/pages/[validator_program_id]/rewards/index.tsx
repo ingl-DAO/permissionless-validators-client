@@ -55,9 +55,9 @@ export default function Rewards() {
       rewardNotif.dismiss();
     }
     setRewardNotif(notif);
-    // notif.notify({
-    //   render: 'Loading rewards...',
-    // });
+    notif.notify({
+      render: 'Loading rewards...',
+    });
     nftService
       ?.loadRewards()
       .then((rewards) => {
@@ -183,7 +183,14 @@ export default function Rewards() {
             <Button
               variant="contained"
               color="primary"
-              disabled={isClaiming || areRewardsLoading}
+              disabled={
+                isClaiming ||
+                areRewardsLoading ||
+                selectedRewards.reduce(
+                  (total, reward) => total + reward.rewards,
+                  0
+                ) === 0
+              }
               onClick={() => setIsConfirmClaimDialogOpen(true)}
             >
               Claim Rewards
@@ -197,7 +204,7 @@ export default function Rewards() {
               sx={{ color: theme.palette.primary.main }}
             >{`${rewards
               .reduce((total, { rewards }) => total + rewards, 0)
-              .toString(10)} SOL`}</Typography>
+              .toFixed(4)} SOL`}</Typography>
           </Typography>
         </Box>
         <Scrollbars autoHide>
