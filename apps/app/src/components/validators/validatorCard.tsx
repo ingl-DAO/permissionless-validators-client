@@ -41,14 +41,13 @@ export default function ValidatorCard({
         display: 'grid',
         rowGap: theme.spacing(2),
         width: '100%',
-        cursor: 'pointer',
       }}
     >
       <img
         src={image_ref}
         width="100%"
         alt={name}
-        style={{ borderRadius: theme.spacing(1) }}
+        style={{ borderRadius: theme.spacing(1), cursor: 'pointer' }}
         onClick={() => handleOnClick('open')}
       />
       <Box
@@ -58,7 +57,10 @@ export default function ValidatorCard({
           rowGap: theme.spacing(1.75),
         }}
       >
-        <div onClick={() => handleOnClick('open')}>
+        <div
+          onClick={() => handleOnClick('open')}
+          style={{ cursor: 'pointer' }}
+        >
           <ValidatorCardContent
             title={website}
             value={name}
