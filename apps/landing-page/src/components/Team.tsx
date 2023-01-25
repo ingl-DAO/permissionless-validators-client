@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import theme from '../theme/theme';
 import UserCard from './UserCard';
 import cyrial from '../assets/cyrial.png';
@@ -28,7 +28,7 @@ export default function Team() {
     {
       fullname: 'Marco Kuidja',
       role: 'dev',
-      linkedinRef: 'https://www.linkedin.com/in/marco-kuidja',
+      linkedinRef: 'https://www.linkedin.com/in/kuidja-marco',
       imageRef: marco,
     },
     {
