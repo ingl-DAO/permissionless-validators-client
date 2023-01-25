@@ -100,7 +100,7 @@ export default function SectionValidator() {
             minimum solana validator requirements
           </a>{' '}
           met, device owners can onboard their computing unit to the solana
-          network without worries of the necessary voting.
+          network without worries of the necessary voting fees.
         </Typography>
         <Box
           sx={{
