@@ -113,6 +113,9 @@ export class NftService {
   ) {}
 
   async mintNft() {
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey) throw new WalletNotConnectedError();
+    
     const payerAccount: AccountMeta = {
       pubkey: this.walletContext.publicKey as PublicKey,
       isSigner: true,
