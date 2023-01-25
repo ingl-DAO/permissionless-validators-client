@@ -141,7 +141,7 @@ export class RegistryService {
     registrationData: ValidatorRegistration
   ) {
     const payerPubkey = this.walletContext.publicKey;
-    if (!payerPubkey) throw new WalletNotConnectedError();
+    if (!payerPubkey) throw new WalletNotConnectedError('Please connect your wallet !!!');
 
     const payerAccount: AccountMeta = {
       pubkey: payerPubkey,

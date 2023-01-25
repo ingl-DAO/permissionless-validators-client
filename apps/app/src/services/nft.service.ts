@@ -114,8 +114,8 @@ export class NftService {
 
   async mintNft() {
     const payerPubkey = this.walletContext.publicKey;
-    if (!payerPubkey) throw new WalletNotConnectedError();
-    
+    if (!payerPubkey) throw new WalletNotConnectedError('Please connect your wallet !!!');
+
     const payerAccount: AccountMeta = {
       pubkey: this.walletContext.publicKey as PublicKey,
       isSigner: true,
@@ -337,7 +337,7 @@ export class NftService {
 
   async redeemNft(tokenMint: PublicKey) {
     const payerPubkey = this.walletContext.publicKey;
-    if (!payerPubkey) throw new WalletNotConnectedError();
+    if (!payerPubkey) throw new WalletNotConnectedError('Please connect your wallet !!!');
 
     const payerAccount: AccountMeta = {
       pubkey: payerPubkey as PublicKey,
@@ -479,7 +479,7 @@ export class NftService {
 
   async delegateNft(tokenMint: PublicKey) {
     const payerPubkey = this.walletContext.publicKey;
-    if (!payerPubkey) throw new WalletNotConnectedError();
+    if (!payerPubkey) throw new WalletNotConnectedError('Please connect your wallet !!!');
 
     const payerAccount: AccountMeta = {
       pubkey: payerPubkey as PublicKey,
@@ -547,7 +547,7 @@ export class NftService {
 
   async undelegateNft(tokenMint: PublicKey) {
     const payerPubkey = this.walletContext.publicKey;
-    if (!payerPubkey) throw new WalletNotConnectedError();
+    if (!payerPubkey) throw new WalletNotConnectedError('Please connect your wallet !!!');
 
     const payerAccount: AccountMeta = {
       pubkey: payerPubkey as PublicKey,
@@ -635,6 +635,9 @@ export class NftService {
   }
 
   async loadNFTs() {
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey) throw new WalletNotConnectedError('Please connect your wallet !!!');
+
     const metaplex = new Metaplex(this.connection);
     const metaplexNft = metaplex.nfts();
 
@@ -698,7 +701,7 @@ export class NftService {
 
   async claimRewards(tokenMints: PublicKey[], expectedRewards: number) {
     const payerPubkey = this.walletContext.publicKey;
-    if (!payerPubkey) throw new WalletNotConnectedError();
+    if (!payerPubkey) throw new WalletNotConnectedError('Please connect your wallet !!!');
 
     if (expectedRewards === 0) throw new Error('No rewards to claim');
     const payerAccount: AccountMeta = {
@@ -785,7 +788,7 @@ export class NftService {
 
   async imprintRarity(tokenMint: PublicKey, network: WalletAdapterNetwork) {
     const payerPubkey = this.walletContext.publicKey;
-    if (!payerPubkey) throw new WalletNotConnectedError();
+    if (!payerPubkey) throw new WalletNotConnectedError('Please connect your wallet !!!');
 
     const payerAccount: AccountMeta = {
       pubkey: payerPubkey as PublicKey,
@@ -939,10 +942,12 @@ export class NftService {
   }
 
   async loadRewards() {
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey)
+      throw new WalletNotConnectedError('Please connect your wallet !!!');
+
     const metaplex = new Metaplex(this.connection);
     const metaplexNft = metaplex.nfts();
-    const payerPubkey = this.walletContext.publicKey as PublicKey;
-
     try {
       let ownerNfts = await metaplexNft.findAllByOwner({
         owner: payerPubkey,
