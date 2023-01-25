@@ -23,15 +23,15 @@ export default function DaoInformation({
 }) {
   const initialValues: DaoInfo = daoInfo ?? {
     proposal_quorum: 65,
-    governance_expiration_time: 35 * 24 * 3600,
+    governance_expiration_time: 35,
   };
 
   const validationSchema = Yup.object().shape({
     proposal_quorum: Yup.number().required('required').max(100).min(65),
     governance_expiration_time: Yup.number()
       .required('required')
-      .min(35 * 24 * 3600, 'Must be greater an 35 days')
-      .max(365 * 24 * 3599, 'Must be less than a year'),
+      .min(35, 'Must be greater an 35 days')
+      .max(365, 'Must be less than a year'),
   });
 
   const formik = useFormik({
@@ -100,8 +100,8 @@ export default function DaoInformation({
               formikKey: 'proposal_quorum',
             },
             {
-              label: 'Governance expiration time (seconds)',
-              description: 'Time needed for proposal to expire in seconds!',
+              label: 'Governance expiration time (days)',
+              description: 'Time needed for proposal to expire in days!',
               formikKey: 'governance_expiration_time',
               isNumber: true,
             },

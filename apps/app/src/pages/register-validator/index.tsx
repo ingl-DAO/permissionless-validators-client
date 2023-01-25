@@ -83,7 +83,8 @@ export default function Register() {
               redemption_fee_duration: voteAccountInfo.redemption_fee_duration,
               init_commission: voteAccountInfo.init_commission,
               default_uri: jsonFileData.default_uri,
-              governance_expiration_time: val.governance_expiration_time,
+              governance_expiration_time:
+                val.governance_expiration_time * (24 * 3600),
               creator_royalties: creatorRoyalties * 100,
             };
             createValidator(validatorInfo.validator_id, validator);
