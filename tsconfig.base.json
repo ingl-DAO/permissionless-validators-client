@@ -15,6 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@ingl-permissionless/axios": ["libs/axios/src/index.ts"],
       "@ingl-permissionless/state": ["libs/state/src/index.ts"]
     }
   },
