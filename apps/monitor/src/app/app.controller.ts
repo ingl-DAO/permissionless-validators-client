@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Put } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
@@ -20,7 +20,7 @@ export class AppController {
     return { program_id: await this.appService.findProgramId() };
   }
 
-  @Get(':program_id/use')
+  @Put(':program_id/use')
   useProgramId(@Param('program_id') programId: string) {
     return this.appService.useProgramId(programId);
   }
