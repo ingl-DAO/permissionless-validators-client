@@ -285,9 +285,15 @@ export class RegistryService {
     });
     try {
       const signature = await forwardLegacyTransaction(
-        { connection: this.connection, wallet: this.walletContext },
+        {
+          connection: this.connection,
+          publicKey: payerPubkey,
+          signTransaction: this.walletContext.signTransaction,
+        },
         [initProgramInstruction],
-        400_000
+        {
+          additionalUnits: 400_000,
+        }
       );
       this.useProgramId(programId.toBase58());
       return signature;
