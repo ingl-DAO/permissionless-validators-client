@@ -19,7 +19,7 @@ export const routes = [
         path: 'programs/:validator_program_id',
         element: <ValidatorLayout />,
         children: [
-          { path: '', element: <Navigate to="nfts" /> },
+          { path: '', element: <Navigate to="details" /> },
           { path: 'nfts', element: <ValidatorNFTs /> },
           { path: 'rewards', element: <Rewards /> },
           { path: 'details', element: <ValidatorStats /> },
