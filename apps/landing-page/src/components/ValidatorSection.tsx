@@ -1,9 +1,8 @@
-import { Button, Grid, Typography, Box, useMediaQuery } from '@mui/material';
-import Validator from '../assets/elec_earth.png';
-import theme from '../theme/theme';
-import SectionTitle from './SectionTitle';
+import { Box, Button, Grid, Typography, useMediaQuery } from '@mui/material';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import theme from '../theme/theme';
+import SectionTitle from './SectionTitle';
 AOS.init();
 
 export default function SectionValidator() {
@@ -52,7 +51,7 @@ export default function SectionValidator() {
           }}
         >
           <img
-            src={Validator}
+            src={'/assets/elec_earth.png'}
             alt={`Validators description`}
             style={{ width: '90%', marginLeft: '-30%' }}
           />

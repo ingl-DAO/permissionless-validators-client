@@ -1,7 +1,6 @@
-import { GitHub, Twitter, Telegram } from '@mui/icons-material';
+import { GitHub, Telegram, Twitter } from '@mui/icons-material';
 import { Box, Tooltip, Typography } from '@mui/material';
 import theme from '../theme/theme';
-import Discord from '../assets/discord.png';
 
 export default function Links() {
   const LINKS: { tooltip: string; link: string; icon: JSX.Element }[] = [
@@ -13,7 +12,7 @@ export default function Links() {
     {
       tooltip: 'discord',
       link: 'https://discord.gg/9KWvjKV3Ed',
-      icon: <img src={Discord} height="24px" alt="discord" />,
+      icon: <img src={'/assets/discord.png'} height="24px" alt="discord" />,
     },
     {
       tooltip: 'twitter',

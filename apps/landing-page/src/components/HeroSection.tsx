@@ -1,8 +1,7 @@
 import { Box, Button, Grid, Typography } from '@mui/material';
-import Hero from '../assets/hero_moon.png';
-import theme from '../theme/theme';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import theme from '../theme/theme';
 AOS.init();
 
 export default function HeroSection() {
@@ -97,7 +96,7 @@ export default function HeroSection() {
         }}
       >
         <img
-          src={Hero}
+          src={'/assets/hero_moon.png'}
           alt="ingl hero"
           style={{
             width: '120%',

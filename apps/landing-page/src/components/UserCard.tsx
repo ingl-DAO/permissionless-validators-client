@@ -32,7 +32,7 @@ export default function UserCard({
         }}
       >
         <img
-          src={imageRef}
+          src={`/assets/${imageRef}`}
           alt={`${fullname}'s profile`}
           style={{
             width: '100%',

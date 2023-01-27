@@ -1,13 +1,9 @@
 import { Box } from '@mui/material';
-import theme from '../theme/theme';
-import UserCard from './UserCard';
-import cyrial from '../assets/cyrial.png';
-import marco from '../assets/marco.png';
-import angelo from '../assets/angelo.png';
-import lorrain from '../assets/lorrain.png';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import theme from '../theme/theme';
 import SectionTitle from './SectionTitle';
+import UserCard from './UserCard';
 AOS.init();
 
 export interface Member {
@@ -23,25 +19,25 @@ export default function Team() {
       fullname: 'Cyrial Kamda',
       role: 'dev',
       linkedinRef: 'https://www.linkedin.com/in/kamda-cyrial/',
-      imageRef: cyrial,
+      imageRef: 'cyrial.png',
     },
     {
       fullname: 'Marco Kuidja',
       role: 'dev',
       linkedinRef: 'https://www.linkedin.com/in/kuidja-marco',
-      imageRef: marco,
+      imageRef: 'marco.png',
     },
     {
       fullname: 'Ange Noubissie',
       role: 'dev',
       linkedinRef: 'https://www.linkedin.com/in/diepe-angelo/',
-      imageRef: angelo,
+      imageRef: 'angelo.png',
     },
     {
       fullname: 'Lorrain Tchakoumi',
       role: 'dev',
       linkedinRef: 'https://www.linkedin.com/in/ltchakoumi',
-      imageRef: lorrain,
+      imageRef: 'lorrain.png',
     },
   ];
   return (

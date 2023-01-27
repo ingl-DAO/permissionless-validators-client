@@ -1,9 +1,8 @@
-import { Button, Grid, Typography, Box, useMediaQuery } from '@mui/material';
-import NFT from '../assets/nfts.png';
-import theme from '../theme/theme';
-import SectionTitle from './SectionTitle';
+import { Box, Button, Grid, Typography, useMediaQuery } from '@mui/material';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import theme from '../theme/theme';
+import SectionTitle from './SectionTitle';
 AOS.init();
 
 export default function SectionNFT() {
@@ -56,7 +55,7 @@ export default function SectionNFT() {
           }}
         >
           <img
-            src={NFT}
+            src={'/assets/nfts.png'}
             alt={`NFT description`}
             style={{ width: '95%', marginRight: '-20%' }}
           />

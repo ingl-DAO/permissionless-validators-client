@@ -1,12 +1,11 @@
 import { useState /*cloneElement*/ } from 'react';
 // import AppBar from '@mui/material/AppBar';
 // import useScrollTrigger from '@mui/material/useScrollTrigger';
-import Box from '@mui/material/Box';
-import Logo from '../assets/logo.png';
-import theme from '../theme/theme';
-import { Button, IconButton, SwipeableDrawer, Tooltip } from '@mui/material';
-import NavItem, { ExternalNavItem } from './NavItem';
 import { MenuRounded } from '@mui/icons-material';
+import { Button, IconButton, SwipeableDrawer, Tooltip } from '@mui/material';
+import Box from '@mui/material/Box';
+import theme from '../theme/theme';
+import NavItem, { ExternalNavItem } from './NavItem';
 
 // interface Props {
 //   children: React.ReactElement;
@@ -100,7 +99,7 @@ export default function Navbar() {
         }}
       >
         <Box sx={{ height: { laptop: '59.88px', mobile: '40px' } }}>
-          <img src={Logo} height="100%" alt="ingl logo" />
+          <img src={'/assets/logo.png'} height="100%" alt="ingl logo" />
         </Box>
         <Box
           sx={{
