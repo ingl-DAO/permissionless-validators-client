@@ -17,7 +17,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from '@solana/web3.js';
-import * as BN from 'bn.js';
+import {BN} from 'bn.js';
 import { GeneralData, ValidatorConfig } from '../state';
 
 export const forwardLegacyTransaction = async (
