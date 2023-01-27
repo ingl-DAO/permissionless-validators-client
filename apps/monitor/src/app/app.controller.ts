@@ -6,10 +6,8 @@ import {
   HttpStatus,
   Param,
   Post,
-  Put,
+  Put
 } from '@nestjs/common';
-import { PublicKey } from '@solana/web3.js';
-import { isBase58 } from 'class-validator';
 import { RegisterValidatorDto } from './app.dto';
 import { AppService } from './app.service';
 
@@ -37,9 +35,8 @@ export class AppController {
     return this.appService.useProgramId(programId);
   }
 
-  @Post(':program_id/register-validator')
+  @Post('register-validator')
   async registerNewValidator(
-    @Param('program_id') programId: string,
     @Body()
     newValidator: RegisterValidatorDto
   ) {
@@ -51,11 +48,6 @@ export class AppController {
       initial_redemption_fee,
       is_validator_id_switchable,
     } = newValidator;
-    if (!isBase58(programId))
-      throw new HttpException(
-        'program_id must be a base 58 encoded string',
-        HttpStatus.BAD_REQUEST
-      );
     if (!is_validator_id_switchable && initial_redemption_fee !== 0)
       throw new HttpException(
         'Validator id must be switchable if there exists any redemption fee',
@@ -76,9 +68,6 @@ export class AppController {
         'Rarities must sum to 10000',
         HttpStatus.BAD_REQUEST
       );
-    return this.appService.registerValidator(
-      new PublicKey(programId),
-      newValidator
-    );
+    return this.appService.registerValidator(newValidator);
   }
 }

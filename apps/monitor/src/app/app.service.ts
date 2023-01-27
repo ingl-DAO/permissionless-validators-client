@@ -85,20 +85,23 @@ export class AppService {
   }
 
   async findProgramId() {
-    const { data } = await this.httpService.axiosRef.post<{
-      document?: {
-        _id: string;
-        program: string;
-        Is_used: boolean;
-      };
-    }>(
-      'https://data.mongodb-api.com/app/data-ywjjx/endpoint/data/v1/action/findOne',
-      this.requestBody,
-      {
-        headers: this.headers,
+    const programs = await this.findPrograms();
+    for (let i = 0; i < programs.length; i++) {
+      const { program } = programs[i];
+      const programKey = new PublicKey(program);
+      const programAccount = await this.connection.getAccountInfo(programKey);
+      if (programAccount && programAccount.executable) {
+        const [configAccountKey] = PublicKey.findProgramAddressSync(
+          [Buffer.from(INGL_CONFIG_SEED)],
+          programKey
+        );
+        const configAccount = await this.connection.getAccountInfo(
+          configAccountKey
+        );
+        if (!configAccount) return programKey.toBase58();
       }
-    );
-    return data.document?.program;
+    }
+    return null;
   }
 
   async useProgramId(programId: string) {
@@ -127,10 +130,18 @@ export class AppService {
     );
   }
 
-  async registerValidator(
-    programId: PublicKey,
-    { validator_id, ...newValidator }: RegisterValidatorDto
-  ) {
+  async registerValidator({
+    validator_id,
+    ...newValidator
+  }: RegisterValidatorDto) {
+    const programId = await this.findProgramId();
+    if (!programId)
+      throw new HttpException(
+        'No predeployed program available',
+        HttpStatus.EXPECTATION_FAILED
+      );
+    const programPubkey = new PublicKey(programId);
+
     const keypairBuffer = Buffer.from(
       JSON.parse(process.env.BACKEND_KEYPAIR as string)
     );
@@ -150,7 +161,7 @@ export class AppService {
 
     const [inglConfigKey] = PublicKey.findProgramAddressSync(
       [Buffer.from(INGL_CONFIG_SEED)],
-      programId
+      programPubkey
     );
     const configAccount: AccountMeta = {
       pubkey: inglConfigKey,
@@ -159,7 +170,7 @@ export class AppService {
     };
     const [urisAccountKey] = PublicKey.findProgramAddressSync(
       [Buffer.from(URIS_ACCOUNT_SEED)],
-      programId
+      programPubkey
     );
     const urisAccount: AccountMeta = {
       isSigner: false,
@@ -169,7 +180,7 @@ export class AppService {
 
     const [inglNftCollectionMintKey] = PublicKey.findProgramAddressSync(
       [Buffer.from(INGL_NFT_COLLECTION_KEY)],
-      programId
+      programPubkey
     );
 
     const collectionMintAccount: AccountMeta = {
@@ -180,7 +191,7 @@ export class AppService {
 
     const [collectionAutorityKey] = PublicKey.findProgramAddressSync(
       [Buffer.from(INGL_MINT_AUTHORITY_KEY)],
-      programId
+      programPubkey
     );
 
     const mintAuthorityAccount: AccountMeta = {
@@ -224,7 +235,7 @@ export class AppService {
 
     const [generalAccountPubkey] = PublicKey.findProgramAddressSync(
       [Buffer.from(GENERAL_ACCOUNT_SEED)],
-      programId
+      programPubkey
     );
 
     const generalAccount: AccountMeta = {
@@ -241,7 +252,7 @@ export class AppService {
 
     const [inglCollectionHolderKey] = PublicKey.findProgramAddressSync(
       [Buffer.from(COLLECTION_HOLDER_KEY)],
-      programId
+      programPubkey
     );
     const collectionHolderAccount: AccountMeta = {
       pubkey: inglCollectionHolderKey,
@@ -318,7 +329,7 @@ export class AppService {
     };
 
     const programAccount: AccountMeta = {
-      pubkey: programId,
+      pubkey: programPubkey,
       isSigner: false,
       isWritable: false,
     };
@@ -343,7 +354,7 @@ export class AppService {
       governance_expiration_time: governance_expiration_time * (24 * 3600),
     });
     const initProgramInstruction = new TransactionInstruction({
-      programId,
+      programId: programPubkey,
       data: Buffer.from(serialize(initProgramPayload)),
       keys: [
         payerAccount,
@@ -373,13 +384,13 @@ export class AppService {
       ],
     });
     const uploadUrisInstructions = this.createUploadUriInst(
-      programId,
+      programPubkey,
       [payerAccount, configAccount, urisAccount],
       rarities
     );
     const [voteAccountKey] = PublicKey.findProgramAddressSync(
       [Buffer.from(VOTE_ACCOUNT_KEY)],
-      programId
+      programPubkey
     );
     const voteAccount: AccountMeta = {
       pubkey: voteAccountKey,
@@ -393,7 +404,7 @@ export class AppService {
     };
     const [stakeAccountKey] = PublicKey.findProgramAddressSync(
       [Buffer.from(STAKE_ACCOUNT_KEY)],
-      programId
+      programPubkey
     );
     const stakeAccount: AccountMeta = {
       pubkey: stakeAccountKey,
@@ -411,7 +422,7 @@ export class AppService {
         configAccount,
         generalAccount,
       ],
-      programId,
+      programId: programPubkey,
       data: Buffer.from(serialize(new CreateVoteAccount(0))),
     });
     try {
@@ -426,7 +437,7 @@ export class AppService {
           signingKeypairs: [payerKeypair],
         }
       );
-      this.useProgramId(programId.toBase58());
+      this.useProgramId(programPubkey.toBase58());
       const uriSignatures = await Promise.all(
         uploadUrisInstructions.map((instruction) =>
           forwardLegacyTransaction(
