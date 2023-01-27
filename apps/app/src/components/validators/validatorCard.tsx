@@ -3,7 +3,9 @@ import { Skeleton } from '@mui/material';
 import { Box } from '@mui/system';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { BN } from 'bn.js';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import useNotification from '../../common/utils/notification';
 import { Validator } from '../../interfaces';
 import theme from '../../theme/theme';
 import ValidatorCardContent from './validatorCardContent';
@@ -25,11 +27,27 @@ export default function ValidatorCard({
   validator: Validator;
   searchValue: string;
 }) {
+  const [validatorCardNotif, setValidatorCardNotif] =
+    useState<useNotification>();
   const navigate = useNavigate();
 
   const handleOnClick = (type: 'open' | 'copy') => {
-    if (type === 'open') navigate(vp_id);
-    navigator.clipboard.writeText(va_id);
+    if (type === 'open') {
+      navigate(vp_id);
+    } else {
+      if (validatorCardNotif) validatorCardNotif.dismiss();
+      const notif = new useNotification();
+      notif.notify({
+        render: 'Copying the vote account ID to clipboard...',
+      });
+      notif.update({
+        render: 'Copied the vote account ID to clipboard',
+        type: 'SUCCESS',
+        autoClose: 2000,
+      });
+      setValidatorCardNotif(notif);
+      navigator.clipboard.writeText(va_id);
+    }
   };
 
   return (
@@ -43,13 +61,16 @@ export default function ValidatorCard({
         width: '100%',
       }}
     >
-      <img
-        src={image_ref}
-        width="100%"
-        alt={name}
-        style={{ borderRadius: theme.spacing(1), cursor: 'pointer' }}
-        onClick={() => handleOnClick('open')}
-      />
+      <div onClick={(e) => handleOnClick('open')} style={{ cursor: 'pointer' }}>
+        <img
+          src={image_ref}
+          width="100%"
+          alt={name}
+          style={{ borderRadius: theme.spacing(1), cursor: 'pointer' }}
+          onClick={() => handleOnClick('open')}
+        />
+      </div>
+
       <Box
         sx={{
           display: 'grid',
@@ -57,17 +78,12 @@ export default function ValidatorCard({
           rowGap: theme.spacing(1.75),
         }}
       >
-        <div
-          onClick={() => handleOnClick('open')}
-          style={{ cursor: 'pointer' }}
-        >
-          <ValidatorCardContent
-            title={website}
-            value={name}
-            revert
-            searchValue={searchValue}
-          />
-        </div>
+        <ValidatorCardContent
+          title={website}
+          value={name}
+          revert
+          searchValue={searchValue}
+        />
         <label
           onClick={() => handleOnClick('copy')}
           style={{ display: 'grid', gridAutoFlow: 'column' }}
