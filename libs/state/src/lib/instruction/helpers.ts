@@ -17,7 +17,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from '@solana/web3.js';
-import * as BN from 'bn.js';
+import {BN} from 'bn.js';
 import { GeneralData, ValidatorConfig } from '../state';
 
 export const forwardLegacyTransaction = async (
@@ -32,7 +32,6 @@ export const forwardLegacyTransaction = async (
     signingKeypairs?: Keypair[];
   }
 ) => {
-  // const connection = new Connection(clusterApiUrl(WalletAdapterNetwork.Devnet));
   console.log('forwarding legacy transaction...');
   const { connection, publicKey: payerKey, signTransaction } = walletConnection;
 
@@ -54,6 +53,11 @@ export const forwardLegacyTransaction = async (
   const signedTransaction = signTransaction
     ? await signTransaction(transaction)
     : null;
+
+  if (!options?.signingKeypairs && !signTransaction)
+    throw new Error(
+      'Transaction must always be signed. Please use your browser wallet and/or your keypair to sign.'
+    );
 
   const signature = await connection.sendRawTransaction(
     (signedTransaction as Transaction).serialize()
@@ -109,10 +113,6 @@ export async function forwardV0Transaction(
 
   const transactionV0 = new VersionedTransaction(messageV0);
 
-  if (!options?.signerKeypairs && signTransaction)
-    throw new Error(
-      'Transaction must always be signed. Please use your browser wallet and/or your keypair to sign.'
-    );
   if (options?.signerKeypairs && options?.signerKeypairs.length > 0)
     transactionV0.sign(options?.signerKeypairs);
 
