@@ -202,11 +202,8 @@ export async function computeVoteAccountRewardAPY(
       : latestVoteRewards.reduce(
           (acc, curr) =>
             acc +
-            Number(
-              new BN(curr.nft_holders_reward)
-                .div(new BN(validatorConfig.max_primary_stake))
-                .toString(10)
-            ),
+            Number(new BN(curr.nft_holders_reward)) /
+              Number(new BN(validatorConfig.max_primary_stake)),
           0
         ) / latestVoteRewards.length;
 
@@ -218,16 +215,18 @@ export async function computeVoteAccountRewardAPY(
     (numberOfSlotsInCurrentEpoch * timePerSlot) / (60 * 60 * 24);
 
   const rewardPerYear = rewardPerPrimaryLamportPerEpoch * (365 / timePerEpoch);
-  const apy = rewardPerYear * 100;
-  // console.log('latestVoteRewards', latestVoteRewards);
-  // console.log(
-  //   'rewardPerPrimaryLamportPerEpoch',
-  //   rewardPerPrimaryLamportPerEpoch
-  // );
-  // console.log('numberOfSlotsInCurrentEpoch', numberOfSlotsInCurrentEpoch);
-  // console.log('timePerSlot', timePerSlot);
-  // console.log('timePerEpoch', timePerEpoch);
-  // console.log('rewardPerYear', rewardPerYear);
-  // console.log('APY', apy);
+  const apy = Math.trunc(rewardPerYear * 100) / 100;
+
+  console.log('validatorConfig', validatorConfig);
+  console.log('latestVoteRewards', latestVoteRewards);
+  console.log(
+    'rewardPerPrimaryLamportPerEpoch',
+    rewardPerPrimaryLamportPerEpoch
+  );
+  console.log('numberOfSlotsInCurrentEpoch', numberOfSlotsInCurrentEpoch);
+  console.log('timePerSlot', timePerSlot);
+  console.log('timePerEpoch', timePerEpoch);
+  console.log('rewardPerYear', rewardPerYear);
+  console.log('APY', apy);
   return apy;
 }
