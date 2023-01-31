@@ -78,7 +78,9 @@ export default function ValidatorInformation({
     validator_id: Yup.string().required('required'),
     validator_name: Yup.string().required('required').max(32),
     discord_invite: Yup.string().required('required').max(32),
-    twitter_handle: Yup.string().required('required'),
+    twitter_handle: Yup.string()
+      .required('required')
+      .matches(/(^|[^@\w])@(\w{1,30})\b/, 'invalid twitter handle'),
     website: Yup.string().required('required').max(64),
   });
 

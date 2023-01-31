@@ -2,7 +2,6 @@ import { Box, Button, Typography } from '@mui/material';
 import React from 'react';
 import theme from '../theme/theme';
 import SectionTitle from './SectionTitle';
-import BG from '../assets/spiral.png';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 AOS.init();
@@ -45,7 +44,7 @@ export default function DaoSection() {
         }}
       >
         <img
-          src={BG}
+          src={'/assets/spiral.png'}
           alt="dao over world"
           style={{
             position: 'absolute',

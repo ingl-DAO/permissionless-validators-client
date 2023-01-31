@@ -3,6 +3,7 @@ import { Box, Button, Skeleton, Typography } from '@mui/material';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
+import MintDialog from '../../../components/mintDialog';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import CopyTransactionId from '../../../common/components/copyTransactionId';
@@ -19,7 +20,7 @@ export default function ValidatorNFTs() {
   const { connection } = useConnection();
   const { validator_program_id } = useParams();
 
-  const [isConfirmMintDialogOpen, setIsConfirmMintDialogOpen] =
+  const [isMintingDialogOpen, setIsMintingDialogOpen] =
     useState<boolean>(false);
 
   const nftService = useMemo(
@@ -38,29 +39,38 @@ export default function ValidatorNFTs() {
   const [isMinting, setIsMinting] = useState<boolean>(false);
   const [nftNotif, setNftNotif] = useState<useNotification>();
 
-  const mintNft = () => {
+  const mintNft = (numberOfNfts?: number) => {
     setIsMinting(true);
     const notif = new useNotification();
     if (nftNotif) nftNotif.dismiss();
     setNftNotif(notif);
     notif.notify({
-      render: 'Minting your awesome NFT...',
+      render: 'Minting your awesome NFTs...',
     });
     nftService
-      ?.mintNft()
-      .then(({ tokenMint, signature }) => {
+      ?.mintNft(numberOfNfts || 1)
+      .then(({ tokenMints, signature }) => {
         notif.update({
           render: (
             <CopyTransactionId
               transaction_id={signature}
-              message="NFT minted successfully"
+              message="NFT minted successfully || Copy last transaction id 👉"
             />
           ),
         });
         nftService
-          ?.loadNFT(tokenMint)
-          .then((newNft) => {
-            if (newNft) setNfts([newNft, ...nfts]);
+          ?.loadNFTsByMint(tokenMints)
+          .then((newNfts) => {
+            if (newNfts.length > 0) {
+              const finalNfts = [];
+              for (let i = 0; i < newNfts.length; i++) {
+                const nft = newNfts[i];
+                if (nft) {
+                  finalNfts.push(nft);
+                }
+              }
+              setNfts([...finalNfts, ...nfts]);
+            }
             setNftNotif(undefined);
           })
           .catch((error) => {
@@ -78,7 +88,7 @@ export default function ValidatorNFTs() {
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => mintNft()}
+              retryFunction={() => mintNft(numberOfNfts || 1)}
               notification={notif}
               message={
                 error?.message ||
@@ -90,7 +100,9 @@ export default function ValidatorNFTs() {
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
       })
-      .finally(() => setIsMinting(false));
+      .finally(() => {
+        setIsMinting(false);
+      });
   };
 
   const [areNftsLoading, setAreNftsLoading] = useState<boolean>(false);
@@ -173,7 +185,7 @@ export default function ValidatorNFTs() {
           render: (
             <CopyTransactionId
               transaction_id={signature}
-              message="NFT redeemed successfully"
+              message="NFT redeemed successfully || Copy transaction id 👉"
             />
           ),
         });
@@ -224,7 +236,7 @@ export default function ValidatorNFTs() {
           render: (
             <CopyTransactionId
               transaction_id={signature}
-              message="NFT delegated successfully"
+              message="NFT delegated successfully || Copy transaction id 👉"
             />
           ),
         });
@@ -276,7 +288,7 @@ export default function ValidatorNFTs() {
           render: (
             <CopyTransactionId
               transaction_id={signature}
-              message="NFT undelegated successfully"
+              message="NFT undelegated successfully || Copy transaction id 👉"
             />
           ),
         });
@@ -345,7 +357,7 @@ export default function ValidatorNFTs() {
           render: (
             <CopyTransactionId
               transaction_id={signature}
-              message="Revealed rarity successfully"
+              message="Revealed rarity successfully || Copy transaction id 👉"
             />
           ),
         });
@@ -418,15 +430,11 @@ export default function ValidatorNFTs() {
           />
         </>
       )}
-      <ConfirmDialog
-        closeDialog={() => setIsConfirmMintDialogOpen(false)}
-        dialogMessage={
-          'You are about to mint a new nft. Click confirm to continue!'
-        }
-        isDialogOpen={isConfirmMintDialogOpen}
-        dialogTitle={'Confirm Mint NFT'}
-        confirmButton="Mint"
-        confirm={() => mintNft()}
+
+      <MintDialog
+        closeDialog={() => setIsMintingDialogOpen(false)}
+        isDialogOpen={isMintingDialogOpen}
+        confirm={(numberOfNfts) => mintNft(numberOfNfts)}
       />
       <Box>
         <Box
@@ -441,7 +449,7 @@ export default function ValidatorNFTs() {
             variant="contained"
             color="primary"
             disabled={isMinting || areNftsLoading}
-            onClick={() => setIsConfirmMintDialogOpen(true)}
+            onClick={() => setIsMintingDialogOpen(true)}
           >
             Mint NFT Now
           </Button>

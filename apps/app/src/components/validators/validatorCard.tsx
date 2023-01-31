@@ -83,29 +83,30 @@ export default function ValidatorCard({
             revert
             searchValue={searchValue}
           />
-          <label
-            onClick={(e) => {
-              e.stopPropagation();
-              handleOnClick('copy');
-            }}
-            style={{ display: 'grid', gridAutoFlow: 'column' }}
-          >
+          <Box style={{ display: 'grid', gridAutoFlow: 'column' }}>
             <ValidatorCardContent
               title="Vote account ID"
               value={va_id.slice(0, 10) + '...' + va_id.slice(-4)}
               searchValue={searchValue}
               trim
             />
-            <ContentCopyRounded
-              fontSize="small"
-              sx={{
-                color: 'white',
-                '&:hover': { color: `#EF233C` },
-                justifySelf: 'start',
-                cursor: 'pointer',
+            <label
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOnClick('copy');
               }}
-            />
-          </label>
+            >
+              <ContentCopyRounded
+                fontSize="small"
+                sx={{
+                  color: 'white',
+                  '&:hover': { color: `#EF233C` },
+                  justifySelf: 'start',
+                  cursor: 'pointer',
+                }}
+              />
+            </label>
+          </Box>
           <Box
             sx={{
               display: 'grid',

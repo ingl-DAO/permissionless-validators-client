@@ -2,7 +2,6 @@ import React from 'react';
 import Question from './Question';
 import SectionTitle from './SectionTitle';
 import theme from '../theme/theme';
-import Wave from '../assets/wave.png';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { Box } from '@mui/material';
@@ -71,7 +70,7 @@ export default function Faqs() {
         ))}
       </Box>
       <img
-        src={Wave}
+        src={'/assets/wave.png'}
         alt="wave"
         style={{
           width: '170%',
