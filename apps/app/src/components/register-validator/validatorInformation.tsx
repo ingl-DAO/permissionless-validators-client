@@ -172,7 +172,7 @@ export default function ValidatorInformation({
               },
               {
                 label: 'Twitter handle',
-                description: 'ex: inglDao',
+                description: 'ex: @inglDao',
                 formikKey: 'twitter_handle',
               },
             ].map(({ description, formikKey, label }, index) => (
