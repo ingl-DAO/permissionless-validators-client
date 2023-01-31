@@ -51,17 +51,17 @@ export default function ValidatorCard({
   };
 
   return (
-    <Box
-      sx={{
-        backgroundColor: '#28293D',
-        borderRadius: theme.spacing(1),
-        padding: `${theme.spacing(2)} ${theme.spacing(2.5)}`,
-        display: 'grid',
-        rowGap: theme.spacing(2),
-        width: '100%',
-      }}
-    >
-      <div onClick={(e) => handleOnClick('open')} style={{ cursor: 'pointer' }}>
+    <div onClick={(e) => handleOnClick('open')} style={{ cursor: 'pointer' }}>
+      <Box
+        sx={{
+          backgroundColor: '#28293D',
+          borderRadius: theme.spacing(1),
+          padding: `${theme.spacing(2)} ${theme.spacing(2.5)}`,
+          display: 'grid',
+          rowGap: theme.spacing(2),
+          width: '100%',
+        }}
+      >
         <img
           src={image_ref}
           width="100%"
@@ -69,72 +69,77 @@ export default function ValidatorCard({
           style={{ borderRadius: theme.spacing(1), cursor: 'pointer' }}
           onClick={() => handleOnClick('open')}
         />
-      </div>
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridAutoFlow: 'row',
-          rowGap: theme.spacing(1.75),
-        }}
-      >
-        <ValidatorCardContent
-          title={website}
-          value={name}
-          revert
-          searchValue={searchValue}
-        />
-        <label
-          onClick={() => handleOnClick('copy')}
-          style={{ display: 'grid', gridAutoFlow: 'column' }}
+        <Box
+          sx={{
+            display: 'grid',
+            gridAutoFlow: 'row',
+            rowGap: theme.spacing(1.75),
+          }}
         >
           <ValidatorCardContent
-            title="Vote account ID"
-            value={va_id.slice(0, 10) + '...' + va_id.slice(-4)}
+            title={website}
+            value={name}
+            revert
             searchValue={searchValue}
-            trim
           />
-          <ContentCopyRounded
-            fontSize="small"
-            sx={{
-              color: 'white',
-              '&:hover': { color: `#EF233C` },
-              justifySelf: 'start',
-              cursor: 'pointer',
+          <label
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOnClick('copy');
             }}
-          />
-        </label>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: '1fr auto',
-            columnGap: theme.spacing(2),
-          }}
-        >
-          <ValidatorCardContent title="NFTs share" value={`${nft_share}%`} />
-          <ValidatorCardContent
-            title="Unit backing"
-            value={`${
-              new BN(unit_backing ?? 0).toNumber() / LAMPORTS_PER_SOL
-            } SOL`}
-            right
-          />
-        </Box>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: '1fr auto',
-            columnGap: theme.spacing(2),
-          }}
-        >
-          <ValidatorCardContent
-            title="Total stake requested"
-            value={`${new BN(tr_stake ?? 0).toNumber() / LAMPORTS_PER_SOL} SOL`}
-          />
-          <ValidatorCardContent title="APY" value={`${apy}%`} right />
+            style={{ display: 'grid', gridAutoFlow: 'column' }}
+          >
+            <ValidatorCardContent
+              title="Vote account ID"
+              value={va_id.slice(0, 10) + '...' + va_id.slice(-4)}
+              searchValue={searchValue}
+              trim
+            />
+            <ContentCopyRounded
+              fontSize="small"
+              sx={{
+                color: 'white',
+                '&:hover': { color: `#EF233C` },
+                justifySelf: 'start',
+                cursor: 'pointer',
+              }}
+            />
+          </label>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: '1fr auto',
+              columnGap: theme.spacing(2),
+            }}
+          >
+            <ValidatorCardContent title="NFTs share" value={`${nft_share}%`} />
+            <ValidatorCardContent
+              title="Unit backing"
+              value={`${
+                new BN(unit_backing ?? 0).toNumber() / LAMPORTS_PER_SOL
+              } SOL`}
+              right
+            />
+          </Box>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: '1fr auto',
+              columnGap: theme.spacing(2),
+            }}
+          >
+            <ValidatorCardContent
+              title="Total stake requested"
+              value={`${
+                new BN(tr_stake ?? 0).toNumber() / LAMPORTS_PER_SOL
+              } SOL`}
+            />
+            <ValidatorCardContent title="APY" value={`${apy}%`} right />
+          </Box>
         </Box>
       </Box>
-    </Box>
+    </div>
   );
 }
 export function ValidatorSkeleton() {
