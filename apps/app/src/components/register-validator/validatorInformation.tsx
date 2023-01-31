@@ -80,7 +80,7 @@ export default function ValidatorInformation({
     discord_invite: Yup.string().required('required').max(32),
     twitter_handle: Yup.string()
       .required('required')
-      .matches(/(^|[^@\w])@(\w{1,30})\b/, 'invalid twitter handle'),
+      .matches(/^(@)?[A-Za-z0-9_]{1,15}$/, 'invalid twitter handle'),
     website: Yup.string().required('required').max(64),
   });
 

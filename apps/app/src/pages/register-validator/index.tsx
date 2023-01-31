@@ -71,7 +71,7 @@ export default function Register() {
               rarities: jsonFileData.rarities,
               discord_invite: validatorInfo.discord_invite,
               website: validatorInfo.website,
-              twitter_handle: validatorInfo.twitter_handle,
+              twitter_handle: validatorInfo.twitter_handle.split('@')[1],
               rarity_names: jsonFileData.rarity_names,
               is_validator_id_switchable:
                 voteAccountInfo.is_validator_id_switchable,
