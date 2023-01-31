@@ -17,7 +17,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from '@solana/web3.js';
-import {BN} from 'bn.js';
+import { BN } from 'bn.js';
 import { GeneralData, ValidatorConfig } from '../state';
 
 export const forwardLegacyTransaction = async (
@@ -215,18 +215,19 @@ export async function computeVoteAccountRewardAPY(
     (numberOfSlotsInCurrentEpoch * timePerSlot) / (60 * 60 * 24);
 
   const rewardPerYear = rewardPerPrimaryLamportPerEpoch * (365 / timePerEpoch);
-  const apy = Math.trunc(rewardPerYear * 100) / 100;
+  let apy = rewardPerYear * 100;
+  apy = Math.trunc(apy * 100) / 100; // just truncating apy to 2 decimal places here
 
-  console.log('validatorConfig', validatorConfig);
-  console.log('latestVoteRewards', latestVoteRewards);
-  console.log(
-    'rewardPerPrimaryLamportPerEpoch',
-    rewardPerPrimaryLamportPerEpoch
-  );
-  console.log('numberOfSlotsInCurrentEpoch', numberOfSlotsInCurrentEpoch);
-  console.log('timePerSlot', timePerSlot);
-  console.log('timePerEpoch', timePerEpoch);
-  console.log('rewardPerYear', rewardPerYear);
-  console.log('APY', apy);
+  // console.log('validatorConfig', validatorConfig);
+  // console.log('latestVoteRewards', latestVoteRewards);
+  // console.log(
+  //   'rewardPerPrimaryLamportPerEpoch',
+  //   rewardPerPrimaryLamportPerEpoch
+  // );
+  // console.log('numberOfSlotsInCurrentEpoch', numberOfSlotsInCurrentEpoch);
+  // console.log('timePerSlot', timePerSlot);
+  // console.log('timePerEpoch', timePerEpoch);
+  // console.log('rewardPerYear', rewardPerYear);
+  // console.log('APY', apy);
   return apy;
 }
