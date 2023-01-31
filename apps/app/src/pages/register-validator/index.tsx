@@ -241,7 +241,32 @@ export default function Register() {
         )}
         <Typography variant="h5">Validator Registration</Typography>
       </Box>
-      {stepComponent[step]}
+      <Box
+        sx={{
+          display: 'grid',
+          columnGap: theme.spacing(2),
+          gridTemplateColumns: {
+            mobile: 'auto',
+            laptop: step !== 3 ? 'auto 1fr' : 'auto',
+          },
+          '&>img': {
+            display: {
+              mobile: 'none',
+              laptop: step !== 3 ? 'initial' : 'none',
+            },
+          },
+        }}
+      >
+        <img
+          src="/assets/hero.png"
+          alt="Hero"
+          style={{
+            width: '80%',
+            justifySelf: 'center',
+          }}
+        />
+        {stepComponent[step]}
+      </Box>
     </Box>
   );
 }

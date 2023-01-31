@@ -91,7 +91,7 @@ export default function DaoInformation({
         </Box>
       </Box>
       <Scrollbars autoHide>
-        <Box sx={{ display: 'grid', rowGap: theme.spacing(1) }}>
+        <Box sx={{ display: 'grid', rowGap: theme.spacing(4) }}>
           {[
             {
               label: 'Proposal quorum (%)',
