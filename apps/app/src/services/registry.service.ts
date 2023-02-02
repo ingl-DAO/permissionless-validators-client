@@ -25,7 +25,6 @@ export class RegistryService {
   }
 
   async registerProgram(
-    programId: PublicKey,
     validatorId: PublicKey,
     { ...registrationData }: ValidatorRegistration
   ) {
@@ -33,12 +32,15 @@ export class RegistryService {
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
 
-    const { data: transaction } = await http.post<Transaction>(
-      `programs/new-validator`,
-      {
-        ...registrationData,
-        validator_id: validatorId,
-      }
+    const {
+      data: [programId, transaction],
+    } = await http.post<[string, Transaction]>(`programs/new-validator`, {
+      ...registrationData,
+      validator_id: validatorId,
+    });
+    const { data: uploadUritransactions } = await http.post<Transaction[]>(
+      `programs/${programId}/upload-uris`,
+      { rarities: registrationData.rarities }
     );
     try {
       const signatures = await forwardExistingTransactions(
@@ -47,10 +49,10 @@ export class RegistryService {
           payerKey: payerPubkey,
           signAllTransactions: this.walletContext.signAllTransactions,
         },
-        [transaction]
+        [transaction, ...uploadUritransactions]
       );
-      this.useProgramId(programId.toBase58());
-      return signatures[0];
+      this.useProgramId(programId);
+      return signatures;
     } catch (error) {
       throw new Error(
         'Validator program registration failed with the following errors:' +

@@ -2,7 +2,7 @@ import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import CopyTransactionId from '../../common/components/copyTransactionId';
 import ErrorMessage from '../../common/components/ErrorMessage';
@@ -129,28 +129,6 @@ export default function Register() {
       />
     ),
   };
-  const [programId, setProgramId] = useState<PublicKey>();
-  useEffect(() => {
-    const notif = new useNotification();
-    if (validatorNotif) validatorNotif.dismiss();
-    setValidatorNotif(notif);
-    registryService
-      .getProgramId()
-      .then(({ program_id }) => {
-        setProgramId(new PublicKey(program_id));
-      })
-      .catch((error) => {
-        notif.update({
-          type: 'ERROR',
-          render:
-            error?.message || 'An error occured while loading programs !!!',
-          autoClose: false,
-          icon: () => <ReportRounded fontSize="medium" color="error" />,
-        });
-      });
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const [validatorNotif, setValidatorNotif] = useState<useNotification>();
 
@@ -166,25 +144,26 @@ export default function Register() {
       render: 'Creating Validator...',
     });
     registryService
-      .registerProgram(
-        programId as PublicKey,
-        new PublicKey(validatorId),
-        validator
-      )
-      .then((signature) => {
+      .registerProgram(new PublicKey(validatorId), validator)
+      .then((signatures) => {
         notif.update({
           render: (
             <>
-              <CopyTransactionId
-                transaction_id={signature}
-                message="Registered validator successfully !!"
-              />
-              <a
-                style={{ color: 'white' }}
-                href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
-              >
-                See what's next
-              </a>
+              {signatures.map((signature) => (
+                <>
+                  <CopyTransactionId
+                    transaction_id={signature}
+                    message="Registered validator successfully !!"
+                  />
+                  <a
+                    style={{ color: 'white' }}
+                    href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
+                  >
+                    See what's next
+                  </a>
+                </>
+              ))}
+              ,
             </>
           ),
         });
