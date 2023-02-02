@@ -80,28 +80,56 @@ export interface UriData {
   rarity: string;
 }
 
-export abstract class GovernanceType {}
-export interface GovenanceInterface {
-  proposal_id: string;
+export enum ConfigAccountEnum {
+  MaxPrimaryStake = 'MaxPrimaryStake',
+  NftHolderShare = 'NftHolderShare',
+  InitialRedemptionFee = 'InitialRedemptionFee',
+  RedemptionFeeDuration = 'RedemptionFeeDuration',
+  ValidatorName = 'ValidatorName',
+  TwitterHandle = 'TwitterHandle',
+  DiscordInvite = 'DiscordInvite',
+}
+
+export interface ConfigAccountType {
+  config_type: ConfigAccountEnum;
+  value: number | string;
+}
+
+export interface ProgramUpgrade {
+  buffer_account: string;
+  code_link: string;
+}
+
+export enum VoteAccountEnum {
+  ValidatorID = 'ValidatorID',
+  Commission = 'Commission',
+}
+export interface VoteAccountGovernance {
+  vote_type: VoteAccountEnum;
+  value: number | string;
+}
+
+export interface Saveguards {
+  nft_mint_id: string;
+  associated_token_id: string;
+}
+
+export interface CreateProposal {
   title: string;
+  program_id: string;
   description: string;
+  safeguards: Saveguards; //put random pubkey string. I will handle it when integrating
+  configAccount?: ConfigAccountType;
+  programUpgrade?: ProgramUpgrade;
+  voteAccount?: VoteAccountGovernance;
+}
+
+export interface GovernanceInterface extends CreateProposal {
+  proposal_id: string;
   votes: [number, boolean][];
   is_still_ongoing: boolean; //can vote
   did_proposal_pass?: boolean; //succeded a few second ago
   is_proposal_executed: boolean;
   date_finalize?: boolean; //completed
   expiration_time: boolean;
-  govenance_type: GovernanceType;
 }
-export class ConfigAccount extends GovernanceType {}
-export class ProgramUpgrade extends GovernanceType {
-  public buffer_account!: string;
-
-  public code_link!: string;
-
-  constructor(properties: ProgramUpgrade) {
-    super();
-    Object.assign(this, properties);
-  }
-}
-export class VoteAccountGovernance extends GovernanceType {}
