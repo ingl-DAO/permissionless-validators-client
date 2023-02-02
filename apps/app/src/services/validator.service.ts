@@ -140,8 +140,7 @@ export class ValidatorService {
       unit_backing: new BN(validatorConfigAccountData.unit_backing),
       validator_apy: await computeVoteAccountRewardAPY(
         this.connection,
-        generalAccountData,
-        validatorConfigAccountData
+        generalAccountData
       ),
       validator_id: new PublicKey(
         validatorConfigAccountData.validator_id
@@ -245,11 +244,6 @@ export class ValidatorService {
           GeneralData,
           { unchecked: true }
         );
-        const validatotConfig = deserialize(
-          configAccountInfos[index]?.data as Buffer,
-          ValidatorConfig,
-          { unchecked: true }
-        );
         const { uri, json, jsonLoaded } = collectionNfts[index];
         let jsonData = json;
         if (!jsonLoaded) {
@@ -260,11 +254,7 @@ export class ValidatorService {
           new PublicKey(programIds[index])
         );
         return {
-          apy: await computeVoteAccountRewardAPY(
-            this.connection,
-            generalData,
-            validatotConfig
-          ),
+          apy: await computeVoteAccountRewardAPY(this.connection, generalData),
           validator_name,
           validator_website: website,
           nft_share: nft_holders_share,

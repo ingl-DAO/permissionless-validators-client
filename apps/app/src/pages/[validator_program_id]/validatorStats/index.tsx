@@ -371,7 +371,16 @@ export default function ValidatorStats() {
               }}
             >
               <ValidatorCardContent
-                title="Validator share"
+                title="NFT Holders share"
+                value={
+                  areDetailsLoading || !details
+                    ? ''
+                    : `${details.nft_holders_share}%`
+                }
+                skeleton={areDetailsLoading || !details}
+              />
+              <ValidatorCardContent
+                title="Validator ID share"
                 value={
                   areDetailsLoading || !details
                     ? ''

@@ -5,6 +5,7 @@ import {
   Delegated,
   DelegateNFT,
   forwardLegacyTransaction,
+  forwardMultipleLegacyTransactions,
   forwardV0Transaction,
   GeneralData,
   GENERAL_ACCOUNT_SEED,
@@ -12,6 +13,7 @@ import {
   INGL_CONFIG_SEED,
   INGL_MINT_AUTHORITY_KEY,
   INGL_NFT_COLLECTION_KEY,
+  isMaximumPrimaryStakeReached,
   METAPLEX_PROGRAM_ID,
   MintNft,
   NftData,
@@ -23,6 +25,7 @@ import {
   URIS_ACCOUNT_SEED,
   ValidatorConfig,
   VOTE_ACCOUNT_KEY,
+  willExceedMaximumPrimaryStake,
 } from '@ingl-permissionless/state';
 import {
   Metaplex,
@@ -37,6 +40,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import {
+  SignerWalletAdapterProps,
   WalletAdapterNetwork,
   WalletNotConnectedError,
 } from '@solana/wallet-adapter-base';
@@ -61,7 +65,7 @@ export class NftService {
     private readonly programId: PublicKey,
     private readonly connection: Connection,
     private readonly walletContext: WalletContextState,
-    private readonly configAccountPDA = PublicKey.findProgramAddressSync(
+    private readonly validatorConfigAccountPDA = PublicKey.findProgramAddressSync(
       [Buffer.from(INGL_CONFIG_SEED)],
       programId
     ),
@@ -112,20 +116,31 @@ export class NftService {
     )
   ) {}
 
-  async mintNft() {
+  async mintNft(numberOfNfts?: number) {
+    numberOfNfts = numberOfNfts ?? 1; // default to 1
+
     const payerPubkey = this.walletContext.publicKey;
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
 
+    // Check if max primary stake already reached
+    await isMaximumPrimaryStakeReached(
+      'You can not mint anymore, the maximum delegable stake is currently attained',
+      this.validatorConfigAccountPDA[0],
+      this.generalAccountPDA[0],
+      this.connection
+    );
+
+    await willExceedMaximumPrimaryStake(
+      "All the NFTs can't be minted, it will exceed the maximum delegable stake",
+      numberOfNfts,
+      this.validatorConfigAccountPDA[0],
+      this.generalAccountPDA[0],
+      this.connection
+    );
+
     const payerAccount: AccountMeta = {
       pubkey: this.walletContext.publicKey as PublicKey,
-      isSigner: true,
-      isWritable: true,
-    };
-
-    const mintKeyPair = Keypair.generate();
-    const nftMintAccount: AccountMeta = {
-      pubkey: mintKeyPair.publicKey,
       isSigner: true,
       isWritable: true,
     };
@@ -154,34 +169,8 @@ export class NftService {
       isWritable: false,
     };
 
-    const [nftMetaplexAccountKey] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from('metadata'),
-        METAPLEX_PROGRAM_ID.toBuffer(),
-        nftMintAccount.pubkey.toBuffer(),
-      ],
-      METAPLEX_PROGRAM_ID
-    );
-
-    const nftMetadataAccount: AccountMeta = {
-      pubkey: nftMetaplexAccountKey,
-      isSigner: false,
-      isWritable: true,
-    };
-
     const generalAccountAccount: AccountMeta = {
       pubkey: this.generalAccountPDA[0],
-      isSigner: false,
-      isWritable: true,
-    };
-
-    const [nftPubkey] = PublicKey.findProgramAddressSync(
-      [Buffer.from(NFT_ACCOUNT_CONST), mintKeyPair.publicKey.toBuffer()],
-      this.programId
-    );
-
-    const nftAccount: AccountMeta = {
-      pubkey: nftPubkey,
       isSigner: false,
       isWritable: true,
     };
@@ -198,15 +187,6 @@ export class NftService {
       isWritable: true,
     };
 
-    const associatedTokenAccount: AccountMeta = {
-      pubkey: getAssociatedTokenAddressSync(
-        mintKeyPair.publicKey,
-        payerAccount.pubkey
-      ),
-      isSigner: false,
-      isWritable: true,
-    };
-
     const inglCollectionMintAccount: AccountMeta = {
       pubkey: this.collectionPDA[0],
       isSigner: false,
@@ -217,21 +197,6 @@ export class NftService {
       pubkey: this.collectionMetadataPDA[0],
       isSigner: false,
       isWritable: false,
-    };
-
-    const [nftEditionKey] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from('metadata'),
-        METAPLEX_PROGRAM_ID.toBuffer(),
-        nftMintAccount.pubkey.toBuffer(),
-        Buffer.from('edition'),
-      ],
-      METAPLEX_PROGRAM_ID
-    );
-    const nftEditionAccount: AccountMeta = {
-      pubkey: nftEditionKey,
-      isSigner: false,
-      isWritable: true,
     };
 
     const collectionEditionAccount: AccountMeta = {
@@ -249,7 +214,7 @@ export class NftService {
     const inglConfigAccount: AccountMeta = {
       isSigner: false,
       isWritable: false,
-      pubkey: this.configAccountPDA[0],
+      pubkey: this.validatorConfigAccountPDA[0],
     };
 
     const urisAccountAccount: AccountMeta = {
@@ -257,50 +222,121 @@ export class NftService {
       isWritable: false,
       pubkey: this.urisAccountPDA[0],
     };
+    const instructions = [];
+    const mintKeyPairs = [];
+
     try {
-      const instructionAccounts = [
-        payerAccount,
-        nftMintAccount,
-        mintAuthorityAccount,
-        associatedTokenAccount,
-        splTokenProgramAccount,
-        sysvarRentAccount,
-        systemProgramAccount,
-        nftMetadataAccount,
-        mintingPoolAccount,
-        nftAccount,
-        collectionEditionAccount,
-        nftEditionAccount,
-        inglCollectionMintAccount,
-        inglCollectionAccount,
-        inglConfigAccount,
-        urisAccountAccount,
-        generalAccountAccount,
+      for (let i = 0; i < numberOfNfts; i++) {
+        const mintKeyPair = Keypair.generate();
+        mintKeyPairs.push(mintKeyPair);
 
-        systemProgramAccount,
-        splTokenProgramAccount,
-        associatedTokeProgramAccount,
-        metaplexProgramAccount,
-      ];
+        const nftMintAccount: AccountMeta = {
+          pubkey: mintKeyPair.publicKey,
+          isSigner: true,
+          isWritable: true,
+        };
 
-      const mintNftInstruction = new TransactionInstruction({
-        programId: this.programId,
-        data: Buffer.from(serialize(new MintNft(2))),
-        keys: instructionAccounts,
-      });
-      const signature = await forwardLegacyTransaction(
+        const [nftMetaplexAccountKey] = PublicKey.findProgramAddressSync(
+          [
+            Buffer.from('metadata'),
+            METAPLEX_PROGRAM_ID.toBuffer(),
+            nftMintAccount.pubkey.toBuffer(),
+          ],
+          METAPLEX_PROGRAM_ID
+        );
+
+        const nftMetadataAccount: AccountMeta = {
+          pubkey: nftMetaplexAccountKey,
+          isSigner: false,
+          isWritable: true,
+        };
+
+        const [nftPubkey] = PublicKey.findProgramAddressSync(
+          [Buffer.from(NFT_ACCOUNT_CONST), mintKeyPair.publicKey.toBuffer()],
+          this.programId
+        );
+
+        const nftAccount: AccountMeta = {
+          pubkey: nftPubkey,
+          isSigner: false,
+          isWritable: true,
+        };
+
+        const associatedTokenAccount: AccountMeta = {
+          pubkey: getAssociatedTokenAddressSync(
+            mintKeyPair.publicKey,
+            payerAccount.pubkey
+          ),
+          isSigner: false,
+          isWritable: true,
+        };
+
+        const [nftEditionKey] = PublicKey.findProgramAddressSync(
+          [
+            Buffer.from('metadata'),
+            METAPLEX_PROGRAM_ID.toBuffer(),
+            nftMintAccount.pubkey.toBuffer(),
+            Buffer.from('edition'),
+          ],
+          METAPLEX_PROGRAM_ID
+        );
+        const nftEditionAccount: AccountMeta = {
+          pubkey: nftEditionKey,
+          isSigner: false,
+          isWritable: true,
+        };
+
+        const instructionAccounts = [
+          payerAccount,
+          nftMintAccount,
+          mintAuthorityAccount,
+          associatedTokenAccount,
+          splTokenProgramAccount,
+          sysvarRentAccount,
+          systemProgramAccount,
+          nftMetadataAccount,
+          mintingPoolAccount,
+          nftAccount,
+          collectionEditionAccount,
+          nftEditionAccount,
+          inglCollectionMintAccount,
+          inglCollectionAccount,
+          inglConfigAccount,
+          urisAccountAccount,
+          generalAccountAccount,
+
+          systemProgramAccount,
+          splTokenProgramAccount,
+          associatedTokeProgramAccount,
+          metaplexProgramAccount,
+        ];
+
+        const mintNftInstruction = new TransactionInstruction({
+          programId: this.programId,
+          data: Buffer.from(serialize(new MintNft(2))),
+          keys: instructionAccounts,
+        });
+
+        instructions.push({
+          instructions: [mintNftInstruction],
+          additionalUnits: 1_000_000,
+          signingKeypairs: [mintKeyPair],
+        });
+      }
+      const result = await forwardMultipleLegacyTransactions(
         {
           publicKey: payerPubkey,
           connection: this.connection,
-          signTransaction: this.walletContext.signTransaction,
+          signAllTransaction: this.walletContext
+            .signAllTransactions as SignerWalletAdapterProps['signAllTransactions'],
         },
-        [mintNftInstruction],
-        {
-          additionalUnits: 1_000_000,
-          signingKeypairs: [mintKeyPair],
-        }
+        instructions
       );
-      return { tokenMint: mintKeyPair.publicKey, signature };
+      console.log('last transaction ID: ', result);
+      return {
+        tokenMints: mintKeyPairs.map((keypair) => keypair.publicKey),
+        signature: result,
+      };
     } catch (error) {
       throw new Error('NFT Minting transaction failed with error ' + error);
     }
@@ -365,6 +401,12 @@ export class NftService {
       isWritable: true,
     };
 
+    const mintAuthorityAccount: AccountMeta = {
+      pubkey: this.mintAuthorityPDA[0],
+      isSigner: false,
+      isWritable: true,
+    };
+
     const associatedTokenAccount: AccountMeta = {
       pubkey: getAssociatedTokenAddressSync(tokenMint, payerAccount.pubkey),
       isSigner: false,
@@ -424,7 +466,7 @@ export class NftService {
     };
 
     const configAccount: AccountMeta = {
-      pubkey: this.configAccountPDA[0],
+      pubkey: this.validatorConfigAccountPDA[0],
       isSigner: false,
       isWritable: false,
     };
@@ -467,12 +509,12 @@ export class NftService {
         configAccount,
         generalAccount,
         voteAccount,
+        mintAuthorityAccount,
 
         systemProgramAccount,
         metaplexProgramAccount,
       ],
     });
-    console.log(redeemInglGemInstruction.data, this.programId.toBase58());
     try {
       return await forwardLegacyTransaction(
         {
@@ -494,13 +536,21 @@ export class NftService {
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
 
+    // Check if max primary stake already reached
+    await isMaximumPrimaryStakeReached(
+      'You can not delegate anymore, the maximum delegable stake is currently attained',
+      this.validatorConfigAccountPDA[0],
+      this.generalAccountPDA[0],
+      this.connection
+    );
+
     const payerAccount: AccountMeta = {
       pubkey: payerPubkey as PublicKey,
       isSigner: true,
       isWritable: true,
     };
     const configAccount: AccountMeta = {
-      pubkey: this.configAccountPDA[0],
+      pubkey: this.validatorConfigAccountPDA[0],
       isSigner: false,
       isWritable: false,
     };
@@ -580,7 +630,7 @@ export class NftService {
     };
 
     const configAccount: AccountMeta = {
-      pubkey: this.configAccountPDA[0],
+      pubkey: this.validatorConfigAccountPDA[0],
       isSigner: false,
       isWritable: true,
     };
@@ -681,6 +731,20 @@ export class NftService {
     }
   }
 
+  async loadNFTsByMint(tokenMints: PublicKey[]) {
+    try {
+      let promisesArray = await Promise.all(
+        tokenMints.map((tokenMint) => this.loadNFT(tokenMint))
+      );
+      promisesArray = promisesArray.filter(
+        (nft) => nft?.nft_mint_id !== undefined
+      );
+      return promisesArray;
+    } catch (error) {
+      throw new Error('Failed to load nfts by mints with error ' + error);
+    }
+  }
+
   async loadNFT(tokenMint: PublicKey) {
     const metaplex = new Metaplex(this.connection);
     const metaplexNft = metaplex.nfts();
@@ -747,7 +811,7 @@ export class NftService {
     };
 
     const validatorConfigAccount: AccountMeta = {
-      pubkey: this.configAccountPDA[0],
+      pubkey: this.validatorConfigAccountPDA[0],
       isSigner: false,
       isWritable: true,
     };
@@ -899,7 +963,7 @@ export class NftService {
     };
 
     const configAccount: AccountMeta = {
-      pubkey: this.configAccountPDA[0],
+      pubkey: this.validatorConfigAccountPDA[0],
       isSigner: false,
       isWritable: false,
     };
@@ -995,7 +1059,7 @@ export class NftService {
       const [generalAccountInfo, validatorConfigAccountInfo] =
         await Promise.all([
           this.connection.getAccountInfo(this.generalAccountPDA[0]),
-          this.connection.getAccountInfo(this.configAccountPDA[0]),
+          this.connection.getAccountInfo(this.validatorConfigAccountPDA[0]),
         ]);
 
       if (!generalAccountInfo || !validatorConfigAccountInfo)

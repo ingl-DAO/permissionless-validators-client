@@ -78,7 +78,9 @@ export default function ValidatorInformation({
     validator_id: Yup.string().required('required'),
     validator_name: Yup.string().required('required').max(32),
     discord_invite: Yup.string().required('required').max(32),
-    twitter_handle: Yup.string().required('required'),
+    twitter_handle: Yup.string()
+      .required('required')
+      .matches(/^(@)?[A-Za-z0-9_]{1,15}$/, 'invalid twitter handle'),
     website: Yup.string().required('required').max(64),
   });
 
@@ -170,7 +172,7 @@ export default function ValidatorInformation({
               },
               {
                 label: 'Twitter handle',
-                description: 'ex: inglDao',
+                description: 'ex: @inglDao',
                 formikKey: 'twitter_handle',
               },
             ].map(({ description, formikKey, label }, index) => (

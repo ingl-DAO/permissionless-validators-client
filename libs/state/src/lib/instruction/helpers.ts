@@ -1,3 +1,4 @@
+import { deserialize } from '@dao-xyz/borsh';
 import {
   SignerWalletAdapterProps,
   WalletAdapterNetwork,
@@ -17,7 +18,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from '@solana/web3.js';
-import {BN} from 'bn.js';
+import { BN } from 'bn.js';
 import { GeneralData, ValidatorConfig } from '../state';
 
 export const forwardLegacyTransaction = async (
@@ -67,6 +68,69 @@ export const forwardLegacyTransaction = async (
     ...blockhashObj,
   });
   return signature;
+};
+
+export const forwardMultipleLegacyTransactions = async (
+  walletConnection: {
+    publicKey: PublicKey;
+    connection: Connection;
+    signAllTransaction: SignerWalletAdapterProps['signAllTransactions'];
+  },
+  instructions: {
+    instructions: TransactionInstruction[];
+    additionalUnits?: number;
+    signingKeypairs?: Keypair[];
+  }[]
+) => {
+  console.log('forwarding multiple legacy transactions...');
+  const {
+    connection,
+    publicKey: payerKey,
+    signAllTransaction,
+  } = walletConnection;
+
+  const blockhashObj = await connection.getLatestBlockhash();
+  const transactions = instructions.map(
+    ({ instructions, additionalUnits, signingKeypairs }) => {
+      const transaction = new Transaction();
+      if (additionalUnits) {
+        const additionalComputeBudgetInstruction =
+          ComputeBudgetProgram.setComputeUnitLimit({
+            units: additionalUnits,
+          });
+        transaction.add(additionalComputeBudgetInstruction);
+      }
+      transaction.add(...instructions).feePayer = payerKey as PublicKey;
+      transaction.recentBlockhash = blockhashObj.blockhash;
+      if (signingKeypairs && signingKeypairs.length > 0)
+        transaction.sign(...signingKeypairs);
+
+      return transaction;
+    }
+  );
+
+  const signedTransactions = signAllTransaction
+    ? await signAllTransaction(transactions)
+    : null;
+  if (!signedTransactions) throw new Error('No signed transactions found');
+
+  let index = 0;
+  let lastSignature = '';
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const signedTransaction = signedTransactions[index];
+    const signature = await connection.sendRawTransaction(
+      (signedTransaction as Transaction).serialize()
+    );
+    lastSignature = signature;
+    await connection.confirmTransaction({
+      signature,
+      ...blockhashObj,
+    });
+    index++;
+    if (index > signedTransactions.length - 1) break;
+  }
+  return lastSignature;
 };
 
 export async function forwardV0Transaction(
@@ -189,24 +253,36 @@ export async function createLookupTable(
 
 export async function computeVoteAccountRewardAPY(
   connection: Connection,
-  generalData: GeneralData,
-  validatorConfig: ValidatorConfig
+  generalData: GeneralData
 ) {
-  const latestVoteRewards =
-    generalData?.vote_rewards.length <= 10
-      ? generalData?.vote_rewards
-      : generalData?.vote_rewards.slice(-1, 10);
+  const latestVoteRewards = (function () {
+    const voteRewards = generalData?.vote_rewards;
+    const latestEpoch = Number(
+      voteRewards[voteRewards.length - 1].epoch_number
+    );
+    const finalVoteReward = [voteRewards[voteRewards.length - 1]];
+    const diffEpoch = 20; // 20 epochs difference
+
+    for (let i = voteRewards.length - 2; i >= 0; i--) {
+      const currentEpoch = Number(voteRewards[i].epoch_number);
+      if (
+        latestEpoch - currentEpoch >= 0 &&
+        latestEpoch - currentEpoch <= diffEpoch + 5 // 5 epochs margin at most
+      ) {
+        finalVoteReward.push(voteRewards[i]);
+      }
+    }
+    return finalVoteReward;
+  })();
+
   const rewardPerPrimaryLamportPerEpoch =
     latestVoteRewards.length === 0
       ? 0
       : latestVoteRewards.reduce(
           (acc, curr) =>
             acc +
-            Number(
-              new BN(curr.nft_holders_reward)
-                .div(new BN(validatorConfig.max_primary_stake))
-                .toString(10)
-            ),
+            Number(new BN(curr.nft_holders_reward)) /
+              Number(new BN(generalData.total_delegated)),
           0
         ) / latestVoteRewards.length;
 
@@ -218,7 +294,9 @@ export async function computeVoteAccountRewardAPY(
     (numberOfSlotsInCurrentEpoch * timePerSlot) / (60 * 60 * 24);
 
   const rewardPerYear = rewardPerPrimaryLamportPerEpoch * (365 / timePerEpoch);
-  const apy = rewardPerYear * 100;
+  let apy = rewardPerYear * 100;
+  apy = Math.trunc(apy * 100) / 100; // just truncating apy to 2 decimal places here
+
   // console.log('latestVoteRewards', latestVoteRewards);
   // console.log(
   //   'rewardPerPrimaryLamportPerEpoch',
@@ -231,3 +309,71 @@ export async function computeVoteAccountRewardAPY(
   // console.log('APY', apy);
   return apy;
 }
+
+export const isMaximumPrimaryStakeReached = async (
+  errorMessage: string,
+  validatorConfigID: PublicKey,
+  generalDataID: PublicKey,
+  connection: Connection
+) => {
+  const [validatorConfigAccountInfo, generalAccountInfo] = await Promise.all([
+    connection.getAccountInfo(validatorConfigID),
+    connection.getAccountInfo(generalDataID),
+  ]);
+
+  if (!validatorConfigAccountInfo)
+    throw new Error('Validator config not found');
+  if (!generalAccountInfo) throw new Error('General account not found');
+
+  const validatorConfigData = deserialize<ValidatorConfig>(
+    validatorConfigAccountInfo.data,
+    ValidatorConfig
+  );
+  const generalAccountData = deserialize<GeneralData>(
+    generalAccountInfo.data,
+    GeneralData
+  );
+  if (
+    validatorConfigData.max_primary_stake === generalAccountData.total_delegated
+  )
+    throw new Error(errorMessage);
+};
+
+export const willExceedMaximumPrimaryStake = async (
+  errorMessage: string,
+  numberOfNfts: number,
+  validatorConfigID: PublicKey,
+  generalDataID: PublicKey,
+  connection: Connection
+) => {
+  const [validatorConfigAccountInfo, generalAccountInfo] = await Promise.all([
+    connection.getAccountInfo(validatorConfigID),
+    connection.getAccountInfo(generalDataID),
+  ]);
+
+  if (!validatorConfigAccountInfo)
+    throw new Error('Validator config not found');
+  if (!generalAccountInfo) throw new Error('General account not found');
+
+  const validatorConfigData = deserialize<ValidatorConfig>(
+    validatorConfigAccountInfo.data,
+    ValidatorConfig
+  );
+  const generalAccountData = deserialize<GeneralData>(
+    generalAccountInfo.data,
+    GeneralData
+  );
+  const amountOfNFTsDelegable = Number(
+    new BN(validatorConfigData.max_primary_stake)
+      .sub(new BN(generalAccountData.total_delegated))
+      .div(new BN(validatorConfigData.unit_backing))
+      .toString(10)
+  );
+  if (amountOfNFTsDelegable < numberOfNfts)
+    throw new Error(
+      errorMessage +
+        ' || Only ' +
+        amountOfNFTsDelegable +
+        ' NFTs can be currently.'
+    );
+};
