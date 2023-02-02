@@ -377,3 +377,38 @@ export const willExceedMaximumPrimaryStake = async (
         ' NFTs can be currently.'
     );
 };
+
+export async function forwardExistingTransactions(
+  walletConnection: {
+    payerKey: PublicKey;
+    connection: Connection;
+    signAllTransactions?: SignerWalletAdapterProps['signAllTransactions'];
+  },
+  transactions: Transaction[]
+) {
+  const { connection, payerKey, signAllTransactions } = walletConnection;
+
+  const blockhashObj = await connection.getLatestBlockhash();
+  const paidfeeTransactions = transactions.map((transaction) => {
+    transaction.feePayer = payerKey;
+    transaction.recentBlockhash = blockhashObj.blockhash;
+
+    return transaction;
+  });
+  const signedTransactions = signAllTransactions
+    ? await signAllTransactions(paidfeeTransactions)
+    : null;
+  if (!signedTransactions) throw new Error('No signed transactions found');
+  return Promise.all(
+    signedTransactions.map(async (signedTransaction) => {
+      const signature = await connection.sendRawTransaction(
+        (signedTransaction as Transaction).serialize()
+      );
+      await connection.confirmTransaction({
+        signature,
+        ...blockhashObj,
+      });
+      return signature;
+    })
+  );
+}

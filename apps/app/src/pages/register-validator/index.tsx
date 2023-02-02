@@ -1,8 +1,7 @@
 import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
-import BN from 'bn.js';
+import { PublicKey } from '@solana/web3.js';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import CopyTransactionId from '../../common/components/copyTransactionId';
@@ -10,13 +9,13 @@ import ErrorMessage from '../../common/components/ErrorMessage';
 import useNotification from '../../common/utils/notification';
 import CollectionInformation from '../../components/register-validator/collectionInformation';
 import DaoInformation, {
-  DaoInfo,
+  DaoInfo
 } from '../../components/register-validator/daoInformation';
 import ValidatorInformation, {
-  ValidatorInfo,
+  ValidatorInfo
 } from '../../components/register-validator/validatorInformation';
 import VoteAccountInformation, {
-  VoteAccountInfo,
+  VoteAccountInfo
 } from '../../components/register-validator/voteAccountInformation';
 import { CollectionJson, ValidatorRegistration } from '../../interfaces';
 import { RegistryService } from '../../services/registry.service';
@@ -66,7 +65,7 @@ export default function Register() {
             const validator: ValidatorRegistration = {
               nft_holders_share: voteAccountInfo.nft_holders_share,
               proposal_quorum: val.proposal_quorum,
-              unit_backing: new BN(solBacking * LAMPORTS_PER_SOL),
+              unit_backing: solBacking,
               collection_uri: jsonFileData.collection_uri,
               rarities: jsonFileData.rarities,
               discord_invite: validatorInfo.discord_invite,
@@ -77,9 +76,7 @@ export default function Register() {
                 voteAccountInfo.is_validator_id_switchable,
               validator_name: validatorInfo.validator_name,
               initial_redemption_fee: voteAccountInfo.initial_redemption_fee,
-              max_primary_stake: new BN(
-                voteAccountInfo.max_primary_stake * LAMPORTS_PER_SOL
-              ),
+              max_primary_stake: voteAccountInfo.max_primary_stake,
               redemption_fee_duration: voteAccountInfo.redemption_fee_duration,
               init_commission: voteAccountInfo.init_commission,
               default_uri: jsonFileData.default_uri,

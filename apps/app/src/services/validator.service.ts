@@ -135,9 +135,10 @@ export class ValidatorService {
           .div(new BN(validatorConfigAccountData.unit_backing))
           .toString(10)
       ),
-      max_primary_stake: new BN(validatorConfigAccountData.max_primary_stake),
+      max_primary_stake:
+        validatorConfigAccountData.max_primary_stake.toNumber(),
       total_secondary_stake: new BN(voteAccountInfo?.activatedStake ?? 0),
-      unit_backing: new BN(validatorConfigAccountData.unit_backing),
+      unit_backing: validatorConfigAccountData.unit_backing.toNumber(),
       validator_apy: await computeVoteAccountRewardAPY(
         this.connection,
         generalAccountData

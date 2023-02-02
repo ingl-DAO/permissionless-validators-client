@@ -36,10 +36,10 @@ export interface ValidatorRarity {
 export interface ValidatorRegistration extends ValidatorRarity {
   proposal_quorum: number;
   init_commission: number; //in percentage
-  max_primary_stake: BN; //in lamports (big number)
+  max_primary_stake: number; //in sol
   initial_redemption_fee: number;
   is_validator_id_switchable: boolean;
-  unit_backing: BN; //big number
+  unit_backing: number; //in sol
   redemption_fee_duration: number;
   creator_royalties: number;
   validator_name: string;
