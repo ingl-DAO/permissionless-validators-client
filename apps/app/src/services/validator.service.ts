@@ -208,7 +208,7 @@ export class ValidatorService {
             [Buffer.from(GENERAL_ACCOUNT_SEED)],
             new PublicKey(programId)
           );
-          programIds.push(programId);
+          programIds.push(new PublicKey(programId));
           configAccountKeys.push(configAccountKey);
           collectionAccountKeys.push(collectionAccountKey);
           generalDataAccountKeys.push(generalDataAccountKey);

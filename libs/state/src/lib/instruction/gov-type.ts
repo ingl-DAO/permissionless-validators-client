@@ -1,5 +1,4 @@
 import { field, fixedArray, variant } from '@dao-xyz/borsh';
-import { PublicKey } from '@solana/web3.js';
 import * as BN from 'bn.js';
 
 export abstract class GovernanceType {}
@@ -84,7 +83,7 @@ export class DiscordInvite extends ConfigAccountType {
 @variant(1)
 export class ProgramUpgrade extends GovernanceType {
   @field({ type: fixedArray('u8', 32) })
-  public buffer_account!: PublicKey;
+  public buffer_account!: Uint8Array;
 
   @field({ type: 'string' })
   public code_link!: string;
@@ -101,9 +100,9 @@ export class VoteAccountGovernance extends GovernanceType {}
 @variant(0)
 export class ValidatorID extends VoteAccountGovernance {
   @field({ type: fixedArray('u8', 32) })
-  public value!: PublicKey;
+  public value!: Uint8Array;
 
-  constructor(value: PublicKey) {
+  constructor(value: Uint8Array) {
     super();
     this.value = value;
   }
