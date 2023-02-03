@@ -1,3 +1,4 @@
+import { ReportRounded, SearchRounded } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -6,16 +7,15 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import theme from '../../../theme/theme';
-import { useEffect, useState } from 'react';
-import ProposalCard from './proposalCard';
-import { ReportRounded, SearchRounded } from '@mui/icons-material';
 import Scrollbars from 'rc-scrollbars';
-import ErrorMessage from '../../../common/components/ErrorMessage';
-import { GovernanceInterface } from '../../../interfaces';
-import useNotification from '../../../common/utils/notification';
-import { useParams } from 'react-router';
+import { useEffect, useState } from 'react';
 import { useIntl } from 'react-intl';
+import { useParams } from 'react-router';
+import ErrorMessage from '../../../common/components/ErrorMessage';
+import useNotification from '../../../common/utils/notification';
+import { GovernanceInterface, InglNft } from '../../../interfaces';
+import theme from '../../../theme/theme';
+import ProposalCard from './proposalCard';
 
 export default function Dao() {
   const [searchValue, setSearchValue] = useState<string>('');
@@ -49,10 +49,7 @@ export default function Dao() {
             proposal_numeration: 2,
             proposal_quorom: 5,
             title: 'Change validator ID, current validator ID malevolent',
-            safeguards: {
-              nft_mint_id: 'eisole',
-              payer_id: 'wieosl',
-            },
+            nft_mint_id: 'eisole',
           },
         ];
         setProposals(newProposals);
@@ -80,8 +77,63 @@ export default function Dao() {
     }, 3000);
   };
 
+  const [nfts, setNfts] = useState<InglNft[]>([]);
+  const [nftNotif, setNftNotif] = useState<useNotification>();
+  const [areNftsLoading, setAreNftsLoading] = useState<boolean>(false);
+
+  const loadNfts = () => {
+    setAreNftsLoading(true);
+    const notif = new useNotification();
+    if (nftNotif) {
+      nftNotif.dismiss();
+    }
+    setNftNotif(notif);
+    setTimeout(() => {
+      //TODO: call api here to load validator details with data vote_account_id
+      // eslint-disable-next-line no-constant-condition
+      if (6 > 5) {
+        const newNfts: InglNft[] = [
+          {
+            image_ref: 'https://miro.medium.com/max/1400/0*jGrQl2vi0S6rk5ix',
+            is_delegated: false,
+            nft_mint_id: 'sldi',
+            numeration: 2,
+          },
+          {
+            image_ref: 'https://miro.medium.com/max/1400/0*jGrQl2vi0S6rk5ix',
+            is_delegated: false,
+            nft_mint_id: 'sldi',
+            numeration: 2,
+          },
+        ];
+        setNfts(newNfts);
+        setAreNftsLoading(false);
+        notif.dismiss();
+        setNftNotif(undefined);
+      } else {
+        notif.notify({
+          render: 'Loading Nfts...',
+        });
+        notif.update({
+          type: 'ERROR',
+          render: (
+            <ErrorMessage
+              retryFunction={() => loadNfts()}
+              notification={notif}
+              //TODO: message should come from backend
+              message="There was an error loading Nfts. please retry!!!"
+            />
+          ),
+          autoClose: false,
+          icon: () => <ReportRounded fontSize="medium" color="error" />,
+        });
+      }
+    }, 3000);
+  };
+
   useEffect(() => {
     loadProposals(validator_program_id as string);
+    loadNfts();
     return () => {
       //TODO: Cleanup axios fetch above
     };
@@ -144,77 +196,84 @@ export default function Dao() {
           />
           <Scrollbars autoHide>
             <Box sx={{ display: 'grid', rowGap: theme.spacing(2) }}>
-              {areProposalsLoading
-                ? [...new Array(10)].map((_, index) => (
-                    <Skeleton
-                      key={index}
-                      variant="rectangular"
-                      height={130}
-                      animation="wave"
-                      sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
-                    />
-                  ))
-                : proposals.map(
-                    (
-                      {
-                        title,
-                        number_of_no_votes,
-                        number_of_yes_votes,
-                        proposal_numeration,
-                        is_still_ongoing,
-                        expiration_time,
-                        did_proposal_pass,
-                        is_proposal_executed,
-                      },
-                      index
-                    ) => {
-                      const totalVotes =
-                        number_of_no_votes + number_of_yes_votes;
-                      const vote_end_time_in_ms = expiration_time * 1000;
-                      const status = is_still_ongoing
-                        ? new Date() > new Date(vote_end_time_in_ms)
-                          ? 'Expired'
-                          : 'Voting'
-                        : did_proposal_pass
-                        ? is_proposal_executed
-                          ? 'Executed'
-                          : 'Success'
-                        : 'Defeated';
-                      return (
-                        <ProposalCard
-                          noPercentage={(number_of_no_votes / totalVotes) * 100}
-                          noVotes={number_of_no_votes}
-                          numeration={proposal_numeration}
-                          title={title}
-                          yesPercentage={
-                            (number_of_yes_votes / totalVotes) * 100
-                          }
-                          yesVotes={number_of_yes_votes}
-                          subtitle={
-                            new Date(vote_end_time_in_ms) > new Date()
-                              ? `Voting ends on ${formatDate(
-                                  new Date(vote_end_time_in_ms),
-                                  {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric',
-                                  }
-                                )}`
-                              : `Votes ended on ${formatDate(
-                                  new Date(vote_end_time_in_ms),
-                                  {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric',
-                                  }
-                                )}`
-                          }
-                          status={status}
-                          key={index}
-                        />
-                      );
-                    }
-                  )}
+              {areProposalsLoading ? (
+                [...new Array(10)].map((_, index) => (
+                  <Skeleton
+                    key={index}
+                    variant="rectangular"
+                    height={130}
+                    animation="wave"
+                    sx={{
+                      backgroundColor: 'rgb(137 127 127 / 43%)',
+                      borderRadius: theme.spacing(4),
+                    }}
+                  />
+                ))
+              ) : proposals.length === 0 ? (
+                <Typography variant="h6" textAlign="center">
+                  No proposals available for this validator yet. You can create
+                  one by clicking on new proposal on the side
+                </Typography>
+              ) : (
+                proposals.map(
+                  (
+                    {
+                      title,
+                      number_of_no_votes,
+                      number_of_yes_votes,
+                      proposal_numeration,
+                      is_still_ongoing,
+                      expiration_time,
+                      did_proposal_pass,
+                      is_proposal_executed,
+                    },
+                    index
+                  ) => {
+                    const totalVotes = number_of_no_votes + number_of_yes_votes;
+                    const vote_end_time_in_ms = expiration_time * 1000;
+                    const status = is_still_ongoing
+                      ? new Date() > new Date(vote_end_time_in_ms)
+                        ? 'Expired'
+                        : 'Voting'
+                      : did_proposal_pass
+                      ? is_proposal_executed
+                        ? 'Executed'
+                        : 'Success'
+                      : 'Defeated';
+                    return (
+                      <ProposalCard
+                        noPercentage={(number_of_no_votes / totalVotes) * 100}
+                        noVotes={number_of_no_votes}
+                        numeration={proposal_numeration}
+                        title={title}
+                        yesPercentage={(number_of_yes_votes / totalVotes) * 100}
+                        yesVotes={number_of_yes_votes}
+                        subtitle={
+                          new Date(vote_end_time_in_ms) > new Date()
+                            ? `Voting ends on ${formatDate(
+                                new Date(vote_end_time_in_ms),
+                                {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                }
+                              )}`
+                            : `Votes ended on ${formatDate(
+                                new Date(vote_end_time_in_ms),
+                                {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                }
+                              )}`
+                        }
+                        status={status}
+                        key={index}
+                      />
+                    );
+                  }
+                )
+              )}
             </Box>
           </Scrollbars>
         </Box>
@@ -247,18 +306,82 @@ export default function Dao() {
               <Typography variant="caption" sx={{ color: 'white' }}>
                 My governance power
               </Typography>
-              <Typography variant="caption" sx={{ color: 'white' }}>
-                44 NFTs
+              <Typography
+                component={'span'}
+                variant="caption"
+                sx={{
+                  color: 'white',
+                  display: 'grid',
+                  gridAutoFlow: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'end',
+                  columnGap: theme.spacing(2),
+                }}
+              >
+                {areNftsLoading ? (
+                  <Skeleton
+                    animation="wave"
+                    width={50}
+                    sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
+                  />
+                ) : (
+                  nfts.length
+                )}{' '}
+                NFTs
               </Typography>
             </Box>
             <Box
               sx={{
-                padding: theme.spacing(3),
+                padding: theme.spacing(1),
                 backgroundColor: 'rgba(28, 28, 40, 1)',
                 borderRadius: '15px',
-                height: '86px',
+                height: '92px',
               }}
-            ></Box>
+            >
+              <Scrollbars autoHide>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridAutoFlow: 'column',
+                    justifyContent: 'start',
+                    columnGap: theme.spacing(1.2),
+                  }}
+                >
+                  {areNftsLoading ? (
+                    [...new Array(10)].map((_, index) => (
+                      <Skeleton
+                        key={index}
+                        variant="rectangular"
+                        animation="wave"
+                        sx={{
+                          backgroundColor: 'rgb(137 127 127 / 43%)',
+                          borderRadius: theme.spacing(2),
+                        }}
+                        height={92}
+                        width={92}
+                      />
+                    ))
+                  ) : nfts.length === 0 ? (
+                    <Typography variant="caption">You own no Nft's</Typography>
+                  ) : (
+                    nfts.map(({ image_ref, numeration }, index) => (
+                      <img
+                        alt={`${numeration}`}
+                        src={image_ref}
+                        key={index}
+                        width="88px"
+                        height="88px"
+                        style={{
+                          objectFit: 'cover',
+                          borderRadius: theme.spacing(2),
+                          border: `2px solid ${theme.palette.primary.main}`,
+                        }}
+                      />
+                    ))
+                  )}
+                </Box>
+              </Scrollbars>
+            </Box>
           </Box>
         </Box>
       </Box>
