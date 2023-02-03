@@ -14,7 +14,7 @@ export default function ProposalCard({
 }: {
   numeration: number;
   title: string;
-  status: 'Voting' | 'Completed' | 'defeated';
+  status: 'Voting' |'Defeated' |'Success' | "Executed" |"Expired";
   yesVotes: number;
   yesPercentage: number;
   noVotes: number;
