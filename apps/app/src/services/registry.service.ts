@@ -221,7 +221,7 @@ export class RegistryService {
       registryConfigKey
     );
     if (!registryAccountInfo)
-      throw Error('Vlidator registration not possible yet.');
+      throw Error('Validator registration not possible yet.');
     const { validation_number } = deserialize(registryAccountInfo.data, Config);
     const storageNumeration = Math.floor(
       validation_number / MAX_PROGRAMS_PER_STORAGE_ACCOUNT

@@ -5,6 +5,7 @@ import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { toast } from 'react-toastify';
 import CopyTransactionId from '../../common/components/copyTransactionId';
 import ErrorMessage from '../../common/components/ErrorMessage';
 import useNotification from '../../common/utils/notification';
@@ -134,23 +135,28 @@ export default function Register() {
   };
   const [programId, setProgramId] = useState<PublicKey>();
   useEffect(() => {
-    const notif = new useNotification();
-    if (validatorNotif) validatorNotif.dismiss();
-    setValidatorNotif(notif);
-    registryService
-      .getProgramId()
-      .then(({ program_id }) => {
-        setProgramId(new PublicKey(program_id));
-      })
-      .catch((error) => {
-        notif.update({
-          type: 'ERROR',
-          render:
-            error?.message || 'An error occured while loading programs !!!',
-          autoClose: false,
-          icon: () => <ReportRounded fontSize="medium" color="error" />,
-        });
-      });
+    // TODO: Remove this after beta setup
+    toast.warning('🛠️Registration currently not accessible for the public⚙️', {
+      autoClose: 5000,
+    });
+    // end TODO
+    // const notif = new useNotification();
+    // if (validatorNotif) validatorNotif.dismiss();
+    // setValidatorNotif(notif);
+    // registryService
+    //   .getProgramId()
+    //   .then(({ program_id }) => {
+    //     setProgramId(new PublicKey(program_id));
+    //   })
+    //   .catch((error) => {
+    //     notif.update({
+    //       type: 'ERROR',
+    //       render:
+    //         error?.message || 'An error occured while loading programs !!!',
+    //       autoClose: false,
+    //       icon: () => <ReportRounded fontSize="medium" color="error" />,
+    //     });
+    //   });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -161,56 +167,61 @@ export default function Register() {
     validatorId: string,
     validator: ValidatorRegistration
   ) {
-    setIsCreating(true);
-    const notif = new useNotification();
-    if (validatorNotif) validatorNotif.dismiss();
-    setValidatorNotif(notif);
-    notif.notify({
-      render: 'Creating Validator...',
+    // TODO: Remove this after beta setup
+    toast.warning('🛠️Registration currently not accessible for the public⚙️', {
+      autoClose: 5000,
     });
-    registryService
-      .registerProgram(
-        programId as PublicKey,
-        new PublicKey(validatorId),
-        validator
-      )
-      .then((signature) => {
-        notif.update({
-          render: (
-            <>
-              <CopyTransactionId
-                transaction_id={signature}
-                message="Registered validator successfully !!"
-              />
-              <a
-                style={{ color: 'white' }}
-                href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
-              >
-                See what's next
-              </a>
-            </>
-          ),
-        });
-        setValidatorNotif(undefined);
-      })
-      .catch((error) => {
-        notif.update({
-          type: 'ERROR',
-          render: (
-            <ErrorMessage
-              retryFunction={() => createValidator(validatorId, validator)}
-              notification={notif}
-              message={
-                error?.message ||
-                'There was an error creating validator. Please try again!!!'
-              }
-            />
-          ),
-          autoClose: false,
-          icon: () => <ReportRounded fontSize="medium" color="error" />,
-        });
-      })
-      .finally(() => setIsCreating(false));
+    // end TODO
+    // setIsCreating(true);
+    // const notif = new useNotification();
+    // if (validatorNotif) validatorNotif.dismiss();
+    // setValidatorNotif(notif);
+    // notif.notify({
+    //   render: 'Creating Validator...',
+    // });
+    // registryService
+    //   .registerProgram(
+    //     programId as PublicKey,
+    //     new PublicKey(validatorId),
+    //     validator
+    //   )
+    //   .then((signature) => {
+    //     notif.update({
+    //       render: (
+    //         <>
+    //           <CopyTransactionId
+    //             transaction_id={signature}
+    //             message="Registered validator successfully !!"
+    //           />
+    //           <a
+    //             style={{ color: 'white' }}
+    //             href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
+    //           >
+    //             See what's next
+    //           </a>
+    //         </>
+    //       ),
+    //     });
+    //     setValidatorNotif(undefined);
+    //   })
+    //   .catch((error) => {
+    //     notif.update({
+    //       type: 'ERROR',
+    //       render: (
+    //         <ErrorMessage
+    //           retryFunction={() => createValidator(validatorId, validator)}
+    //           notification={notif}
+    //           message={
+    //             error?.message ||
+    //             'There was an error creating validator. Please try again!!!'
+    //           }
+    //         />
+    //       ),
+    //       autoClose: false,
+    //       icon: () => <ReportRounded fontSize="medium" color="error" />,
+    //     });
+    //   })
+    //   .finally(() => setIsCreating(false));
   }
 
   return (
