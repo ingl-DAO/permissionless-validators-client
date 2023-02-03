@@ -1,7 +1,7 @@
 import { field, fixedArray, variant } from '@dao-xyz/borsh';
 import * as BN from 'bn.js';
 
-export abstract class GovernanceType {}
+export  class GovernanceType {}
 
 @variant(0)
 export class ConfigAccountType extends GovernanceType {}
