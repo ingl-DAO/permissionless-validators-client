@@ -111,7 +111,7 @@ export interface VoteAccountGovernance {
 
 export interface Saveguards {
   nft_mint_id: string;
-  associated_token_id: string;
+  payer_id: string;
 }
 
 export interface CreateProposal {
@@ -126,10 +126,13 @@ export interface CreateProposal {
 
 export interface GovernanceInterface extends CreateProposal {
   proposal_id: string;
-  votes: [number, boolean][];
+  number_of_yes_votes: number;
+  number_of_no_votes: number;
   is_still_ongoing: boolean; //can vote
   did_proposal_pass?: boolean; //succeded a few second ago
   is_proposal_executed: boolean;
   date_finalize?: boolean; //completed
   expiration_time: boolean;
+  proposal_numeration: number;
+  proposal_quorom: number;
 }
