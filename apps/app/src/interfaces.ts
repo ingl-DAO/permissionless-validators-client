@@ -110,19 +110,14 @@ export interface VoteAccountGovernance {
   value: number | string;
 }
 
-export interface Saveguards {
-  nft_mint_id: string;
-  payer_id: string;
-}
-
 export interface CreateProposal {
   title: string;
   program_id: string;
   description: string;
-  safeguards: Saveguards; //put random pubkey string. I will handle it when integrating
   configAccount?: ConfigAccountType;
   programUpgrade?: ProgramUpgrade;
   voteAccount?: VoteAccountGovernance;
+  nft_mint_id: string;
 }
 
 export interface GovernanceInterface extends CreateProposal {
