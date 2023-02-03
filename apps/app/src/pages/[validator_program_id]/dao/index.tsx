@@ -1,16 +1,20 @@
-import { ReportRounded, SearchRounded } from '@mui/icons-material';
+import {
+  DangerousOutlined,
+  ReportRounded,
+  SearchRounded,
+} from '@mui/icons-material';
 import {
   Box,
   Button,
   InputAdornment,
   Skeleton,
   TextField,
-  Typography
+  Typography,
 } from '@mui/material';
 import Scrollbars from 'rc-scrollbars';
 import { useEffect, useState } from 'react';
 import { useIntl } from 'react-intl';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import ErrorMessage from '../../../common/components/ErrorMessage';
 import useNotification from '../../../common/utils/notification';
 import GovernancePower from '../../../components/dao/governancePower';
@@ -142,6 +146,8 @@ export default function Dao() {
   }, []);
 
   const { formatDate } = useIntl();
+  const navigate = useNavigate();
+  const ttNotif = new useNotification();
 
   return (
     <Box
@@ -285,7 +291,24 @@ export default function Dao() {
             alignContent: 'start',
           }}
         >
-          <Button variant="contained" color="primary" fullWidth>
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={() => {
+              if (nfts.length === 0) {
+                ttNotif.dismiss();
+                ttNotif.notify({ render: 'Notifying' });
+                ttNotif.update({
+                  autoClose: 5000,
+                  type: 'WARNING',
+                  icon: () => <DangerousOutlined color="warning" />,
+                  render:
+                    'You must own at least an nft on this validator to create a proposal!!!',
+                });
+              } else navigate('create');
+            }}
+          >
             New Proposal
           </Button>
           <GovernancePower areNftsLoading={areNftsLoading} nfts={nfts} />
