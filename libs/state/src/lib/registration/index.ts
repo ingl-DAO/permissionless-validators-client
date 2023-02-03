@@ -10,22 +10,3 @@ export const toBytesInt32 = (num: number) => {
   ]);
   return arr;
 };
-
-// function toBigEndian(n: number) {
-//   return n
-//     .toString(16)
-//     .match(/[\da-f]/g)
-//     .reduceRight(
-//       (r, c, i, a) =>
-//         (a.length - i) % 2
-//           ? r.concat(c)
-//           : ((r[r.length - 1] = c + r[r.length - 1]), r),
-//       []
-//     )
-//     .map((s) => (s.length === 1 ? 0 + s : s))
-//     .reduce((p, c, i, a) =>
-//       i < a.length - 1
-//         ? p + ' ' + c
-//         : p + ' ' + c + ' 00'.repeat(~~(4 - a.length))
-//     );
-// }

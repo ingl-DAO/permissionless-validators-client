@@ -251,7 +251,7 @@ export class ValidatorConfig {
   commission!: number;
 
   @field({ type: fixedArray('u8', 32) })
-  validator_id!: PublicKey;
+  validator_id!: Uint8Array;
 
   @field({ type: 'u32' })
   governance_expiration_time!: number;

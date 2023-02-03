@@ -30,7 +30,7 @@ export class ProgramStorage {
   public validation_phrase!: number;
 
   @field({ type: vec(fixedArray('u8', 32)) })
-  public programs!: PublicKey[];
+  public programs!: Uint8Array[];
 
   constructor(properties: ProgramStorage) {
     Object.assign(this, properties);

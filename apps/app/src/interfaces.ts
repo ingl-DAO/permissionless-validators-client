@@ -80,28 +80,60 @@ export interface UriData {
   rarity: string;
 }
 
-export abstract class GovernanceType {}
-export interface GovenanceInterface {
-  proposal_id: string;
+export enum ConfigAccountEnum {
+  MaxPrimaryStake = 'MaxPrimaryStake',
+  NftHolderShare = 'NftHolderShare',
+  InitialRedemptionFee = 'InitialRedemptionFee',
+  RedemptionFeeDuration = 'RedemptionFeeDuration',
+  ValidatorName = 'ValidatorName',
+  TwitterHandle = 'TwitterHandle',
+  DiscordInvite = 'DiscordInvite',
+}
+
+export enum VoteAccountEnum {
+  ValidatorID = 'ValidatorID',
+  Commission = 'Commission',
+}
+
+export interface ConfigAccountType {
+  config_type: ConfigAccountEnum;
+  value: number | string;
+}
+
+export interface ProgramUpgrade {
+  buffer_account: string;
+  code_link: string;
+}
+
+export interface VoteAccountGovernance {
+  vote_type: VoteAccountEnum;
+  value: number | string;
+}
+
+export interface Saveguards {
+  nft_mint_id: string;
+  payer_id: string;
+}
+
+export interface CreateProposal {
   title: string;
+  program_id: string;
   description: string;
-  votes: [number, boolean][];
+  safeguards: Saveguards; //put random pubkey string. I will handle it when integrating
+  configAccount?: ConfigAccountType;
+  programUpgrade?: ProgramUpgrade;
+  voteAccount?: VoteAccountGovernance;
+}
+
+export interface GovernanceInterface extends CreateProposal {
+  proposal_id: string;
+  number_of_yes_votes: number;
+  number_of_no_votes: number;
   is_still_ongoing: boolean; //can vote
   did_proposal_pass?: boolean; //succeded a few second ago
   is_proposal_executed: boolean;
   date_finalize?: boolean; //completed
   expiration_time: boolean;
-  govenance_type: GovernanceType;
+  proposal_numeration: number;
+  proposal_quorom: number;
 }
-export class ConfigAccount extends GovernanceType {}
-export class ProgramUpgrade extends GovernanceType {
-  public buffer_account!: string;
-
-  public code_link!: string;
-
-  constructor(properties: ProgramUpgrade) {
-    super();
-    Object.assign(this, properties);
-  }
-}
-export class VoteAccountGovernance extends GovernanceType {}
