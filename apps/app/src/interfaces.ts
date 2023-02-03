@@ -133,7 +133,7 @@ export interface GovernanceInterface extends CreateProposal {
   did_proposal_pass?: boolean; //succeded a few second ago
   is_proposal_executed: boolean;
   date_finalize?: boolean; //completed
-  expiration_time: boolean;
+  expiration_time: number; //in seconds
   proposal_numeration: number;
   proposal_quorom: number;
 }
