@@ -20,7 +20,7 @@ import useNotification from '../../../common/utils/notification';
 import GovernancePower from '../../../components/dao/governancePower';
 import { GovernanceInterface, InglNft } from '../../../interfaces';
 import theme from '../../../theme/theme';
-import ProposalCard from './proposalCard';
+import ProposalCard from '../../../components/dao/proposalCard';
 
 export default function Dao() {
   const [searchValue, setSearchValue] = useState<string>('');

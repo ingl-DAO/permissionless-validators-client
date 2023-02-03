@@ -1,6 +1,6 @@
 import { ArrowForwardIosOutlined } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
-import theme from '../../../theme/theme';
+import theme from '../../theme/theme';
 
 export default function ProposalCard({
   numeration,
