@@ -19,6 +19,7 @@ export const CustomInput = ({
   formikKey,
   type = 'string',
   multiline = false,
+  rows = 1,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   formik: any;
@@ -27,6 +28,7 @@ export const CustomInput = ({
   formikKey: string;
   type?: 'string' | 'number';
   multiline?: boolean;
+  rows?: number;
 }) => {
   return (
     <Box>
@@ -41,6 +43,7 @@ export const CustomInput = ({
         placeholder={label}
         fullWidth
         multiline={multiline}
+        rows={multiline ? rows : 1}
         type={type}
         required
         sx={{
