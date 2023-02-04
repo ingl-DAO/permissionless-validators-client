@@ -1,16 +1,16 @@
 import { deserialize, serialize } from '@dao-xyz/borsh';
 import { http } from '@ingl-permissionless/axios';
 import {
-  GeneralData,
+  Commission,
+  DiscordInvite, GeneralData,
   GENERAL_ACCOUNT_SEED,
-  GovernanceData,
-  INGL_CONFIG_SEED,
+  GovernanceData, GovernanceType, INGL_CONFIG_SEED,
   INGL_PROPOSAL_KEY,
-  InitGovernance,
-  NFT_ACCOUNT_CONST,
-  toBytesInt32,
-  ValidatorConfig,
-  VOTE_ACCOUNT_KEY,
+  InitGovernance, InitialRedemptionFee,
+  MaxPrimaryStake,
+  NftHolderShare, NFT_ACCOUNT_CONST, ProgramUpgrade,
+  RedemptionFeeDuration, toBytesInt32, TwitterHandle, ValidatorConfig, ValidatorID,
+  ValidatorName, VOTE_ACCOUNT_KEY
 } from '@ingl-permissionless/state';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { WalletNotConnectedError } from '@solana/wallet-adapter-base';
@@ -20,27 +20,14 @@ import {
   Connection,
   LAMPORTS_PER_SOL,
   PublicKey,
-  TransactionInstruction,
+  TransactionInstruction
 } from '@solana/web3.js';
 import BN from 'bn.js';
-import {
-  Commission,
-  DiscordInvite,
-  GovernanceType,
-  InitialRedemptionFee,
-  MaxPrimaryStake,
-  NftHolderShare,
-  ProgramUpgrade,
-  RedemptionFeeDuration,
-  TwitterHandle,
-  ValidatorID,
-  ValidatorName,
-} from 'libs/state/src/lib/instruction/gov-type';
 import {
   ConfigAccountEnum,
   CreateProposal,
   GovernanceInterface,
-  VoteAccountEnum,
+  VoteAccountEnum
 } from '../interfaces';
 
 export enum VersionStatus {

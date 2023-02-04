@@ -3,6 +3,7 @@ import * as BN from 'bn.js';
 import { GovernanceType } from './gov-type';
 
 export * from './helpers';
+export * from './gov-type';
 
 abstract class Instruction {
   @field({ type: 'u8' })
