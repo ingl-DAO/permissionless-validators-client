@@ -52,9 +52,8 @@ export default function Dao() {
             program_id: 'lsiel',
             proposal_id: 'lsie',
             proposal_numeration: 2,
-            proposal_quorom: 5,
+            proposal_quorum: 5,
             title: 'Change validator ID, current validator ID malevolent',
-            nft_mint_id: 'eisole',
           },
         ];
         setProposals(newProposals);
