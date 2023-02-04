@@ -3,6 +3,7 @@ import { http } from '@ingl-permissionless/axios';
 import {
   Commission,
   DiscordInvite,
+  FinalizeGovernance,
   forwardLegacyTransaction,
   GeneralData,
   GENERAL_ACCOUNT_SEED,
@@ -33,6 +34,8 @@ import {
   Connection,
   LAMPORTS_PER_SOL,
   PublicKey,
+  SYSVAR_CLOCK_PUBKEY,
+  SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
 } from '@solana/web3.js';
 import BN from 'bn.js';
@@ -285,7 +288,7 @@ export class ProposalService {
       );
     } catch (error) {
       throw new Error(
-        `Sorry, an error occured when init governance process: ${error}`
+        `Sorry, an error occured on init governance process: ${error}`
       );
     }
   }
@@ -380,7 +383,7 @@ export class ProposalService {
     const proposalAccount: AccountMeta = {
       pubkey: proposalAccountKey,
       isSigner: false,
-      isWritable: false,
+      isWritable: true,
     };
 
     const cntAccounts = tokenMints.reduce<AccountMeta[]>(
@@ -434,7 +437,95 @@ export class ProposalService {
       );
     } catch (error) {
       throw new Error(
-        `Sorry, an error occured when vote governanace process: ${error}`
+        `Sorry, an error occured on vote governanace process: ${error}`
+      );
+    }
+  }
+
+  async finalizeGovernance(proposal_numeration: number) {
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey)
+      throw new WalletNotConnectedError('Please connect your wallet !!!');
+
+    const payerAccount: AccountMeta = {
+      pubkey: payerPubkey,
+      isSigner: true,
+      isWritable: true,
+    };
+
+    const sysvarClockAccount: AccountMeta = {
+      pubkey: SYSVAR_CLOCK_PUBKEY,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const sysvarRentAccount: AccountMeta = {
+      pubkey: SYSVAR_RENT_PUBKEY,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const [proposalAccountKey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(INGL_PROPOSAL_KEY), toBytesInt32(proposal_numeration)],
+      this.programId
+    );
+
+    const proposalAccount: AccountMeta = {
+      pubkey: proposalAccountKey,
+      isSigner: false,
+      isWritable: true,
+    };
+    const [generalAccountPubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(GENERAL_ACCOUNT_SEED)],
+      this.programId
+    );
+
+    const generalAccount: AccountMeta = {
+      pubkey: generalAccountPubkey,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const [inglConfigKey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(INGL_CONFIG_SEED)],
+      this.programId
+    );
+    const configAccount: AccountMeta = {
+      pubkey: inglConfigKey,
+      isSigner: false,
+      isWritable: false,
+    };
+    const finalizeGovernanceInstruction = new TransactionInstruction({
+      programId: this.programId,
+      data: Buffer.from(
+        serialize(
+          new FinalizeGovernance({
+            log_level: 0,
+            numeration: proposal_numeration,
+          })
+        )
+      ),
+      keys: [
+        payerAccount,
+        sysvarRentAccount,
+        sysvarClockAccount,
+        proposalAccount,
+        configAccount,
+        generalAccount,
+      ],
+    });
+    try {
+      return forwardLegacyTransaction(
+        {
+          publicKey: payerPubkey,
+          connection: this.connection,
+          signTransaction: this.walletContext.signTransaction,
+        },
+        [finalizeGovernanceInstruction]
+      );
+    } catch (error) {
+      throw new Error(
+        `Sorry, an error ocuured on finalize govenance process: ${error}`
       );
     }
   }
