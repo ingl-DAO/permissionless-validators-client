@@ -119,7 +119,8 @@ export interface CreateProposal {
   voteAccount?: VoteAccountGovernance;
 }
 
-export interface GovernanceInterface extends CreateProposal {
+export interface GovernanceInterface
+  extends Omit<CreateProposal, 'nft_mint_id'> {
   proposal_id: string;
   number_of_yes_votes: number;
   number_of_no_votes: number;
@@ -127,7 +128,7 @@ export interface GovernanceInterface extends CreateProposal {
   did_proposal_pass?: boolean; //succeded a few second ago
   is_proposal_executed: boolean;
   date_finalize?: boolean; //completed
-  expiration_time: boolean;
+  expiration_time: number;
   proposal_numeration: number;
-  proposal_quorom: number;
+  proposal_quorum: number;
 }

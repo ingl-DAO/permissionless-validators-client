@@ -3,11 +3,13 @@ import { http } from '@ingl-permissionless/axios';
 import {
   GeneralData,
   GENERAL_ACCOUNT_SEED,
+  GovernanceData,
   INGL_CONFIG_SEED,
   INGL_PROPOSAL_KEY,
   InitGovernance,
   NFT_ACCOUNT_CONST,
   toBytesInt32,
+  ValidatorConfig,
   VOTE_ACCOUNT_KEY,
 } from '@ingl-permissionless/state';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
@@ -37,6 +39,7 @@ import {
 import {
   ConfigAccountEnum,
   CreateProposal,
+  GovernanceInterface,
   VoteAccountEnum,
 } from '../interfaces';
 
@@ -271,5 +274,62 @@ export class ProposalService {
         )
       ),
     });
+  }
+
+  async loadProposals(): Promise<GovernanceInterface[]> {
+    const [generalAccountPubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(GENERAL_ACCOUNT_SEED)],
+      this.programId
+    );
+    const generalAccountInfo = await this.connection.getAccountInfo(
+      generalAccountPubkey
+    );
+    const { proposal_numeration } = deserialize(
+      generalAccountInfo?.data as Buffer,
+      GeneralData,
+      { unchecked: true }
+    );
+    const [inglConfigKey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(INGL_CONFIG_SEED)],
+      this.programId
+    );
+    const configAccountInfo = await this.connection.getAccountInfo(
+      inglConfigKey
+    );
+    const { proposal_quorum } = deserialize(
+      configAccountInfo?.data as Buffer,
+      ValidatorConfig,
+      { unchecked: true }
+    );
+    return Promise.all(
+      new Array(proposal_numeration).map(async (_, numeration) => {
+        const [proposalAccountKey] = PublicKey.findProgramAddressSync(
+          [Buffer.from(INGL_PROPOSAL_KEY), toBytesInt32(numeration)],
+          this.programId
+        );
+        const proposalAccountInfo = await this.connection.getAccountInfo(
+          proposalAccountKey
+        );
+        const { governance_type, votes, ...proposal } = deserialize(
+          proposalAccountInfo?.data as Buffer,
+          GovernanceData,
+          { unchecked: true }
+        );
+        let number_of_no_votes = 0;
+        let number_of_yes_votes = 0;
+        new Map(votes).forEach((value) =>
+          value ? number_of_yes_votes++ : number_of_no_votes++
+        );
+        return {
+          ...proposal,
+          proposal_quorum,
+          number_of_no_votes,
+          number_of_yes_votes,
+          proposal_numeration: numeration,
+          program_id: this.programId.toBase58(),
+          proposal_id: proposalAccountKey.toBase58(),
+        };
+      })
+    );
   }
 }
