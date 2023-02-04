@@ -2,15 +2,28 @@ import { deserialize, serialize } from '@dao-xyz/borsh';
 import { http } from '@ingl-permissionless/axios';
 import {
   Commission,
-  DiscordInvite, GeneralData,
+  DiscordInvite,
+  forwardLegacyTransaction,
+  GeneralData,
   GENERAL_ACCOUNT_SEED,
-  GovernanceData, GovernanceType, INGL_CONFIG_SEED,
+  GovernanceData,
+  GovernanceType,
+  INGL_CONFIG_SEED,
   INGL_PROPOSAL_KEY,
-  InitGovernance, InitialRedemptionFee,
+  InitGovernance,
+  InitialRedemptionFee,
   MaxPrimaryStake,
-  NftHolderShare, NFT_ACCOUNT_CONST, ProgramUpgrade,
-  RedemptionFeeDuration, toBytesInt32, TwitterHandle, ValidatorConfig, ValidatorID,
-  ValidatorName, VOTE_ACCOUNT_KEY
+  NftHolderShare,
+  NFT_ACCOUNT_CONST,
+  ProgramUpgrade,
+  RedemptionFeeDuration,
+  toBytesInt32,
+  TwitterHandle,
+  ValidatorConfig,
+  ValidatorID,
+  ValidatorName,
+  VoteGovernance,
+  VOTE_ACCOUNT_KEY,
 } from '@ingl-permissionless/state';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { WalletNotConnectedError } from '@solana/wallet-adapter-base';
@@ -20,14 +33,14 @@ import {
   Connection,
   LAMPORTS_PER_SOL,
   PublicKey,
-  TransactionInstruction
+  TransactionInstruction,
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import {
   ConfigAccountEnum,
   CreateProposal,
   GovernanceInterface,
-  VoteAccountEnum
+  VoteAccountEnum,
 } from '../interfaces';
 
 export enum VersionStatus {
@@ -238,7 +251,7 @@ export class ProposalService {
       isSigner: false,
       isWritable: false,
     };
-    return new TransactionInstruction({
+    const initGovernanaceInstruction = new TransactionInstruction({
       keys: [
         payerAccount,
         voteAccount,
@@ -261,6 +274,20 @@ export class ProposalService {
         )
       ),
     });
+    try {
+      return forwardLegacyTransaction(
+        {
+          connection: this.connection,
+          publicKey: payerPubkey,
+          signTransaction: this.walletContext.signTransaction,
+        },
+        [initGovernanaceInstruction]
+      );
+    } catch (error) {
+      throw new Error(
+        `Sorry, an error occured when init governance process: ${error}`
+      );
+    }
   }
 
   async loadProposals(): Promise<GovernanceInterface[]> {
@@ -318,5 +345,97 @@ export class ProposalService {
         };
       })
     );
+  }
+
+  async voteGovernance(
+    vote: boolean,
+    proposal_numeration: number,
+    tokenMints: PublicKey[]
+  ) {
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey)
+      throw new WalletNotConnectedError('Please connect your wallet !!!');
+
+    const [proposalAccountKey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(INGL_PROPOSAL_KEY), toBytesInt32(proposal_numeration)],
+      this.programId
+    );
+    const proposalAccountInfo = await this.connection.getAccountInfo(
+      proposalAccountKey
+    );
+    const { is_still_ongoing, expiration_time } = deserialize(
+      proposalAccountInfo?.data as Buffer,
+      GovernanceData,
+      { unchecked: true }
+    );
+    if (!is_still_ongoing) throw new Error('This proposal is currently closed');
+    if (new Date(expiration_time) < new Date())
+      throw new Error('This proposal has expired');
+
+    const payerAccount: AccountMeta = {
+      pubkey: payerPubkey,
+      isSigner: true,
+      isWritable: true,
+    };
+    const proposalAccount: AccountMeta = {
+      pubkey: proposalAccountKey,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const cntAccounts = tokenMints.reduce<AccountMeta[]>(
+      (accounts, tokenMint) => {
+        const mintAccount: AccountMeta = {
+          pubkey: tokenMint,
+          isSigner: false,
+          isWritable: false,
+        };
+        const associatedTokenAccount: AccountMeta = {
+          pubkey: getAssociatedTokenAddressSync(tokenMint, payerPubkey),
+          isSigner: false,
+          isWritable: false,
+        };
+        const [nftPubkey] = PublicKey.findProgramAddressSync(
+          [Buffer.from(NFT_ACCOUNT_CONST)],
+          this.programId
+        );
+        const nftAccount: AccountMeta = {
+          pubkey: nftPubkey,
+          isSigner: false,
+          isWritable: false,
+        };
+        return [...accounts, nftAccount, mintAccount, associatedTokenAccount];
+      },
+      []
+    );
+    const voteInstruction = new TransactionInstruction({
+      programId: this.programId,
+      data: Buffer.from(
+        serialize(
+          new VoteGovernance({
+            vote,
+            log_level: 0,
+            cnt: tokenMints.length,
+            numeration: proposal_numeration,
+          })
+        )
+      ),
+      keys: [payerAccount, proposalAccount, ...cntAccounts],
+    });
+
+    try {
+      return forwardLegacyTransaction(
+        {
+          connection: this.connection,
+          publicKey: payerPubkey,
+          signTransaction: this.walletContext.signTransaction,
+        },
+        [voteInstruction]
+      );
+    } catch (error) {
+      throw new Error(
+        `Sorry, an error occured when vote governanace process: ${error}`
+      );
+    }
   }
 }
