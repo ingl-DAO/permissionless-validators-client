@@ -20,6 +20,7 @@ export const CustomInput = ({
   type = 'string',
   multiline = false,
   rows = 1,
+  inputBackgroundColor = '#28293D',
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   formik: any;
@@ -29,6 +30,7 @@ export const CustomInput = ({
   type?: 'string' | 'number';
   multiline?: boolean;
   rows?: number;
+  inputBackgroundColor?: string;
 }) => {
   return (
     <Box>
@@ -47,8 +49,8 @@ export const CustomInput = ({
         type={type}
         required
         sx={{
-          '& input': {
-            backgroundColor: '#28293D',
+          '& input, & div': {
+            backgroundColor: inputBackgroundColor,
             color: 'white',
             '&::placeholder': {
               color: 'white',
