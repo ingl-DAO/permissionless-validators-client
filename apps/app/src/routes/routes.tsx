@@ -7,7 +7,7 @@ import ValidatorNFTs from '../pages/[validator_program_id]/nfts';
 import Rewards from '../pages/[validator_program_id]/rewards/index';
 import ValidatorStats from '../pages/[validator_program_id]/validatorStats';
 import Dao from '../pages/[validator_program_id]/dao';
-import CreateProposal from '../pages/[validator_program_id]/dao/create';
+import ProposalCreation from '../pages/[validator_program_id]/dao/create';
 
 export const routes = [
   { path: '/', element: <Navigate to="/programs" /> },
@@ -25,7 +25,7 @@ export const routes = [
           { path: 'rewards', element: <Rewards /> },
           { path: 'details', element: <ValidatorStats /> },
           { path: 'dao', element: <Dao /> },
-          { path: 'dao/create', element: <CreateProposal /> },
+          { path: 'dao/create', element: <ProposalCreation /> },
         ],
       },
       {
