@@ -1,13 +1,20 @@
-import { ReportRounded, WarningAmberOutlined } from '@mui/icons-material';
 import {
-    Box,
-    Button,
-    Chip,
-    FormControl,
-    MenuItem,
-    OutlinedInput,
-    Select,
-    Skeleton, Typography
+  DangerousOutlined,
+  ReportRounded,
+  WarningAmberOutlined,
+} from '@mui/icons-material';
+import {
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  FormControl,
+  MenuItem,
+  OutlinedInput,
+  Select,
+  Skeleton,
+  TextField,
+  Typography,
 } from '@mui/material';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
@@ -22,11 +29,18 @@ import ErrorMessage from '../../../../common/components/ErrorMessage';
 import useNotification from '../../../../common/utils/notification';
 import GovernancePower from '../../../../components/dao/governancePower';
 import { CustomInput } from '../../../../components/register-validator/validatorInformation';
-import { InglNft, InglValidator, ProgramUpgrade } from '../../../../interfaces';
+import {
+  ConfigAccountEnum,
+  CreateProposal,
+  InglNft,
+  InglValidator,
+  ProgramUpgrade,
+  VoteAccountEnum,
+} from '../../../../interfaces';
 import { ValidatorService } from '../../../../services/validator.service';
 import theme from '../../../../theme/theme';
 
-export default function CreateProposal() {
+export default function ProposalCreation() {
   const navigate = useNavigate();
   const { validator_program_id } = useParams();
   const { pathname } = useLocation();
@@ -200,6 +214,24 @@ export default function CreateProposal() {
     },
   });
 
+  const vId_init_vals: { new_value: string | number } = {
+    new_value: '',
+  };
+
+  const vId_schema = Yup.object().shape({
+    new_value: Yup.string().required('required'),
+  });
+
+  const vId_formik = useFormik({
+    initialValues: vId_init_vals,
+    validationSchema: vId_schema,
+    enableReinitialize: true,
+    onSubmit: (values, { resetForm }) => {
+      alert(JSON.stringify(values));
+      resetForm();
+    },
+  });
+
   const pu_init_vals: ProgramUpgrade = {
     buffer_account: '',
     code_link: '',
@@ -221,6 +253,120 @@ export default function CreateProposal() {
   });
 
   const [proposalType, setProposalType] = useState<string>('Program upgrade');
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [proposalNotif, setProposalNotif] = useState<useNotification>();
+
+  const submitProposal = (proposal: CreateProposal) => {
+    alert(JSON.stringify(proposal));
+    setIsCreating(true);
+    const notif = new useNotification();
+    if (proposalNotif) proposalNotif.dismiss();
+    setProposalNotif(notif);
+    notif.notify({
+      render: 'Creating Proposal...',
+    });
+    setTimeout(() => {
+      //TODO: call api here create proposal with data proposal
+      // eslint-disable-next-line no-constant-condition
+      if (6 > 5) {
+        setIsCreating(false);
+        notif.update({
+          render: 'Created proposal successfully',
+        });
+        setProposalNotif(undefined);
+      } else {
+        notif.update({
+          type: 'ERROR',
+          render: (
+            <ErrorMessage
+              retryFunction={() => submitProposal(proposal)}
+              notification={notif}
+              //TODO: message should come from backend
+              message={
+                'There was an error creating your proposal. Please try again!!!'
+              }
+            />
+          ),
+          autoClose: false,
+          icon: () => <ReportRounded fontSize="medium" color="error" />,
+        });
+      }
+    }, 3000);
+  };
+
+  const submitForms = () => {
+    if (nfts.length > 0) {
+      const { description: d, title: t } = formik.values;
+      if (d !== '' && d.length <= 300 && t !== '' && t.length <= 130) {
+        const submitData: CreateProposal = {
+          description: d,
+          title: t,
+          nft_mint_id: nfts[0].nft_mint_id,
+          program_id: validator_program_id as string,
+        };
+
+        if (proposalType === 'Program upgrade') {
+          const { buffer_account, code_link } = pu_formik.values;
+          if (buffer_account !== '' && code_link !== '') {
+            submitData.programUpgrade = {
+              buffer_account: buffer_account,
+              code_link: code_link,
+            };
+          } else pu_formik.submitForm();
+        } else if (proposalType.includes('Vote account')) {
+          const { new_value } = vId_formik.values;
+          if (new_value !== '') {
+            submitData.voteAccount = {
+              value: new_value,
+              vote_type: proposalType.includes('commission')
+                ? VoteAccountEnum.Commission
+                : VoteAccountEnum.ValidatorID,
+            };
+          } else vId_formik.submitForm();
+        } else if (proposalType.includes('Config account')) {
+          const { new_value } = vId_formik.values;
+          if (new_value !== '') {
+            submitData.configAccount = {
+              value: [
+                'Config account : change max primary stake',
+                'Config account : change NFT holder share',
+                'Config account : change initial redemption fee',
+                'Config account : change redemption fee duration',
+              ].includes(proposalType)
+                ? Number(new_value)
+                : new_value,
+              config_type: proposalType.includes('stake')
+                ? ConfigAccountEnum.MaxPrimaryStake
+                : proposalType.includes('share')
+                ? ConfigAccountEnum.NftHolderShare
+                : proposalType.includes('initial redemption')
+                ? ConfigAccountEnum.InitialRedemptionFee
+                : proposalType.includes('fee duration')
+                ? ConfigAccountEnum.RedemptionFeeDuration
+                : proposalType.includes('validator name')
+                ? ConfigAccountEnum.ValidatorName
+                : proposalType.includes('twitter')
+                ? ConfigAccountEnum.TwitterHandle
+                : ConfigAccountEnum.DiscordInvite,
+            };
+          } else vId_formik.submitForm();
+        } else alert('testing new stuff');
+
+        submitProposal(submitData);
+      } else formik.submitForm();
+    } else {
+      const tt = new useNotification();
+      tt.notify({ render: 'Notifying' });
+      tt.update({
+        autoClose: 5000,
+        type: 'WARNING',
+        icon: () => <DangerousOutlined color="warning" />,
+        render:
+          'You must own at least an nft on this validator to create a proposal!!!',
+      });
+      navigate(pathname.split('/').slice(0, -1).join('/'));
+    }
+  };
 
   return (
     <Box
@@ -360,7 +506,7 @@ export default function CreateProposal() {
                       <OutlinedInput
                         fullWidth
                         sx={{
-                            minWidth: theme.spacing(20),
+                          minWidth: theme.spacing(20),
                           '& input, & div, & svg': {
                             backgroundColor: '#1C1C28',
                             color: 'white',
@@ -397,41 +543,6 @@ export default function CreateProposal() {
                     ))}
                   </Select>
                 </FormControl>
-
-                {/* <TextField
-                  size="small"
-                  required
-                  select
-                  fullWidth
-                  value={proposalType}
-                  onChange={(event) => setProposalType(event.target.value)}
-                  sx={{
-                    '& input, & div, & svg': {
-                      backgroundColor: '#1C1C28',
-                      color: 'white',
-                      '&::placeholder': {
-                        color: 'white',
-                      },
-                    },
-                  }}
-                >
-                  {[
-                    'Program upgrade',
-                    'Vote account : swap validator ID',
-                    'Vote account : swap commission',
-                    'Config account : change max primary stake',
-                    'Config account : change NFT holder share',
-                    'Config account : change initial redemption fee',
-                    'Config account : change redemption fee duration',
-                    'Config account : change validator name',
-                    'Config account : change twitter handle',
-                    'Config account : change discord invite',
-                  ].map((val, index) => (
-                    <MenuItem key={index} value={val}>
-                      {val}
-                    </MenuItem>
-                  ))}
-                </TextField> */}
               </Box>
 
               <Box
@@ -465,6 +576,152 @@ export default function CreateProposal() {
                       subLabel="Github link to the code behind the deployed buffer data"
                     />
                   </Box>
+                ) : proposalType === 'Vote account : swap validator ID' ? (
+                  <CustomInput
+                    inputBackgroundColor="#1C1C28"
+                    formik={vId_formik}
+                    formikKey="new_value"
+                    label="New validator ID"
+                    subLabel="Address of the validator to be newly onboarded"
+                  />
+                ) : proposalType === 'Vote account : swap commission' ? (
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridAutoFlow: 'column',
+                      columnGap: 2,
+                    }}
+                  >
+                    <Box>
+                      <Box>
+                        <Typography variant="h6">
+                          Previous commission
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'wheat' }}>
+                          Commission currently charged from secondary stakers
+                        </Typography>
+                      </Box>
+                      <TextField
+                        size="small"
+                        placeholder="Previous commission"
+                        fullWidth
+                        required
+                        value={
+                          validatorDetails
+                            ? `${validatorDetails.init_commission}%`
+                            : ''
+                        }
+                        disabled
+                        sx={{
+                          '& input, & div': {
+                            backgroundColor: '#1C1C28',
+                            color: 'white',
+                            '&::placeholder': {
+                              color: 'white',
+                            },
+                          },
+                          '& .Mui-disabled': {
+                            WebkitTextFillColor: 'rgba(255, 255, 255, 0.35)',
+                          },
+                        }}
+                      />
+                    </Box>
+                    <CustomInput
+                      inputBackgroundColor="#1C1C28"
+                      type="number"
+                      formik={vId_formik}
+                      formikKey="new_value"
+                      label="New commission"
+                      subLabel="New commission to be charged from secondary stakers"
+                    />
+                  </Box>
+                ) : proposalType.includes('Config account') ? (
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridAutoFlow: 'column',
+                      columnGap: 2,
+                    }}
+                  >
+                    <Box>
+                      <Box>
+                        <Typography variant="h6">Previous value</Typography>
+                        <Typography variant="caption" sx={{ color: 'wheat' }}>
+                          Validator's current value
+                        </Typography>
+                      </Box>
+                      <TextField
+                        size="small"
+                        fullWidth
+                        required
+                        value={
+                          validatorDetails
+                            ? proposalType.includes('stake')
+                              ? `${Number(
+                                  validatorDetails.max_primary_stake
+                                    .div(new BN(10_000_000_000))
+                                    .toString(10)
+                                )}SOL`
+                              : proposalType.includes('share')
+                              ? `${validatorDetails.nft_holders_share}%`
+                              : proposalType.includes('initial redemption')
+                              ? formatNumber(
+                                  validatorDetails.initial_redemption_fee,
+                                  {
+                                    style: 'unit',
+                                    unit: 'percent',
+                                    unitDisplay: 'narrow',
+                                  }
+                                )
+                              : proposalType.includes('fee duration')
+                              ? formatNumber(
+                                  validatorDetails.redemption_fee_duration,
+                                  {
+                                    style: 'unit',
+                                    unit: 'day',
+                                    unitDisplay: 'long',
+                                  }
+                                )
+                              : proposalType.includes('validator name')
+                              ? validatorDetails.validator_name
+                              : proposalType.includes('twitter')
+                              ? validatorDetails.twitter_handle
+                              : validatorDetails.discord_invite
+                            : ''
+                        }
+                        disabled
+                        sx={{
+                          '& input, & div': {
+                            backgroundColor: '#1C1C28',
+                            color: 'white',
+                            '&::placeholder': {
+                              color: 'white',
+                            },
+                          },
+                          '& .Mui-disabled': {
+                            WebkitTextFillColor: 'rgba(255, 255, 255, 0.35)',
+                          },
+                        }}
+                      />
+                    </Box>
+                    <CustomInput
+                      inputBackgroundColor="#1C1C28"
+                      type={
+                        [
+                          'Config account : change max primary stake',
+                          'Config account : change NFT holder share',
+                          'Config account : change initial redemption fee',
+                          'Config account : change redemption fee duration',
+                        ].includes(proposalType)
+                          ? 'number'
+                          : 'string'
+                      }
+                      formik={vId_formik}
+                      formikKey="new_value"
+                      label="New value"
+                      subLabel="Enter proposition to be voted for"
+                    />
+                  </Box>
                 ) : (
                   proposalType
                 )}
@@ -491,14 +748,24 @@ export default function CreateProposal() {
               color="inherit"
               fullWidth
               sx={{ color: theme.common.background }}
+              disabled={isCreating}
               onClick={() =>
                 navigate(pathname.split('/').slice(0, -1).join('/'))
               }
             >
               Cancel
             </Button>
-            <Button variant="contained" color="primary" fullWidth>
-              Create
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              disabled={isCreating}
+              onClick={submitForms}
+            >
+              {isCreating && (
+                <CircularProgress color="primary" thickness={5} size={'20px'} />
+              )}
+              {isCreating ? 'Creating' : 'Create'}
             </Button>
           </Box>
           <GovernancePower areNftsLoading={areNftsLoading} nfts={nfts} />
