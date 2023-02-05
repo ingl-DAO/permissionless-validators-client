@@ -1,21 +1,19 @@
-import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
+import { ArrowBackIosNewOutlined } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import CopyTransactionId from '../../common/components/copyTransactionId';
-import ErrorMessage from '../../common/components/ErrorMessage';
+import { toast } from 'react-toastify';
 import useNotification from '../../common/utils/notification';
 import CollectionInformation from '../../components/register-validator/collectionInformation';
 import DaoInformation, {
-  DaoInfo
+  DaoInfo,
 } from '../../components/register-validator/daoInformation';
 import ValidatorInformation, {
-  ValidatorInfo
+  ValidatorInfo,
 } from '../../components/register-validator/validatorInformation';
 import VoteAccountInformation, {
-  VoteAccountInfo
+  VoteAccountInfo,
 } from '../../components/register-validator/voteAccountInformation';
 import { CollectionJson, ValidatorRegistration } from '../../interfaces';
 import { RegistryService } from '../../services/registry.service';
@@ -136,57 +134,61 @@ export default function Register() {
     validatorId: string,
     validator: ValidatorRegistration
   ) {
-    setIsCreating(true);
-    const notif = new useNotification();
-    if (validatorNotif) validatorNotif.dismiss();
-    setValidatorNotif(notif);
-    notif.notify({
-      render: 'Creating Validator...',
+    // TODO: Remove this after beta setup
+    toast.warning('🛠️Registration currently not accessible for the public⚙️', {
+      autoClose: 5000,
     });
-    registryService
-      .registerProgram(new PublicKey(validatorId), validator)
-      .then((signatures) => {
-        notif.update({
-          render: (
-            <>
-              {signatures.map((signature) => (
-                <>
-                  <CopyTransactionId
-                    transaction_id={signature}
-                    message="Registered validator successfully !!"
-                  />
-                  <a
-                    style={{ color: 'white' }}
-                    href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
-                  >
-                    See what's next
-                  </a>
-                </>
-              ))}
-              ,
-            </>
-          ),
-        });
-        setValidatorNotif(undefined);
-      })
-      .catch((error) => {
-        notif.update({
-          type: 'ERROR',
-          render: (
-            <ErrorMessage
-              retryFunction={() => createValidator(validatorId, validator)}
-              notification={notif}
-              message={
-                error?.message ||
-                'There was an error creating validator. Please try again!!!'
-              }
-            />
-          ),
-          autoClose: false,
-          icon: () => <ReportRounded fontSize="medium" color="error" />,
-        });
-      })
-      .finally(() => setIsCreating(false));
+    // end TODO
+    // setIsCreating(true);
+    // const notif = new useNotification();
+    // if (validatorNotif) validatorNotif.dismiss();
+    // setValidatorNotif(notif);
+    // notif.notify({
+    //   render: 'Creating Validator...',
+    // });
+    // registryService
+    //   .registerProgram(
+    //     programId as PublicKey,
+    //     new PublicKey(validatorId),
+    //     validator
+    //   )
+    //   .then((signature) => {
+    //     notif.update({
+    //       render: (
+    //         <>
+    //           <CopyTransactionId
+    //             transaction_id={signature}
+    //             message="Registered validator successfully !!"
+    //           />
+    //           <a
+    //             style={{ color: 'white' }}
+    //             href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
+    //           >
+    //             See what's next
+    //           </a>
+    //         </>
+    //       ),
+    //     });
+    //     setValidatorNotif(undefined);
+    //   })
+    //   .catch((error) => {
+    //     notif.update({
+    //       type: 'ERROR',
+    //       render: (
+    //         <ErrorMessage
+    //           retryFunction={() => createValidator(validatorId, validator)}
+    //           notification={notif}
+    //           message={
+    //             error?.message ||
+    //             'There was an error creating validator. Please try again!!!'
+    //           }
+    //         />
+    //       ),
+    //       autoClose: false,
+    //       icon: () => <ReportRounded fontSize="medium" color="error" />,
+    //     });
+    //   })
+    //   .finally(() => setIsCreating(false));
   }
 
   return (

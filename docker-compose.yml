@@ -15,12 +15,3 @@ services:
     restart: always
     ports:
       - "89:3000"
-  monitor:
-    build:
-      dockerfile: ./Dockerfile.monitor
-      context: .
-    restart: always
-    environment:
-      - NX_MONITOR_BASE_URL=https://beta.ingl.io
-    ports:
-      - "88:8080"

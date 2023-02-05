@@ -18,6 +18,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from '@solana/web3.js';
+import { all } from 'axios';
 import { BN } from 'bn.js';
 import { GeneralData, ValidatorConfig } from '../state';
 
@@ -115,14 +116,14 @@ export const forwardMultipleLegacyTransactions = async (
   if (!signedTransactions) throw new Error('No signed transactions found');
 
   let index = 0;
-  let lastSignature = '';
+  const allSignatures = [];
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const signedTransaction = signedTransactions[index];
     const signature = await connection.sendRawTransaction(
       (signedTransaction as Transaction).serialize()
     );
-    lastSignature = signature;
+    allSignatures.push(signature);
     await connection.confirmTransaction({
       signature,
       ...blockhashObj,
@@ -130,7 +131,7 @@ export const forwardMultipleLegacyTransactions = async (
     index++;
     if (index > signedTransactions.length - 1) break;
   }
-  return lastSignature;
+  return allSignatures;
 };
 
 export async function forwardV0Transaction(

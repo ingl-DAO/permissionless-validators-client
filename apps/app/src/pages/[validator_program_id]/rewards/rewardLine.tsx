@@ -27,6 +27,9 @@ export default function RewardLine({
       <TableCell align="center">
         <Checkbox
           color="primary"
+          sx={{
+            color: 'rgba(255, 255, 255, 0.5)',
+          }}
           checked={isChecked}
           disabled={rewards === 0}
           onClick={() => onSelect(reward)}

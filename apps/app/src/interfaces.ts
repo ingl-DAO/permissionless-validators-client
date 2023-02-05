@@ -90,6 +90,11 @@ export enum ConfigAccountEnum {
   DiscordInvite = 'DiscordInvite',
 }
 
+export enum VoteAccountEnum {
+  ValidatorID = 'ValidatorID',
+  Commission = 'Commission',
+}
+
 export interface ConfigAccountType {
   config_type: ConfigAccountEnum;
   value: number | string;
@@ -100,10 +105,6 @@ export interface ProgramUpgrade {
   code_link: string;
 }
 
-export enum VoteAccountEnum {
-  ValidatorID = 'ValidatorID',
-  Commission = 'Commission',
-}
 export interface VoteAccountGovernance {
   vote_type: VoteAccountEnum;
   value: number | string;
@@ -113,10 +114,10 @@ export interface CreateProposal {
   title: string;
   program_id: string;
   description: string;
-  nft_mint_id: string;
   configAccount?: ConfigAccountType;
   programUpgrade?: ProgramUpgrade;
   voteAccount?: VoteAccountGovernance;
+  nft_mint_id: string;
 }
 
 export interface GovernanceInterface
@@ -128,7 +129,7 @@ export interface GovernanceInterface
   did_proposal_pass?: boolean; //succeded a few second ago
   is_proposal_executed: boolean;
   date_finalize?: boolean; //completed
-  expiration_time: number;
+  expiration_time: number; //in seconds
   proposal_numeration: number;
   proposal_quorum: number;
 }
