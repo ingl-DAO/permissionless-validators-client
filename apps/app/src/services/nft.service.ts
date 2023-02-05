@@ -54,6 +54,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
   LAMPORTS_PER_SOL,
+  Transaction,
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import { InglNft, NftReward } from '../interfaces';
@@ -332,10 +333,10 @@ export class NftService {
         },
         instructions
       );
-      console.log('last transaction ID: ', result);
+      console.log('all transaction IDs: ', result);
       return {
         tokenMints: mintKeyPairs.map((keypair) => keypair.publicKey),
-        signature: result,
+        signature: result[result.length - 1],
       };
     } catch (error) {
       throw new Error('NFT Minting transaction failed with error ' + error);
@@ -821,13 +822,15 @@ export class NftService {
       isSigner: false,
       isWritable: true,
     };
-
+    console.log('Token addresses :');
     const cntAccounts = tokenMints.reduce<AccountMeta[]>(
-      (accounts, tokenMint) => {
+      (accounts, tokenMint, index) => {
         const [nftPubkey] = PublicKey.findProgramAddressSync(
           [Buffer.from(NFT_ACCOUNT_CONST), tokenMint.toBuffer()],
           this.programId
         );
+        console.log(index, nftPubkey.toString());
+        console.log(getAssociatedTokenAddressSync(tokenMint, payerPubkey));
         return [
           ...accounts,
           {
@@ -841,40 +844,124 @@ export class NftService {
       },
       []
     );
+    console.log('end');
 
+    let splittedCntAccountsPerClaim = [];
+    const NUM_TOKENS_PER_CLAIM_TXN = 3;
+    const numberOfClaims = Math.ceil(
+      tokenMints.length / NUM_TOKENS_PER_CLAIM_TXN
+    );
+    console.log('Number of tokens per claims', numberOfClaims);
+    if (numberOfClaims === 0) throw new Error('No rewards to claim');
+
+    if (numberOfClaims === 1) {
+      splittedCntAccountsPerClaim = [cntAccounts];
+    } else {
+      let count = 0;
+      splittedCntAccountsPerClaim = new Array(numberOfClaims);
+      const copyCntAccounts = [...cntAccounts];
+      while (count < numberOfClaims) {
+        if (copyCntAccounts.length >= NUM_TOKENS_PER_CLAIM_TXN * 3) {
+          splittedCntAccountsPerClaim[count] = copyCntAccounts.splice(
+            0,
+            NUM_TOKENS_PER_CLAIM_TXN * 3
+          );
+        } else {
+          splittedCntAccountsPerClaim[count] = copyCntAccounts;
+        }
+        count++;
+      }
+    }
+    console.log('splittedCntAccountsPerClaim', splittedCntAccountsPerClaim);
     const systemProgramAccount: AccountMeta = {
       pubkey: SystemProgram.programId,
       isSigner: false,
       isWritable: false,
     };
+    const claimRewardInstructionsPerTransaction = [];
 
-    const claimRewardInstruction = new TransactionInstruction({
-      programId: this.programId,
-      data: Buffer.from(serialize(new NFTWithdraw(tokenMints.length, 0))),
-      keys: [
-        payerAccount,
-        voteAccount,
-        generalAccount,
-        validatorConfigAccount,
-        authorizedWithdrawerAccount,
-        //cntAccounts
-        ...cntAccounts,
+    for (let i = 0; i < numberOfClaims; i++) {
+      const claimRewardInstructions: TransactionInstruction[] = [];
+      const NUM_TOKEN_IN_INSTRUCTION = 2;
+      const numberOfInstructions = Math.ceil(
+        splittedCntAccountsPerClaim[i].length / (NUM_TOKEN_IN_INSTRUCTION * 3)
+      );
+      let splittedCntAccountsPerInstruction = [];
+      console.log('Number of tokens per instruction', numberOfInstructions);
+      if (numberOfInstructions === 1) {
+        splittedCntAccountsPerInstruction = [splittedCntAccountsPerClaim[i]];
+      } else {
+        let count = 0;
+        splittedCntAccountsPerInstruction = new Array(numberOfInstructions);
+        const copyCntAccountPerTransaction = splittedCntAccountsPerClaim[i];
 
-        systemProgramAccount,
-      ],
-    });
+        while (count < numberOfInstructions) {
+          if (
+            copyCntAccountPerTransaction.length >=
+            NUM_TOKEN_IN_INSTRUCTION * 3
+          ) {
+            splittedCntAccountsPerInstruction[count] =
+              copyCntAccountPerTransaction.splice(
+                0,
+                NUM_TOKEN_IN_INSTRUCTION * 3
+              );
+          } else {
+            splittedCntAccountsPerInstruction[count] =
+              copyCntAccountPerTransaction;
+          }
+          count++;
+        }
+      }
+      console.log(
+        'splittedCntAccountsPerInstruction',
+        splittedCntAccountsPerInstruction
+      );
+      for (let j = 0; j < numberOfInstructions; j++) {
+        claimRewardInstructions.push(
+          new TransactionInstruction({
+            programId: this.programId,
+            data: Buffer.from(
+              serialize(
+                new NFTWithdraw(
+                  splittedCntAccountsPerInstruction[j].length / 3,
+                  0
+                )
+              )
+            ),
+            keys: [
+              payerAccount,
+              voteAccount,
+              generalAccount,
+              validatorConfigAccount,
+              authorizedWithdrawerAccount,
+              //cntAccounts
+              ...splittedCntAccountsPerInstruction[j],
 
+              systemProgramAccount,
+            ],
+          })
+        );
+      }
+      claimRewardInstructionsPerTransaction.push({
+        instructions: claimRewardInstructions,
+        additionalUnits: 1_000_000,
+        signingKeypairs: [],
+      });
+    }
+    console.log(claimRewardInstructionsPerTransaction);
     try {
-      return await forwardLegacyTransaction(
+      const result = await forwardMultipleLegacyTransactions(
         {
           publicKey: payerPubkey,
           connection: this.connection,
-          signTransaction: this.walletContext.signTransaction,
+          signAllTransaction: this.walletContext
+            .signAllTransactions as SignerWalletAdapterProps['signAllTransactions'],
         },
-        [claimRewardInstruction]
+        claimRewardInstructionsPerTransaction
       );
+      return result[result.length - 1];
     } catch (error) {
-      throw new Error('Failed to claim gems rewards  with error ' + error);
+      throw new Error('NFT Minting transaction failed with error ' + error);
     }
   }
 
@@ -1096,7 +1183,6 @@ export class NftService {
         } = deserialize(accountInfo?.data as Buffer, NftData, {
           unchecked: true,
         });
-        console.log(last_delegation_epoch, last_withdrawal_epoch);
         if (funds_location instanceof Delegated) {
           const comp = (left?: BN, right?: BN) => {
             const temp_left = Number(left?.toString(10));

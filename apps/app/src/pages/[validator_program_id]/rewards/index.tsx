@@ -61,6 +61,8 @@ export default function Rewards() {
     nftService
       ?.loadRewards()
       .then((rewards) => {
+        // Only reward greater than 0
+        rewards = rewards.filter(({ rewards }) => rewards > 0);
         setRewards(rewards);
         setAreRewardsLoading(false);
         notif.dismiss();
@@ -221,6 +223,9 @@ export default function Rewards() {
                 <TableCell align="center">
                   <Checkbox
                     color="primary"
+                    sx={{
+                      color: 'rgba(255, 255, 255, 0.5)',
+                    }}
                     checked={
                       selectedRewards.length === rewards.length &&
                       rewards.length > 0
@@ -273,7 +278,7 @@ export default function Rewards() {
                       selectedRewards.find(
                         ({ nft_mint_id: nft_pubkey }) =>
                           nft_pubkey === reward.nft_mint_id
-                      )
+                      ) && reward.rewards > 0
                     )}
                     onSelect={(reward: NftReward) => {
                       const tt = selectedRewards.find(
