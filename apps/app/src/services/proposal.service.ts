@@ -3,12 +3,14 @@ import { http } from '@ingl-permissionless/axios';
 import {
   Commission,
   DiscordInvite,
+  ExecuteGovernance,
   FinalizeGovernance,
   forwardLegacyTransaction,
   GeneralData,
   GENERAL_ACCOUNT_SEED,
   GovernanceData,
   GovernanceType,
+  GOVERNANCE_SAFETY_LEEWAY,
   INGL_CONFIG_SEED,
   INGL_PROPOSAL_KEY,
   InitGovernance,
@@ -522,6 +524,108 @@ export class ProposalService {
           signTransaction: this.walletContext.signTransaction,
         },
         [finalizeGovernanceInstruction]
+      );
+    } catch (error) {
+      throw new Error(
+        `Sorry, an error ocuured on finalize govenance process: ${error}`
+      );
+    }
+  }
+
+  async executeGovernance(proposal_numeration: number) {
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey)
+      throw new WalletNotConnectedError('Please connect your wallet !!!');
+
+    const payerAccount: AccountMeta = {
+      pubkey: payerPubkey,
+      isSigner: true,
+      isWritable: true,
+    };
+
+    const sysvarClockAccount: AccountMeta = {
+      pubkey: SYSVAR_CLOCK_PUBKEY,
+      isSigner: false,
+      isWritable: false,
+    };
+
+    const [proposalAccountKey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(INGL_PROPOSAL_KEY), toBytesInt32(proposal_numeration)],
+      this.programId
+    );
+    const proposalAccountInfo = await this.connection.getAccountInfo(
+      proposalAccountKey
+    );
+    const {
+      date_finalized,
+      is_still_ongoing,
+      did_proposal_pass,
+      is_proposal_executed,
+    } = deserialize(proposalAccountInfo?.data as Buffer, GovernanceData, {
+      unchecked: true,
+    });
+    if (is_still_ongoing)
+      throw new Error('This proposal is currently still ongoing');
+    if (
+      !date_finalized ||
+      new Date() < new Date(date_finalized + GOVERNANCE_SAFETY_LEEWAY)
+    )
+      throw new Error('Proposal mus be executed');
+    if (is_proposal_executed)
+      throw new Error('This proposal has already been executed');
+    if (!did_proposal_pass) throw new Error('This proposal was not passed.');
+
+    const proposalAccount: AccountMeta = {
+      pubkey: proposalAccountKey,
+      isSigner: false,
+      isWritable: true,
+    };
+    const [generalAccountPubkey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(GENERAL_ACCOUNT_SEED)],
+      this.programId
+    );
+
+    const generalAccount: AccountMeta = {
+      pubkey: generalAccountPubkey,
+      isSigner: false,
+      isWritable: true,
+    };
+
+    const [inglConfigKey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(INGL_CONFIG_SEED)],
+      this.programId
+    );
+    const configAccount: AccountMeta = {
+      pubkey: inglConfigKey,
+      isSigner: false,
+      isWritable: false,
+    };
+    const executeGovernanceInstruction = new TransactionInstruction({
+      programId: this.programId,
+      data: Buffer.from(
+        serialize(
+          new ExecuteGovernance({
+            log_level: 0,
+            numeration: proposal_numeration,
+          })
+        )
+      ),
+      keys: [
+        payerAccount,
+        sysvarClockAccount,
+        proposalAccount,
+        configAccount,
+        generalAccount,
+      ],
+    });
+    try {
+      return forwardLegacyTransaction(
+        {
+          publicKey: payerPubkey,
+          connection: this.connection,
+          signTransaction: this.walletContext.signTransaction,
+        },
+        [executeGovernanceInstruction]
       );
     } catch (error) {
       throw new Error(
