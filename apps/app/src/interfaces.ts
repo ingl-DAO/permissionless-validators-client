@@ -28,8 +28,12 @@ export interface NftReward {
   rewards: number;
 }
 
+export interface Rarity {
+  rarity: number;
+  uris: string[];
+}
 export interface ValidatorRarity {
-  rarities: number[];
+  rarities: Rarity[];
   rarity_names: string[];
 }
 

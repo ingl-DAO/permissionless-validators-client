@@ -64,7 +64,7 @@ export default function ProposalCreation() {
     init_commission: 20,
     initial_redemption_fee: 20,
     is_validator_id_switchable: false,
-    max_primary_stake: new BN(20),
+    max_primary_stake: 20,
     nft_holders_share: 20,
     proposal_quorum: 10,
     redemption_fee_duration: 37923829293,
@@ -73,7 +73,7 @@ export default function ProposalCreation() {
     total_minted_count: 0,
     total_secondary_stake: new BN(2),
     twitter_handle: 'ieol',
-    unit_backing: new BN(20),
+    unit_backing: 20,
     validator_apy: 20,
     validator_id: 'owie',
     validator_name: 'Labrent',
@@ -658,9 +658,8 @@ export default function ProposalCreation() {
                           validatorDetails
                             ? proposalType.includes('stake')
                               ? `${Number(
-                                  validatorDetails.max_primary_stake
-                                    .div(new BN(10_000_000_000))
-                                    .toString(10)
+                                  validatorDetails.max_primary_stake /
+                                    10_000_000_000
                                 )}SOL`
                               : proposalType.includes('share')
                               ? `${validatorDetails.nft_holders_share}%`
