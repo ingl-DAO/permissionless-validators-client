@@ -28,10 +28,10 @@ import {
   willExceedMaximumPrimaryStake,
 } from '@ingl-permissionless/state';
 import {
-  Metaplex,
-  Nft,
   JsonMetadata,
   Metadata,
+  Metaplex,
+  Nft,
   Sft,
 } from '@metaplex-foundation/js';
 import {
@@ -47,14 +47,13 @@ import {
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
   AccountMeta,
-  type Connection,
   Keypair,
+  LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
-  LAMPORTS_PER_SOL,
-  Transaction,
+  type Connection,
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import { InglNft, NftReward } from '../interfaces';

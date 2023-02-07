@@ -109,12 +109,12 @@ export class ProposalService {
       const isBufferProgramVerified = await this.verifyProgramVersion(
         bufferAccountKey
       );
-      if (isBufferProgramVerified) {
-        governanceType = new ProgramUpgrade({
-          buffer_account: bufferAccountKey.toBuffer(),
-          code_link,
-        });
-      }
+      if (!isBufferProgramVerified)
+        throw new Error(`Your buffer program version is invalid`);
+      governanceType = new ProgramUpgrade({
+        buffer_account: bufferAccountKey.toBuffer(),
+        code_link,
+      });
     } else if (configAccount) {
       const { config_type, value } = configAccount;
       if (
@@ -214,7 +214,7 @@ export class ProposalService {
     const proposalAccount: AccountMeta = {
       pubkey: proposalAccountKey,
       isSigner: false,
-      isWritable: false,
+      isWritable: true,
     };
 
     const [inglConfigKey] = PublicKey.findProgramAddressSync(
@@ -248,7 +248,7 @@ export class ProposalService {
       isWritable: false,
     };
     const [nftPubkey] = PublicKey.findProgramAddressSync(
-      [Buffer.from(NFT_ACCOUNT_CONST)],
+      [Buffer.from(NFT_ACCOUNT_CONST), mintAccount.pubkey.toBuffer()],
       this.programId
     );
     const nftAccount: AccountMeta = {
@@ -256,17 +256,24 @@ export class ProposalService {
       isSigner: false,
       isWritable: false,
     };
+    const instructionAccounts = [
+      payerAccount,
+      voteAccount,
+      proposalAccount,
+      generalAccount,
+      mintAccount,
+      associatedTokenAccount,
+      nftAccount,
+      configAccount,
+    ];
+    if (governanceType instanceof ProgramUpgrade)
+      instructionAccounts.push({
+        pubkey: new PublicKey(governanceType.buffer_account),
+        isSigner: false,
+        isWritable: false,
+      });
     const initGovernanaceInstruction = new TransactionInstruction({
-      keys: [
-        payerAccount,
-        voteAccount,
-        proposalAccount,
-        generalAccount,
-        mintAccount,
-        associatedTokenAccount,
-        nftAccount,
-        configAccount,
-      ],
+      keys: instructionAccounts,
       programId: this.programId,
       data: Buffer.from(
         serialize(
