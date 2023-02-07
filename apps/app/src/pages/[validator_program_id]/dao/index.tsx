@@ -232,6 +232,7 @@ export default function Dao() {
                       expiration_time,
                       did_proposal_pass,
                       is_proposal_executed,
+                      proposal_id,
                     },
                     index
                   ) => {
@@ -248,6 +249,7 @@ export default function Dao() {
                       : 'Defeated';
                     return (
                       <ProposalCard
+                        proposal_id={proposal_id}
                         noPercentage={(number_of_no_votes / totalVotes) * 100}
                         noVotes={number_of_no_votes}
                         numeration={proposal_numeration}

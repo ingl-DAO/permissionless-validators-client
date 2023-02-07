@@ -1,5 +1,6 @@
 import { ArrowForwardIosOutlined } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
+import { useNavigate } from 'react-router';
 import theme from '../../theme/theme';
 
 export default function ProposalCard({
@@ -11,6 +12,7 @@ export default function ProposalCard({
   noVotes,
   noPercentage,
   subtitle,
+  proposal_id,
 }: {
   numeration: number;
   title: string;
@@ -20,8 +22,10 @@ export default function ProposalCard({
   noVotes: number;
   noPercentage: number;
   subtitle: string;
+  proposal_id: string;
 }) {
   const totalVotes = noVotes + yesVotes;
+  const navigate = useNavigate();
   return (
     <Box
       sx={{
@@ -32,6 +36,7 @@ export default function ProposalCard({
         rowGap: theme.spacing(2),
         cursor: 'pointer',
       }}
+      onClick={() => navigate(proposal_id)}
     >
       <Box
         sx={{
