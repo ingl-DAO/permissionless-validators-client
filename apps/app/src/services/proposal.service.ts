@@ -12,6 +12,7 @@ import {
   GovernanceType,
   GOVERNANCE_SAFETY_LEEWAY,
   INGL_CONFIG_SEED,
+  INGL_PROGRAM_AUTHORITY_KEY,
   INGL_PROPOSAL_KEY,
   InitGovernance,
   InitialRedemptionFee,
@@ -106,6 +107,19 @@ export class ProposalService {
     } else if (programUpgrade) {
       const { buffer_account, code_link } = programUpgrade;
       const bufferAccountKey = new PublicKey(buffer_account);
+      const bufferAccount = await this.connection.getAccountInfo(
+        bufferAccountKey
+      );
+      const [expectedAuthorityKey] = PublicKey.findProgramAddressSync(
+        [Buffer.from(INGL_PROGRAM_AUTHORITY_KEY)],
+        this.programId
+      );
+      if (
+        bufferAccount?.data[4] &&
+        expectedAuthorityKey.toBase58() ===
+          new PublicKey(bufferAccount?.data.slice(5, 37)).toBase58()
+      )
+        throw new Error(`Error @ Authority must the correct program's PDA`);
       const isBufferProgramVerified = await this.verifyProgramVersion(
         bufferAccountKey
       );
