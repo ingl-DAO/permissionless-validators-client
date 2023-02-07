@@ -18,6 +18,9 @@ export const CustomInput = ({
   subLabel,
   formikKey,
   type = 'string',
+  multiline = false,
+  rows = 1,
+  inputBackgroundColor = '#28293D',
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   formik: any;
@@ -25,6 +28,9 @@ export const CustomInput = ({
   subLabel: string;
   formikKey: string;
   type?: 'string' | 'number';
+  multiline?: boolean;
+  rows?: number;
+  inputBackgroundColor?: string;
 }) => {
   return (
     <Box>
@@ -38,11 +44,13 @@ export const CustomInput = ({
         size="small"
         placeholder={label}
         fullWidth
+        multiline={multiline}
+        rows={multiline ? rows : 1}
         type={type}
         required
         sx={{
-          '& input': {
-            backgroundColor: '#28293D',
+          '& input, & div': {
+            backgroundColor: inputBackgroundColor,
             color: 'white',
             '&::placeholder': {
               color: 'white',

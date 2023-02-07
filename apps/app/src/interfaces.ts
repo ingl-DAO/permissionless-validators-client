@@ -28,18 +28,22 @@ export interface NftReward {
   rewards: number;
 }
 
+export interface Rarity {
+  rarity: number;
+  uris: string[];
+}
 export interface ValidatorRarity {
-  rarities: number[];
+  rarities: Rarity[];
   rarity_names: string[];
 }
 
 export interface ValidatorRegistration extends ValidatorRarity {
   proposal_quorum: number;
   init_commission: number; //in percentage
-  max_primary_stake: BN; //in lamports (big number)
+  max_primary_stake: number; //in sol
   initial_redemption_fee: number;
   is_validator_id_switchable: boolean;
-  unit_backing: BN; //big number
+  unit_backing: number; //in sol
   redemption_fee_duration: number;
   creator_royalties: number;
   validator_name: string;
@@ -110,22 +114,18 @@ export interface VoteAccountGovernance {
   value: number | string;
 }
 
-export interface Saveguards {
-  nft_mint_id: string;
-  payer_id: string;
-}
-
 export interface CreateProposal {
   title: string;
   program_id: string;
   description: string;
-  safeguards: Saveguards; //put random pubkey string. I will handle it when integrating
   configAccount?: ConfigAccountType;
   programUpgrade?: ProgramUpgrade;
   voteAccount?: VoteAccountGovernance;
+  nft_mint_id: string;
 }
 
-export interface GovernanceInterface extends CreateProposal {
+export interface GovernanceInterface
+  extends Omit<CreateProposal, 'nft_mint_id'> {
   proposal_id: string;
   number_of_yes_votes: number;
   number_of_no_votes: number;
@@ -133,7 +133,7 @@ export interface GovernanceInterface extends CreateProposal {
   did_proposal_pass?: boolean; //succeded a few second ago
   is_proposal_executed: boolean;
   date_finalize?: boolean; //completed
-  expiration_time: boolean;
+  expiration_time: number; //in seconds
   proposal_numeration: number;
-  proposal_quorom: number;
+  proposal_quorum: number;
 }

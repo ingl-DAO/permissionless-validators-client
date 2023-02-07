@@ -18,7 +18,6 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from '@solana/web3.js';
-import { all } from 'axios';
 import { BN } from 'bn.js';
 import { GeneralData, ValidatorConfig } from '../state';
 
@@ -378,3 +377,36 @@ export const willExceedMaximumPrimaryStake = async (
         ' NFTs can be currently.'
     );
 };
+
+export async function forwardExistingTransactions(
+  walletConnection: {
+    payerKey: PublicKey;
+    connection: Connection;
+    signAllTransactions?: SignerWalletAdapterProps['signAllTransactions'];
+  },
+  transactions: Transaction[]
+) {
+  const { connection, signAllTransactions } = walletConnection;
+
+  const blockhashObj = await connection.getLatestBlockhash();
+  console.log(
+    transactions.map((transaction) => transaction.feePayer?.toBase58())
+  );
+  const signedTransactions = signAllTransactions
+    ? await signAllTransactions(transactions)
+    : null;
+  if (!signedTransactions) throw new Error('No transactions could be sign');
+  return Promise.all(
+    signedTransactions.map(async (signedTransaction) => {
+      const signature = await connection.sendRawTransaction(
+        (signedTransaction as Transaction).serialize()
+      );
+      console.log(signature);
+      await connection.confirmTransaction({
+        signature,
+        ...blockhashObj,
+      });
+      return signature;
+    })
+  );
+}

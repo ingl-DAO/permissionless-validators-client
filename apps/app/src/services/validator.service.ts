@@ -130,14 +130,14 @@ export class ValidatorService {
       proposal_quorum: validatorConfigAccountData.proposal_quorum,
       redemption_fee_duration:
         validatorConfigAccountData.redemption_fee_duration,
-      total_delegated_count: Number(
-        new BN(generalAccountData.total_delegated)
-          .div(new BN(validatorConfigAccountData.unit_backing))
-          .toString(10)
-      ),
-      max_primary_stake: new BN(validatorConfigAccountData.max_primary_stake),
+      total_delegated_count:
+        new BN(generalAccountData.total_delegated).toNumber() /
+        new BN(validatorConfigAccountData.unit_backing).toNumber(),
+      max_primary_stake: new BN(
+        validatorConfigAccountData.max_primary_stake
+      ).toNumber(),
       total_secondary_stake: new BN(voteAccountInfo?.activatedStake ?? 0),
-      unit_backing: new BN(validatorConfigAccountData.unit_backing),
+      unit_backing: new BN(validatorConfigAccountData.unit_backing).toNumber(),
       validator_apy: await computeVoteAccountRewardAPY(
         this.connection,
         generalAccountData

@@ -1,23 +1,18 @@
-import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
+import { ArrowBackIosNewOutlined } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
-import BN from 'bn.js';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
-import CopyTransactionId from '../../common/components/copyTransactionId';
-import ErrorMessage from '../../common/components/ErrorMessage';
-import useNotification from '../../common/utils/notification';
 import CollectionInformation from '../../components/register-validator/collectionInformation';
 import DaoInformation, {
-  DaoInfo,
+  DaoInfo
 } from '../../components/register-validator/daoInformation';
 import ValidatorInformation, {
-  ValidatorInfo,
+  ValidatorInfo
 } from '../../components/register-validator/validatorInformation';
 import VoteAccountInformation, {
-  VoteAccountInfo,
+  VoteAccountInfo
 } from '../../components/register-validator/voteAccountInformation';
 import { CollectionJson, ValidatorRegistration } from '../../interfaces';
 import { RegistryService } from '../../services/registry.service';
@@ -67,9 +62,12 @@ export default function Register() {
             const validator: ValidatorRegistration = {
               nft_holders_share: voteAccountInfo.nft_holders_share,
               proposal_quorum: val.proposal_quorum,
-              unit_backing: new BN(solBacking * LAMPORTS_PER_SOL),
+              unit_backing: solBacking,
               collection_uri: jsonFileData.collection_uri,
-              rarities: jsonFileData.rarities,
+              rarities: jsonFileData.rarities.map((rarity, index) => ({
+                rarity,
+                uris: jsonFileData.uris[index],
+              })),
               discord_invite: validatorInfo.discord_invite,
               website: validatorInfo.website,
               twitter_handle: validatorInfo.twitter_handle.split('@')[1],
@@ -78,15 +76,12 @@ export default function Register() {
                 voteAccountInfo.is_validator_id_switchable,
               validator_name: validatorInfo.validator_name,
               initial_redemption_fee: voteAccountInfo.initial_redemption_fee,
-              max_primary_stake: new BN(
-                voteAccountInfo.max_primary_stake * LAMPORTS_PER_SOL
-              ),
+              max_primary_stake: voteAccountInfo.max_primary_stake,
               redemption_fee_duration: voteAccountInfo.redemption_fee_duration,
               init_commission: voteAccountInfo.init_commission,
               default_uri: jsonFileData.default_uri,
-              governance_expiration_time:
-                val.governance_expiration_time * (24 * 3600),
-              creator_royalties: creatorRoyalties * 100,
+              governance_expiration_time: val.governance_expiration_time,
+              creator_royalties: creatorRoyalties,
             };
             createValidator(validatorInfo.validator_id, validator);
           } else
@@ -133,35 +128,8 @@ export default function Register() {
       />
     ),
   };
-  const [programId, setProgramId] = useState<PublicKey>();
-  useEffect(() => {
-    // TODO: Remove this after beta setup
-    toast.warning('🛠️Registration currently not accessible for the public⚙️', {
-      autoClose: 5000,
-    });
-    // end TODO
-    // const notif = new useNotification();
-    // if (validatorNotif) validatorNotif.dismiss();
-    // setValidatorNotif(notif);
-    // registryService
-    //   .getProgramId()
-    //   .then(({ program_id }) => {
-    //     setProgramId(new PublicKey(program_id));
-    //   })
-    //   .catch((error) => {
-    //     notif.update({
-    //       type: 'ERROR',
-    //       render:
-    //         error?.message || 'An error occured while loading programs !!!',
-    //       autoClose: false,
-    //       icon: () => <ReportRounded fontSize="medium" color="error" />,
-    //     });
-    //   });
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const [validatorNotif, setValidatorNotif] = useState<useNotification>();
+  // const [validatorNotif, setValidatorNotif] = useState<useNotification>();
 
   function createValidator(
     validatorId: string,
@@ -180,25 +148,25 @@ export default function Register() {
     //   render: 'Creating Validator...',
     // });
     // registryService
-    //   .registerProgram(
-    //     programId as PublicKey,
-    //     new PublicKey(validatorId),
-    //     validator
-    //   )
-    //   .then((signature) => {
+    //   .registerProgram(new PublicKey(validatorId), validator)
+    //   .then((signatures) => {
     //     notif.update({
     //       render: (
     //         <>
-    //           <CopyTransactionId
-    //             transaction_id={signature}
-    //             message="Registered validator successfully !!"
-    //           />
-    //           <a
-    //             style={{ color: 'white' }}
-    //             href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
-    //           >
-    //             See what's next
-    //           </a>
+    //           {signatures.map((signature) => (
+    //             <>
+    //               <CopyTransactionId
+    //                 transaction_id={signature}
+    //                 message="Registered validator successfully !!"
+    //               />
+    //               <a
+    //                 style={{ color: 'white' }}
+    //                 href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
+    //               >
+    //                 See what's next
+    //               </a>
+    //             </>
+    //           ))}
     //         </>
     //       ),
     //     });

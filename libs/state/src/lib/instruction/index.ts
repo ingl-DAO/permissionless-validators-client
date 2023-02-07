@@ -3,6 +3,7 @@ import * as BN from 'bn.js';
 import { GovernanceType } from './gov-type';
 
 export * from './helpers';
+export * from './gov-type';
 
 abstract class Instruction {
   @field({ type: 'u8' })
@@ -170,7 +171,7 @@ export class InitGovernance {
   public instruction!: number;
 
   @field({ type: GovernanceType })
-  public governance_tpe!: GovernanceType;
+  public governance_type!: GovernanceType;
 
   @field({ type: 'string' })
   public title!: string;

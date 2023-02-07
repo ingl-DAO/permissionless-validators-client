@@ -1,6 +1,6 @@
 import { ArrowForwardIosOutlined } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
-import theme from '../../../theme/theme';
+import theme from '../../theme/theme';
 
 export default function ProposalCard({
   numeration,
@@ -14,13 +14,14 @@ export default function ProposalCard({
 }: {
   numeration: number;
   title: string;
-  status: 'Voting' | 'Completed' | 'defeated';
+  status: 'Voting' | 'Defeated' | 'Success' | 'Executed' | 'Expired';
   yesVotes: number;
   yesPercentage: number;
   noVotes: number;
   noPercentage: number;
   subtitle: string;
 }) {
+  const totalVotes = noVotes + yesVotes;
   return (
     <Box
       sx={{
@@ -127,6 +128,17 @@ export default function ProposalCard({
               {`${noPercentage < 10 ? `0${noPercentage}` : noPercentage}%`}
             </Typography>
           </Box>
+        </Box>
+        <Box sx={{ justifySelf: 'end' }}>
+          <Typography
+            variant="caption"
+            sx={{ color: 'rgba(255, 255, 255, 0.5)' }}
+          >
+            Total votes
+          </Typography>
+          <Typography sx={{ textAlign: 'end' }}>
+            {totalVotes < 10 ? `0${totalVotes}` : totalVotes}
+          </Typography>
         </Box>
       </Box>
     </Box>
