@@ -442,6 +442,7 @@ export default function ValidatorNFTs() {
             display: 'grid',
             gridTemplateColumns: '1fr auto',
             columnGap: theme.spacing(2),
+            paddingBottom: theme.spacing(3),
           }}
         >
           <Typography variant="h5">My NFT Collection</Typography>

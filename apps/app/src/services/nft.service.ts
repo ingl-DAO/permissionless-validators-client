@@ -822,7 +822,6 @@ export class NftService {
       isSigner: false,
       isWritable: true,
     };
-    console.log('Token addresses :');
     const cntAccounts = tokenMints.reduce<AccountMeta[]>(
       (accounts, tokenMint, index) => {
         const [nftPubkey] = PublicKey.findProgramAddressSync(
@@ -844,14 +843,12 @@ export class NftService {
       },
       []
     );
-    console.log('end');
 
     let splittedCntAccountsPerClaim = [];
     const NUM_TOKENS_PER_CLAIM_TXN = 3;
     const numberOfClaims = Math.ceil(
       tokenMints.length / NUM_TOKENS_PER_CLAIM_TXN
     );
-    console.log('Number of tokens per claims', numberOfClaims);
     if (numberOfClaims === 0) throw new Error('No rewards to claim');
 
     if (numberOfClaims === 1) {
@@ -872,7 +869,6 @@ export class NftService {
         count++;
       }
     }
-    console.log('splittedCntAccountsPerClaim', splittedCntAccountsPerClaim);
     const systemProgramAccount: AccountMeta = {
       pubkey: SystemProgram.programId,
       isSigner: false,
@@ -887,7 +883,6 @@ export class NftService {
         splittedCntAccountsPerClaim[i].length / (NUM_TOKEN_IN_INSTRUCTION * 3)
       );
       let splittedCntAccountsPerInstruction = [];
-      console.log('Number of tokens per instruction', numberOfInstructions);
       if (numberOfInstructions === 1) {
         splittedCntAccountsPerInstruction = [splittedCntAccountsPerClaim[i]];
       } else {
@@ -912,10 +907,7 @@ export class NftService {
           count++;
         }
       }
-      console.log(
-        'splittedCntAccountsPerInstruction',
-        splittedCntAccountsPerInstruction
-      );
+
       for (let j = 0; j < numberOfInstructions; j++) {
         claimRewardInstructions.push(
           new TransactionInstruction({
@@ -948,7 +940,6 @@ export class NftService {
         signingKeypairs: [],
       });
     }
-    console.log(claimRewardInstructionsPerTransaction);
     try {
       const result = await forwardMultipleLegacyTransactions(
         {
@@ -961,7 +952,7 @@ export class NftService {
       );
       return result[result.length - 1];
     } catch (error) {
-      throw new Error('NFT Minting transaction failed with error ' + error);
+      throw new Error('Claim reward transaction failed with error ' + error);
     }
   }
 
