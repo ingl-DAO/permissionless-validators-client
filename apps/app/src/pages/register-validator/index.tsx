@@ -65,7 +65,10 @@ export default function Register() {
               proposal_quorum: val.proposal_quorum,
               unit_backing: solBacking,
               collection_uri: jsonFileData.collection_uri,
-              rarities: jsonFileData.rarities,
+              rarities: jsonFileData.rarities.map((rarity, index) => ({
+                rarity,
+                uris: jsonFileData.uris[index],
+              })),
               discord_invite: validatorInfo.discord_invite,
               website: validatorInfo.website,
               twitter_handle: validatorInfo.twitter_handle.split('@')[1],
