@@ -1,6 +1,9 @@
 import { http } from '@ingl-permissionless/axios';
 import { forwardExistingTransactions } from '@ingl-permissionless/state';
-import { WalletNotConnectedError } from '@solana/wallet-adapter-base';
+import {
+  SignerWalletAdapterProps,
+  WalletNotConnectedError,
+} from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { ValidatorRegistration } from '../interfaces';
@@ -34,22 +37,26 @@ export class RegistryService {
 
     const {
       data: [programId, transaction],
-    } = await http.post<[string, Transaction]>(`programs/new-validator`, {
+    } = await http.post<[string, Buffer]>(`programs/new-validator`, {
       ...registrationData,
+      payer_id: payerPubkey.toBase58(),
       validator_id: validatorId,
     });
-    const { data: uploadUritransactions } = await http.post<Transaction[]>(
+    const { data: uploadUritransactions } = await http.post<Buffer[]>(
       `programs/${programId}/upload-uris`,
-      { rarities: registrationData.rarities }
+      { payer_id: payerPubkey.toBase58(), rarities: registrationData.rarities }
     );
     try {
       const signatures = await forwardExistingTransactions(
         {
           connection: this.connection,
           payerKey: payerPubkey,
-          signAllTransactions: this.walletContext.signAllTransactions,
+          signAllTransactions: this.walletContext
+            .signAllTransactions as SignerWalletAdapterProps['signAllTransactions'],
         },
-        [transaction, ...uploadUritransactions]
+        [transaction, ...uploadUritransactions].map((wireTransaction) =>
+          Transaction.from(Buffer.from(wireTransaction))
+        )
       );
       this.useProgramId(programId);
       return signatures;

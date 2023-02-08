@@ -18,7 +18,6 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from '@solana/web3.js';
-import { all } from 'axios';
 import { BN } from 'bn.js';
 import { GeneralData, ValidatorConfig } from '../state';
 
@@ -387,24 +386,22 @@ export async function forwardExistingTransactions(
   },
   transactions: Transaction[]
 ) {
-  const { connection, payerKey, signAllTransactions } = walletConnection;
+  const { connection, signAllTransactions } = walletConnection;
 
   const blockhashObj = await connection.getLatestBlockhash();
-  const paidfeeTransactions = transactions.map((transaction) => {
-    transaction.feePayer = payerKey;
-    transaction.recentBlockhash = blockhashObj.blockhash;
-
-    return transaction;
-  });
+  console.log(
+    transactions.map((transaction) => transaction.feePayer?.toBase58())
+  );
   const signedTransactions = signAllTransactions
-    ? await signAllTransactions(paidfeeTransactions)
+    ? await signAllTransactions(transactions)
     : null;
-  if (!signedTransactions) throw new Error('No signed transactions found');
+  if (!signedTransactions) throw new Error('No transactions could be sign');
   return Promise.all(
     signedTransactions.map(async (signedTransaction) => {
       const signature = await connection.sendRawTransaction(
         (signedTransaction as Transaction).serialize()
       );
+      console.log(signature);
       await connection.confirmTransaction({
         signature,
         ...blockhashObj,

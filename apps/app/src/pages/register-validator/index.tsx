@@ -4,16 +4,15 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
-import useNotification from '../../common/utils/notification';
 import CollectionInformation from '../../components/register-validator/collectionInformation';
 import DaoInformation, {
-  DaoInfo,
+  DaoInfo
 } from '../../components/register-validator/daoInformation';
 import ValidatorInformation, {
-  ValidatorInfo,
+  ValidatorInfo
 } from '../../components/register-validator/validatorInformation';
 import VoteAccountInformation, {
-  VoteAccountInfo,
+  VoteAccountInfo
 } from '../../components/register-validator/voteAccountInformation';
 import { CollectionJson, ValidatorRegistration } from '../../interfaces';
 import { RegistryService } from '../../services/registry.service';
@@ -81,9 +80,8 @@ export default function Register() {
               redemption_fee_duration: voteAccountInfo.redemption_fee_duration,
               init_commission: voteAccountInfo.init_commission,
               default_uri: jsonFileData.default_uri,
-              governance_expiration_time:
-                val.governance_expiration_time * (24 * 3600),
-              creator_royalties: creatorRoyalties * 100,
+              governance_expiration_time: val.governance_expiration_time,
+              creator_royalties: creatorRoyalties,
             };
             createValidator(validatorInfo.validator_id, validator);
           } else
@@ -131,7 +129,7 @@ export default function Register() {
     ),
   };
 
-  const [validatorNotif, setValidatorNotif] = useState<useNotification>();
+  // const [validatorNotif, setValidatorNotif] = useState<useNotification>();
 
   function createValidator(
     validatorId: string,
@@ -150,25 +148,25 @@ export default function Register() {
     //   render: 'Creating Validator...',
     // });
     // registryService
-    //   .registerProgram(
-    //     programId as PublicKey,
-    //     new PublicKey(validatorId),
-    //     validator
-    //   )
-    //   .then((signature) => {
+    //   .registerProgram(new PublicKey(validatorId), validator)
+    //   .then((signatures) => {
     //     notif.update({
     //       render: (
     //         <>
-    //           <CopyTransactionId
-    //             transaction_id={signature}
-    //             message="Registered validator successfully !!"
-    //           />
-    //           <a
-    //             style={{ color: 'white' }}
-    //             href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
-    //           >
-    //             See what's next
-    //           </a>
+    //           {signatures.map((signature) => (
+    //             <>
+    //               <CopyTransactionId
+    //                 transaction_id={signature}
+    //                 message="Registered validator successfully !!"
+    //               />
+    //               <a
+    //                 style={{ color: 'white' }}
+    //                 href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
+    //               >
+    //                 See what's next
+    //               </a>
+    //             </>
+    //           ))}
     //         </>
     //       ),
     //     });

@@ -11,16 +11,20 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import Scrollbars from 'rc-scrollbars';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useIntl } from 'react-intl';
 import { useNavigate, useParams } from 'react-router';
 import ErrorMessage from '../../../common/components/ErrorMessage';
 import useNotification from '../../../common/utils/notification';
 import GovernancePower from '../../../components/dao/governancePower';
-import { GovernanceInterface, InglNft } from '../../../interfaces';
-import theme from '../../../theme/theme';
 import ProposalCard from '../../../components/dao/proposalCard';
+import { GovernanceInterface, InglNft } from '../../../interfaces';
+import { NftService } from '../../../services/nft.service';
+import { ProposalService } from '../../../services/proposal.service';
+import theme from '../../../theme/theme';
 
 export default function Dao() {
   const [searchValue, setSearchValue] = useState<string>('');
@@ -30,37 +34,47 @@ export default function Dao() {
   const [proposalNotif, setProposalNotif] = useState<useNotification>();
   const { validator_program_id } = useParams();
 
-  const loadProposals = (validator_program_id: string) => {
+  const walletContext = useWallet();
+  const { connection } = useConnection();
+  const nftService = useMemo(
+    () =>
+      validator_program_id
+        ? new NftService(
+            new PublicKey(validator_program_id),
+            connection,
+            walletContext
+          )
+        : null,
+    [connection, validator_program_id, walletContext]
+  );
+  const proposalService = useMemo(
+    () =>
+      validator_program_id
+        ? new ProposalService(
+            new PublicKey(validator_program_id),
+            connection,
+            walletContext
+          )
+        : null,
+    [connection, validator_program_id, walletContext]
+  );
+
+  const loadProposals = () => {
     setAreProposalsLoading(true);
     const notif = new useNotification();
     if (proposalNotif) {
       proposalNotif.dismiss();
     }
     setProposalNotif(notif);
-    setTimeout(() => {
-      //TODO: call api here to load validator details with data vote_account_id
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
-        const newProposals: GovernanceInterface[] = [
-          {
-            description: 'Make it rain',
-            expiration_time: 1245365478,
-            is_proposal_executed: false,
-            is_still_ongoing: true,
-            number_of_no_votes: 2,
-            number_of_yes_votes: 2,
-            program_id: 'lsiel',
-            proposal_id: 'lsie',
-            proposal_numeration: 2,
-            proposal_quorum: 5,
-            title: 'Change validator ID, current validator ID malevolent',
-          },
-        ];
-        setProposals(newProposals);
+    proposalService
+      ?.loadProposals()
+      .then((proposals) => {
+        setProposals(proposals);
         setAreProposalsLoading(false);
         notif.dismiss();
         setProposalNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
         notif.notify({
           render: 'Loading proposals...',
         });
@@ -68,17 +82,18 @@ export default function Dao() {
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => loadProposals(validator_program_id)}
+              retryFunction={() => loadProposals()}
               notification={notif}
-              //TODO: message should come from backend
-              message="There was an error loading proposals. please retry!!!"
+              message={
+                error?.message ||
+                'There was an error loading proposals. please retry!!!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   };
 
   const [nfts, setNfts] = useState<InglNft[]>([]);
@@ -92,57 +107,42 @@ export default function Dao() {
       nftNotif.dismiss();
     }
     setNftNotif(notif);
-    setTimeout(() => {
-      //TODO: call api here to load validator details with data vote_account_id
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
-        const newNfts: InglNft[] = [
-          {
-            image_ref: 'https://miro.medium.com/max/1400/0*jGrQl2vi0S6rk5ix',
-            is_delegated: false,
-            nft_mint_id: 'sldi',
-            numeration: 2,
-          },
-          {
-            image_ref: 'https://miro.medium.com/max/1400/0*jGrQl2vi0S6rk5ix',
-            is_delegated: false,
-            nft_mint_id: 'sldi',
-            numeration: 2,
-          },
-        ];
-        setNfts(newNfts);
+    nftService
+      ?.loadNFTs()
+      .then((nfts) => {
+        setNfts(nfts);
         setAreNftsLoading(false);
         notif.dismiss();
         setNftNotif(undefined);
-      } else {
-        notif.notify({
-          render: 'Loading Nfts...',
-        });
+      })
+      .catch((error) => {
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => loadNfts()}
+              retryFunction={loadNfts}
               notification={notif}
-              //TODO: message should come from backend
-              message="There was an error loading Nfts. please retry!!!"
+              message={
+                error?.message ||
+                'There was an error loading nfts. please retry!!!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      })
+      .finally(() => setAreNftsLoading(false));
   };
 
   useEffect(() => {
-    loadProposals(validator_program_id as string);
-    loadNfts();
+    if (proposalService) loadProposals();
+    if (nftService) loadNfts();
     return () => {
       //TODO: Cleanup axios fetch above
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [proposalService, nftService]);
 
   const { formatDate } = useIntl();
   const navigate = useNavigate();
@@ -250,11 +250,19 @@ export default function Dao() {
                     return (
                       <ProposalCard
                         proposal_id={proposal_id}
-                        noPercentage={(number_of_no_votes / totalVotes) * 100}
+                        noPercentage={
+                          (number_of_no_votes / totalVotes === 0
+                            ? 1
+                            : totalVotes) * 100
+                        }
                         noVotes={number_of_no_votes}
                         numeration={proposal_numeration}
                         title={title}
-                        yesPercentage={(number_of_yes_votes / totalVotes) * 100}
+                        yesPercentage={
+                          (number_of_yes_votes / totalVotes === 0
+                            ? 1
+                            : totalVotes) * 100
+                        }
                         yesVotes={number_of_yes_votes}
                         subtitle={
                           new Date(vote_end_time_in_ms) > new Date()
