@@ -12,7 +12,6 @@ import {
   GovernanceType,
   GOVERNANCE_SAFETY_LEEWAY,
   INGL_CONFIG_SEED,
-  INGL_PROGRAM_AUTHORITY_KEY,
   INGL_PROPOSAL_KEY,
   InitGovernance,
   InitialRedemptionFee,
@@ -25,9 +24,8 @@ import {
   TwitterHandle,
   ValidatorConfig,
   ValidatorID,
-  ValidatorName,
-  VoteGovernance,
-  VOTE_ACCOUNT_KEY,
+  ValidatorName, VoteGovernance,
+  VOTE_ACCOUNT_KEY
 } from '@ingl-permissionless/state';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { WalletNotConnectedError } from '@solana/wallet-adapter-base';
@@ -37,16 +35,17 @@ import {
   Connection,
   LAMPORTS_PER_SOL,
   PublicKey,
+  SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
-  TransactionInstruction,
+  TransactionInstruction
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import {
   ConfigAccountEnum,
   CreateProposal,
   GovernanceInterface,
-  VoteAccountEnum,
+  VoteAccountEnum
 } from '../interfaces';
 
 export enum VersionStatus {
@@ -110,16 +109,7 @@ export class ProposalService {
       const bufferAccount = await this.connection.getAccountInfo(
         bufferAccountKey
       );
-      const [expectedAuthorityKey] = PublicKey.findProgramAddressSync(
-        [Buffer.from(INGL_PROGRAM_AUTHORITY_KEY)],
-        this.programId
-      );
-      if (
-        bufferAccount?.data[4] &&
-        expectedAuthorityKey.toBase58() ===
-          new PublicKey(bufferAccount?.data.slice(5, 37)).toBase58()
-      )
-        throw new Error(`Error @ Authority must the correct program's PDA`);
+      if (!bufferAccount) throw new Error("Buffer account info doesn't exist");
       const isBufferProgramVerified = await this.verifyProgramVersion(
         bufferAccountKey
       );
@@ -286,8 +276,13 @@ export class ProposalService {
         isSigner: false,
         isWritable: false,
       });
+    const systemProgramAccount: AccountMeta = {
+      pubkey: SystemProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    };
     const initGovernanaceInstruction = new TransactionInstruction({
-      keys: instructionAccounts,
+      keys: [...instructionAccounts, systemProgramAccount],
       programId: this.programId,
       data: Buffer.from(
         serialize(
@@ -342,7 +337,7 @@ export class ProposalService {
       { unchecked: true }
     );
     return Promise.all(
-      new Array(proposal_numeration).map(async (_, numeration) => {
+      [...new Array(proposal_numeration)].map(async (_, numeration) => {
         const [proposalAccountKey] = PublicKey.findProgramAddressSync(
           [Buffer.from(INGL_PROPOSAL_KEY), toBytesInt32(numeration)],
           this.programId
@@ -357,7 +352,7 @@ export class ProposalService {
         );
         let number_of_no_votes = 0;
         let number_of_yes_votes = 0;
-        new Map(votes).forEach((value) =>
+        votes.forEach((value) =>
           value ? number_of_yes_votes++ : number_of_no_votes++
         );
         return {
