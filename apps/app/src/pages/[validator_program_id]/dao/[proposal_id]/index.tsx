@@ -204,19 +204,19 @@ export default function ProposalVote() {
           proposal_numeration: 2,
           proposal_quorum: 5,
           title: 'Change validator ID, current validator ID malevolent',
-          programUpgrade: {
-            buffer_account: 'EEFgagZwMnSaj34uf2c7f55UencYvb2WpW5eAVDPbDdm',
-            code_link:
-              'https://github.com/ingl-DAO/permissionless-validators/v2.0.1',
+          // programUpgrade: {
+          //   buffer_account: 'EEFgagZwMnSaj34uf2c7f55UencYvb2WpW5eAVDPbDdm',
+          //   code_link:
+          //     'https://github.com/ingl-DAO/permissionless-validators/v2.0.1',
+          // },
+          // configAccount:{
+          //   config_type:ConfigAccountEnum.DiscordInvite,
+          //   value:'lsld'
+          // },
+          voteAccount: {
+            value: 'EEFgagZwMnSaj34uf2c7f55UencYvb2WpW5eAVDPbDdm',
+            vote_type: VoteAccountEnum.ValidatorID,
           },
-          //   configAccount:{
-          //     config_type:ConfigAccountEnum.DiscordInvite,
-          //     value:'lsld'
-          //   },
-          //   voteAccount:{
-          //     value:'',
-          //     vote_type:VoteAccountEnum.ValidatorID
-          //   }
         };
 
         setProposalDetail(newProposals);
@@ -258,7 +258,7 @@ export default function ProposalVote() {
   const [programStatus, setProgramStatus] = useState<ProgramVersion>({
     program_data_hash: 'lsdiel',
     released_on: new Date(),
-    status: VersionStatus.Unsafe,
+    status: VersionStatus.Safe,
     version: 2.0,
   });
 
@@ -317,9 +317,9 @@ export default function ProposalVote() {
         dialogMessage={
           <Typography>
             <Typography component="span" color={theme.palette.primary.main}>
-              Note:{' '}
+              Note:
             </Typography>
-            <Typography component="span">
+            <Typography component="span" marginLeft={'4px'}>
               This is a suspicious proposal and could potentially lead to loss
               of all DAO memebers. We recommend voting against the proposal for
               the safety of all DAO members.
@@ -328,7 +328,10 @@ export default function ProposalVote() {
         }
         isDialogOpen={isConfirmUnsafeProposalVoteDialogOpen}
         dialogTitle={'Confirm vote cast'}
-        closeDialog={() => setIsConfirmUnsafeProposalVoteDialogOpen(false)}
+        closeDialog={() => {
+          setIsConfirmUnsafeProposalVoteDialogOpen(false);
+          setVoteChoice(undefined);
+        }}
         confirm={() => {
           setIsConfirmUnsafeProposalVoteDialogOpen(false);
           setIsConfirmVoteProposalDialogOpen(true);
@@ -336,7 +339,10 @@ export default function ProposalVote() {
       />
 
       <ConfirmDialog
-        closeDialog={() => setIsConfirmVoteProposalDialogOpen(false)}
+        closeDialog={() => {
+          setIsConfirmVoteProposalDialogOpen(false);
+          setVoteChoice(undefined);
+        }}
         isDialogOpen={isConfirmVoteProposalDialogOpen}
         dialogTitle="Confirm proposal vote"
         dialogMessage={
@@ -344,7 +350,7 @@ export default function ProposalVote() {
             <Typography component="span" color={theme.palette.primary.main}>
               Note:
             </Typography>
-            <Typography component="span">
+            <Typography component="span" marginLeft={'4px'}>
               Validating your vote for this proposal will use your governance
               power towards validating the proposal. Are you sure you want to
               continue?
@@ -688,10 +694,158 @@ export default function ProposalVote() {
                             </Box>
                           </Box>
                         ) : proposalDetail.voteAccount ? (
-                          'Vote account variations'
-                        ) : (
-                          'Config account flash'
-                        )
+                          <Box display="grid" rowGap={2}>
+                            <PropoposalVoteLine
+                              color="#D5F2E3"
+                              title={
+                                proposalDetail.voteAccount.vote_type ===
+                                VoteAccountEnum.Commission
+                                  ? 'New initial commission'
+                                  : 'New validator ID'
+                              }
+                              value={`${proposalDetail.voteAccount.value}${
+                                proposalDetail.voteAccount.vote_type ===
+                                VoteAccountEnum.Commission
+                                  ? '%'
+                                  : null
+                              }`}
+                            />
+                            <PropoposalVoteLine
+                              title={
+                                proposalDetail.voteAccount.vote_type ===
+                                VoteAccountEnum.Commission
+                                  ? 'Current initial commission'
+                                  : 'Current validator ID'
+                              }
+                              strikethrough
+                              value={
+                                validatorDetails &&
+                                !areValidatorDetailsLoading ? (
+                                  proposalDetail.voteAccount.vote_type ===
+                                  VoteAccountEnum.Commission ? (
+                                    `${validatorDetails.init_commission}%`
+                                  ) : (
+                                    validatorDetails.validator_id
+                                  )
+                                ) : (
+                                  <Skeleton
+                                    animation="wave"
+                                    width={100}
+                                    component="span"
+                                    sx={{
+                                      backgroundColor: 'rgb(137 127 127 / 43%)',
+                                    }}
+                                  />
+                                )
+                              }
+                            />
+                          </Box>
+                        ) : proposalDetail.configAccount ? (
+                          <Box display="grid" rowGap={2}>
+                            <PropoposalVoteLine
+                              color="#D5F2E3"
+                              title={
+                                proposalDetail.configAccount.config_type ===
+                                ConfigAccountEnum.MaxPrimaryStake
+                                  ? 'New max primary stake'
+                                  : proposalDetail.configAccount.config_type ===
+                                    ConfigAccountEnum.InitialRedemptionFee
+                                  ? `New initial redemption fee`
+                                  : proposalDetail.configAccount.config_type ===
+                                    ConfigAccountEnum.NftHolderShare
+                                  ? `New NFT holder's share`
+                                  : proposalDetail.configAccount.config_type ===
+                                    ConfigAccountEnum.RedemptionFeeDuration
+                                  ? `New redemption duration`
+                                  : proposalDetail.configAccount.config_type ===
+                                    ConfigAccountEnum.DiscordInvite
+                                  ? `New discord invite`
+                                  : proposalDetail.configAccount.config_type ===
+                                    ConfigAccountEnum.TwitterHandle
+                                  ? `New twitter handle`
+                                  : `New validator name`
+                              }
+                              value={`${proposalDetail.configAccount.value} ${
+                                proposalDetail.configAccount.config_type ===
+                                ConfigAccountEnum.MaxPrimaryStake
+                                  ? 'SOL'
+                                  : proposalDetail.configAccount.config_type ===
+                                      ConfigAccountEnum.InitialRedemptionFee ||
+                                    proposalDetail.configAccount.config_type ===
+                                      ConfigAccountEnum.NftHolderShare
+                                  ? '%'
+                                  : proposalDetail.configAccount.config_type ===
+                                    ConfigAccountEnum.RedemptionFeeDuration
+                                  ? 'days'
+                                  : null
+                              }`}
+                            />
+                            <PropoposalVoteLine
+                              strikethrough
+                              title={
+                                proposalDetail.configAccount.config_type ===
+                                ConfigAccountEnum.MaxPrimaryStake
+                                  ? 'Current max primary stake'
+                                  : proposalDetail.configAccount.config_type ===
+                                    ConfigAccountEnum.InitialRedemptionFee
+                                  ? `Current initial redemption fee`
+                                  : proposalDetail.configAccount.config_type ===
+                                    ConfigAccountEnum.NftHolderShare
+                                  ? `Current NFT holder's share`
+                                  : proposalDetail.configAccount.config_type ===
+                                    ConfigAccountEnum.RedemptionFeeDuration
+                                  ? `Current redemption duration`
+                                  : proposalDetail.configAccount.config_type ===
+                                    ConfigAccountEnum.DiscordInvite
+                                  ? `Current discord invite`
+                                  : proposalDetail.configAccount.config_type ===
+                                    ConfigAccountEnum.TwitterHandle
+                                  ? `Current twitter handle`
+                                  : `Current validator name`
+                              }
+                              value={
+                                validatorDetails &&
+                                !areValidatorDetailsLoading ? (
+                                  proposalDetail.configAccount.config_type ===
+                                  ConfigAccountEnum.MaxPrimaryStake ? (
+                                    `${validatorDetails.max_primary_stake} SOL`
+                                  ) : proposalDetail.configAccount
+                                      .config_type ===
+                                    ConfigAccountEnum.InitialRedemptionFee ? (
+                                    `${validatorDetails.initial_redemption_fee} %`
+                                  ) : proposalDetail.configAccount
+                                      .config_type ===
+                                    ConfigAccountEnum.NftHolderShare ? (
+                                    `${validatorDetails.nft_holders_share} %`
+                                  ) : proposalDetail.configAccount
+                                      .config_type ===
+                                    ConfigAccountEnum.RedemptionFeeDuration ? (
+                                    `${validatorDetails.redemption_fee_duration}`
+                                  ) : proposalDetail.configAccount
+                                      .config_type ===
+                                    ConfigAccountEnum.DiscordInvite ? (
+                                    `${validatorDetails.discord_invite}`
+                                  ) : proposalDetail.configAccount
+                                      .config_type ===
+                                    ConfigAccountEnum.TwitterHandle ? (
+                                    `${validatorDetails.twitter_handle}`
+                                  ) : (
+                                    `${validatorDetails.validator_name}`
+                                  )
+                                ) : (
+                                  <Skeleton
+                                    animation="wave"
+                                    width={100}
+                                    component="span"
+                                    sx={{
+                                      backgroundColor: 'rgb(137 127 127 / 43%)',
+                                    }}
+                                  />
+                                )
+                              }
+                            />
+                          </Box>
+                        ) : null
                       ) : (
                         <Skeleton
                           animation="wave"
@@ -727,7 +881,11 @@ export default function ProposalVote() {
                     : 'contained'
                 }
                 color={'primary'}
-                disabled={areValidatorDetailsLoading || isProposalDetailLoading}
+                disabled={
+                  isVoting ||
+                  areValidatorDetailsLoading ||
+                  isProposalDetailLoading
+                }
                 onClick={() => {
                   setVoteChoice(true);
                   if (programStatus.status === VersionStatus.Unsafe)
@@ -745,7 +903,11 @@ export default function ProposalVote() {
                   setVoteChoice(false);
                   setIsConfirmVoteProposalDialogOpen(true);
                 }}
-                disabled={areValidatorDetailsLoading || isProposalDetailLoading}
+                disabled={
+                  isVoting ||
+                  areValidatorDetailsLoading ||
+                  isProposalDetailLoading
+                }
                 fullWidth
               >
                 Vote No
