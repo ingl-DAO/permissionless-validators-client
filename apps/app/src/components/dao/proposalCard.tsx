@@ -12,7 +12,6 @@ export default function ProposalCard({
   noVotes,
   noPercentage,
   subtitle,
-  proposal_id,
 }: {
   numeration: number;
   title: string;
@@ -36,7 +35,7 @@ export default function ProposalCard({
         rowGap: theme.spacing(2),
         cursor: 'pointer',
       }}
-      onClick={() => navigate(proposal_id)}
+      onClick={() => navigate(numeration)}
     >
       <Box
         sx={{

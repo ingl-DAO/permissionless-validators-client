@@ -15,9 +15,8 @@ import {
 } from '../../../..//interfaces';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
-import { useConnection } from '@solana/wallet-adapter-react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { ValidatorService } from '../../../../services/validator.service';
-import { BN } from 'bn.js';
 import { PublicKey } from '@solana/web3.js';
 import { Box, Button, Chip, Skeleton, Typography } from '@mui/material';
 import theme from '../../../../theme/theme';
@@ -27,58 +26,54 @@ import { useIntl } from 'react-intl';
 import PropoposalVoteLine from '../../../../components/dao/proposalVoteLine';
 import {
   ProgramVersion,
+  ProposalService,
   VersionStatus,
 } from '../../../../services/proposal.service';
 import ConfirmDialog from '../../../../components/confirmDialog';
+import { NftService } from 'apps/app/src/services/nft.service';
 
 export default function ProposalVote() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { validator_program_id, proposal_id } = useParams();
+  const { validator_program_id, numeration } = useParams();
   const { formatDate } = useIntl();
-
-  const [areValidatorDetailsLoading, setAreValidatorDetailsLoading] =
-    useState<boolean>(false);
-
-  //TODO: remove initial data. it was put just for dev purposes.
-  //TODO: also remove |undefined on state.
-  //TODO: useState<InglValidator>() is what is needed
-  const [validatorDetails, setValidatorDetails] = useState<
-    InglValidator | undefined
-  >({
-    collection_id: 'lsi',
-    collection_uri: 'lsi',
-    creator_royalties: 20,
-    default_uri: 'sie',
-    discord_invite: 'iwoel',
-    governance_expiration_time: 139389283,
-    init_commission: 20,
-    initial_redemption_fee: 20,
-    is_validator_id_switchable: false,
-    max_primary_stake: 20,
-    nft_holders_share: 20,
-    proposal_quorum: 10,
-    redemption_fee_duration: 37923829293,
-    total_delegated_count: 0,
-    total_delegated_stake: new BN(0),
-    total_minted_count: 0,
-    total_secondary_stake: new BN(2),
-    twitter_handle: 'ieol',
-    unit_backing: 20,
-    validator_apy: 20,
-    validator_id: 'owie',
-    validator_name: 'Labrent',
-    vote_account_id: 'owie',
-    website: 'lwieos',
-  });
-  const [validatorDetailNotif, setValidatorDetailNotif] =
-    useState<useNotification>();
-
   const { connection } = useConnection();
+  const walletContext = useWallet();
+
   const validatorService = useMemo(
     () => new ValidatorService(connection),
     [connection]
   );
+
+  const nftService = useMemo(
+    () =>
+      validator_program_id
+        ? new NftService(
+            new PublicKey(validator_program_id),
+            connection,
+            walletContext
+          )
+        : null,
+    [connection, validator_program_id, walletContext]
+  );
+  const proposalService = useMemo(
+    () =>
+      validator_program_id
+        ? new ProposalService(
+            new PublicKey(validator_program_id),
+            connection,
+            walletContext
+          )
+        : null,
+    [connection, validator_program_id, walletContext]
+  );
+
+  const [areValidatorDetailsLoading, setAreValidatorDetailsLoading] =
+    useState<boolean>(false);
+
+  const [validatorDetails, setValidatorDetails] = useState<InglValidator>();
+  const [validatorDetailNotif, setValidatorDetailNotif] =
+    useState<useNotification>();
 
   const loadValidatorDetails = async (validator_program_id: string) => {
     setAreValidatorDetailsLoading(true);
@@ -129,51 +124,32 @@ export default function ProposalVote() {
       nftNotif.dismiss();
     }
     setNftNotif(notif);
-    setTimeout(() => {
-      //TODO: call api here to load validator details with data vote_account_id
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
-        const newNfts: InglNft[] = [
-          {
-            image_ref: 'https://miro.medium.com/max/1400/0*jGrQl2vi0S6rk5ix',
-            is_delegated: false,
-            nft_mint_id: 'sldi',
-            numeration: 2,
-          },
-          {
-            image_ref: 'https://miro.medium.com/max/1400/0*jGrQl2vi0S6rk5ix',
-            is_delegated: false,
-            nft_mint_id: 'sldi',
-            numeration: 2,
-          },
-        ];
-        if (newNfts.length === 0) {
-          navigate(pathname.split('/').slice(0, -1).join('/'));
-        } else {
-          setNfts(newNfts);
-          setAreNftsLoading(false);
-          notif.dismiss();
-          setNftNotif(undefined);
-        }
-      } else {
-        notif.notify({
-          render: 'Loading Nfts...',
-        });
+    nftService
+      ?.loadNFTs()
+      .then((nfts) => {
+        setNfts(nfts);
+        setAreNftsLoading(false);
+        notif.dismiss();
+        setNftNotif(undefined);
+      })
+      .catch((error) => {
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => loadNfts()}
+              retryFunction={loadNfts}
               notification={notif}
-              //TODO: message should come from backend
-              message="There was an error loading Nfts. please retry!!!"
+              message={
+                error?.message ||
+                'There was an error loading nfts. please retry!!!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      })
+      .finally(() => setAreNftsLoading(false));
   };
 
   const [proposalDetail, setProposalDetail] = useState<GovernanceInterface>();
@@ -181,49 +157,22 @@ export default function ProposalVote() {
     useState<boolean>(false);
   const [proposalNotif, setProposalNotif] = useState<useNotification>();
 
-  const loadProposalDetail = (proposal_id: string) => {
+  const loadProposalDetail = (numeration: number) => {
     setIsProposalDetailLoading(true);
     const notif = new useNotification();
     if (proposalNotif) {
       proposalNotif.dismiss();
     }
     setProposalNotif(notif);
-    setTimeout(() => {
-      //TODO: call api here to load validator details with data vote_account_id
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
-        const newProposals: GovernanceInterface = {
-          description: 'Make it rain',
-          expiration_time: 1245365478,
-          is_proposal_executed: false,
-          is_still_ongoing: true,
-          number_of_no_votes: 2,
-          number_of_yes_votes: 2,
-          program_id: 'lsiel',
-          proposal_id: 'lsie',
-          proposal_numeration: 2,
-          proposal_quorum: 5,
-          title: 'Change validator ID, current validator ID malevolent',
-          // programUpgrade: {
-          //   buffer_account: 'EEFgagZwMnSaj34uf2c7f55UencYvb2WpW5eAVDPbDdm',
-          //   code_link:
-          //     'https://github.com/ingl-DAO/permissionless-validators/v2.0.1',
-          // },
-          // configAccount:{
-          //   config_type:ConfigAccountEnum.DiscordInvite,
-          //   value:'lsld'
-          // },
-          voteAccount: {
-            value: 'EEFgagZwMnSaj34uf2c7f55UencYvb2WpW5eAVDPbDdm',
-            vote_type: VoteAccountEnum.ValidatorID,
-          },
-        };
-
-        setProposalDetail(newProposals);
+    proposalService
+      ?.loadProposalDetail(numeration)
+      .then((proposalDetail) => {
+        setProposalDetail(proposalDetail);
         setIsProposalDetailLoading(false);
         notif.dismiss();
         setProposalNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
         notif.notify({
           render: 'Loading proposals...',
         });
@@ -231,28 +180,37 @@ export default function ProposalVote() {
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => loadProposalDetail(proposal_id)}
+              retryFunction={() => loadProposalDetail(numeration)}
               notification={notif}
-              //TODO: message should come from backend
-              message="There was an error loading proposals. please retry!!!"
+              message={
+                error?.message ||
+                'There was an error loading proposals. please retry!!!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   };
 
   useEffect(() => {
-    loadValidatorDetails(validator_program_id as string);
-    loadNfts();
-    loadProposalDetail(proposal_id as string);
+    if (nftService) loadNfts();
     return () => {
       //TODO: cleanup above axios calls
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [nftService]);
+  useEffect(() => {
+    if (validator_program_id && numeration) {
+      loadProposalDetail(Number(numeration));
+      loadValidatorDetails(validator_program_id);
+    }
+    return () => {
+      //TODO: cleanup above axios calls
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [validator_program_id, numeration]);
 
   //TODO: load program status here
   const [programStatus, setProgramStatus] = useState<ProgramVersion>({

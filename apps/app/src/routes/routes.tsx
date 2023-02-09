@@ -27,7 +27,7 @@ export const routes = [
           { path: 'details', element: <ValidatorStats /> },
           { path: 'dao', element: <Dao /> },
           { path: 'dao/create', element: <ProposalCreation /> },
-          { path: 'dao/:proposal_id', element: <ProposalVote /> },
+          { path: 'dao/:numeration', element: <ProposalVote /> },
         ],
       },
       {
