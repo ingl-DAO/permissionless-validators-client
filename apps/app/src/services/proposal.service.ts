@@ -24,8 +24,9 @@ import {
   TwitterHandle,
   ValidatorConfig,
   ValidatorID,
-  ValidatorName, VoteGovernance,
-  VOTE_ACCOUNT_KEY
+  ValidatorName,
+  VoteGovernance,
+  VOTE_ACCOUNT_KEY,
 } from '@ingl-permissionless/state';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { WalletNotConnectedError } from '@solana/wallet-adapter-base';
@@ -38,14 +39,14 @@ import {
   SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
-  TransactionInstruction
+  TransactionInstruction,
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import {
   ConfigAccountEnum,
   CreateProposal,
   GovernanceInterface,
-  VoteAccountEnum
+  VoteAccountEnum,
 } from '../interfaces';
 
 export enum VersionStatus {
@@ -68,9 +69,11 @@ export class ProposalService {
     private readonly walletContext: WalletContextState
   ) {}
 
-  async verifyProgramVersion(programId: PublicKey) {
+  async verifyVersion(programId?: PublicKey) {
     const { data: programVersion } = await http.get<ProgramVersion | null>(
-      `/program-versions/verify?program_id=${programId.toBase58()}`
+      `/program-versions/verify?program_id=${(
+        programId ?? this.programId
+      ).toBase58()}`
     );
     return programVersion;
   }
@@ -110,7 +113,7 @@ export class ProposalService {
         bufferAccountKey
       );
       if (!bufferAccount) throw new Error("Buffer account info doesn't exist");
-      const isBufferProgramVerified = await this.verifyProgramVersion(
+      const isBufferProgramVerified = await this.verifyVersion(
         bufferAccountKey
       );
       if (!isBufferProgramVerified)
@@ -338,34 +341,61 @@ export class ProposalService {
     );
     return Promise.all(
       [...new Array(proposal_numeration)].map(async (_, numeration) => {
-        const [proposalAccountKey] = PublicKey.findProgramAddressSync(
-          [Buffer.from(INGL_PROPOSAL_KEY), toBytesInt32(numeration)],
-          this.programId
-        );
-        const proposalAccountInfo = await this.connection.getAccountInfo(
-          proposalAccountKey
-        );
-        const { governance_type, votes, ...proposal } = deserialize(
-          proposalAccountInfo?.data as Buffer,
-          GovernanceData,
-          { unchecked: true }
-        );
-        let number_of_no_votes = 0;
-        let number_of_yes_votes = 0;
-        votes.forEach((value) =>
-          value ? number_of_yes_votes++ : number_of_no_votes++
-        );
+        const proposal = await this.deserializeProposal(numeration);
         return {
           ...proposal,
           proposal_quorum,
-          number_of_no_votes,
-          number_of_yes_votes,
-          proposal_numeration: numeration,
-          program_id: this.programId.toBase58(),
-          proposal_id: proposalAccountKey.toBase58(),
         };
       })
     );
+  }
+
+  async loadProposalDetail(proposalNumeration: number) {
+    const [inglConfigKey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(INGL_CONFIG_SEED)],
+      this.programId
+    );
+    const configAccountInfo = await this.connection.getAccountInfo(
+      inglConfigKey
+    );
+    const { proposal_quorum } = deserialize(
+      configAccountInfo?.data as Buffer,
+      ValidatorConfig,
+      { unchecked: true }
+    );
+    const proposal = await this.deserializeProposal(proposalNumeration);
+    return {
+      ...proposal,
+      proposal_quorum,
+    };
+  }
+
+  private async deserializeProposal(proposal_numeration: number) {
+    const [proposalAccountKey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(INGL_PROPOSAL_KEY), toBytesInt32(proposal_numeration)],
+      this.programId
+    );
+    const proposalAccountInfo = await this.connection.getAccountInfo(
+      proposalAccountKey
+    );
+    const { governance_type, votes, ...proposal } = deserialize(
+      proposalAccountInfo?.data as Buffer,
+      GovernanceData,
+      { unchecked: true }
+    );
+    let number_of_no_votes = 0;
+    let number_of_yes_votes = 0;
+    votes.forEach((value) =>
+      value ? number_of_yes_votes++ : number_of_no_votes++
+    );
+    return {
+      ...proposal,
+      number_of_no_votes,
+      number_of_yes_votes,
+      proposal_numeration,
+      program_id: this.programId.toBase58(),
+      proposal_id: proposalAccountKey.toBase58(),
+    };
   }
 
   async voteGovernance(
