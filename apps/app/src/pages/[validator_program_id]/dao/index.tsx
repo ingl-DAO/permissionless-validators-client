@@ -251,17 +251,17 @@ export default function Dao() {
                       <ProposalCard
                         proposal_id={proposal_id}
                         noPercentage={
-                          (number_of_no_votes / totalVotes === 0
-                            ? 1
-                            : totalVotes) * 100
+                          (number_of_no_votes /
+                            (totalVotes === 0 ? 1 : totalVotes)) *
+                          100
                         }
                         noVotes={number_of_no_votes}
                         numeration={proposal_numeration}
                         title={title}
                         yesPercentage={
-                          (number_of_yes_votes / totalVotes === 0
-                            ? 1
-                            : totalVotes) * 100
+                          (number_of_yes_votes /
+                            (totalVotes === 0 ? 1 : totalVotes)) *
+                          100
                         }
                         yesVotes={number_of_yes_votes}
                         subtitle={
