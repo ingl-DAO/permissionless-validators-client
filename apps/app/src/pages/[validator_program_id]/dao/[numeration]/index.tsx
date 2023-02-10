@@ -128,6 +128,14 @@ export default function ProposalVote() {
       ?.loadNFTs()
       .then((nfts) => {
         setNfts(nfts);
+        setVoteChoice(
+          nfts.reduce<boolean | undefined>(
+            (choice, { votes }) =>
+              choice ??
+              votes.find((_) => _.numeration === Number(numeration))?.vote,
+            undefined
+          )
+        );
         setAreNftsLoading(false);
         notif.dismiss();
         setNftNotif(undefined);
@@ -152,7 +160,7 @@ export default function ProposalVote() {
       .finally(() => setAreNftsLoading(false));
   };
 
-  const [proposalDetail, setProposalDetail] = useState<GovernanceInterface>();
+  const [proposalDetails, setProposalDetails] = useState<GovernanceInterface>();
   const [isProposalDetailLoading, setIsProposalDetailLoading] =
     useState<boolean>(false);
   const [proposalNotif, setProposalNotif] = useState<useNotification>();
@@ -171,7 +179,7 @@ export default function ProposalVote() {
           loadProgramVersion(
             new PublicKey(proposalDetail.programUpgrade.buffer_account)
           );
-        setProposalDetail(proposalDetail);
+        setProposalDetails(proposalDetail);
         setIsProposalDetailLoading(false);
         notif.dismiss();
         setProposalNotif(undefined);
@@ -265,7 +273,6 @@ export default function ProposalVote() {
     useState<boolean>(false);
 
   const [voteChoice, setVoteChoice] = useState<boolean | undefined>();
-
   const [isVoting, setIsVoting] = useState<boolean>(false);
   const [voteNotif, setVoteNotif] = useState<useNotification>();
 
@@ -306,7 +313,90 @@ export default function ProposalVote() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      });
+      })
+      .finally(() => setIsVoting(false));
+  };
+
+  const [isExecutingProposal, setIsExecutingProposal] =
+    useState<boolean>(false);
+  const [isExecutingProposalDialogOpen, setIsExecutingProposalDialogOpen] =
+    useState<boolean>(false);
+  const [executeNotif, setExecuteNotif] = useState<useNotification>();
+  const executeProposal = () => {
+    setIsExecutingProposal(true);
+    const notif = new useNotification();
+    if (executeNotif) executeNotif.dismiss();
+    setFinalizeNotif(notif);
+    notif.notify({
+      render: 'Executing Proposal...',
+    });
+    proposalService
+      ?.executeGovernance(Number(numeration))
+      .then(() => {
+        notif.update({
+          render: 'Proposal was executed successfully',
+        });
+        setExecuteNotif(undefined);
+      })
+      .catch((error) => {
+        notif.update({
+          type: 'ERROR',
+          render: (
+            <ErrorMessage
+              retryFunction={() => finalizeProposal()}
+              notification={notif}
+              message={
+                error?.message ||
+                'There was an error finalizing this proposal. Please try again!!!'
+              }
+            />
+          ),
+          autoClose: false,
+          icon: () => <ReportRounded fontSize="medium" color="error" />,
+        });
+      })
+      .finally(() => setIsExecutingProposal(false));
+  };
+
+  const [isFinalizingProposal, setIsFinalizingProposal] =
+    useState<boolean>(false);
+  const [isFinalizingProposalDialogOpen, setIsFinalizingProposalDialogOpen] =
+    useState<boolean>(false);
+  const [finalizeNotif, setFinalizeNotif] = useState<useNotification>();
+  const finalizeProposal = () => {
+    setIsFinalizingProposal(true);
+    const notif = new useNotification();
+    if (finalizeNotif) finalizeNotif.dismiss();
+    setFinalizeNotif(notif);
+    notif.notify({
+      render: 'Finalizing Proposal...',
+    });
+    proposalService
+      ?.finalizeGovernance(Number(numeration))
+      .then(() => {
+        notif.update({
+          render: 'Proposal was finalized successfully',
+        });
+        setFinalizeNotif(undefined);
+      })
+      .catch((error) => {
+        notif.update({
+          type: 'ERROR',
+          render: (
+            <ErrorMessage
+              retryFunction={() => finalizeProposal()}
+              notification={notif}
+              message={
+                error?.message ||
+                'There was an error finalizing this proposal. Please try again!!!'
+              }
+            />
+          ),
+          autoClose: false,
+          icon: () => <ReportRounded fontSize="medium" color="error" />,
+        });
+      })
+      .finally(() => setIsFinalizingProposal(false));
   };
   return (
     <>
@@ -360,6 +450,40 @@ export default function ProposalVote() {
             voteProposal(voteChoice);
           }
         }}
+      />
+      <ConfirmDialog
+        closeDialog={() => setIsFinalizingProposalDialogOpen(false)}
+        isDialogOpen={isFinalizingProposalDialogOpen}
+        dialogTitle="Confirm proposal finalizing"
+        dialogMessage={
+          <Typography>
+            <Typography component="span" color={theme.palette.primary.main}>
+              Note:
+            </Typography>
+            <Typography component="span" marginLeft={'4px'}>
+              Finalizing this proposal will close very possibility of casting a
+              vote on it ?
+            </Typography>
+          </Typography>
+        }
+        confirm={() => finalizeProposal()}
+      />
+      <ConfirmDialog
+        closeDialog={() => setIsExecutingProposalDialogOpen(false)}
+        isDialogOpen={isExecutingProposalDialogOpen}
+        dialogTitle="Confirm proposal execution"
+        dialogMessage={
+          <Typography>
+            <Typography component="span" color={theme.palette.primary.main}>
+              Note:
+            </Typography>
+            <Typography component="span" marginLeft={'4px'}>
+              Executing this proposal will apply all the change related to the
+              the proposal request ?
+            </Typography>
+          </Typography>
+        }
+        confirm={() => executeProposal()}
       />
       <Box
         sx={{
@@ -439,15 +563,15 @@ export default function ProposalVote() {
                   }}
                 >
                   <Typography variant="body2" color="#D5F2E3">
-                    {proposalDetail && !isProposalDetailLoading ? (
+                    {proposalDetails && !isProposalDetailLoading ? (
                       `Expire${
-                        new Date(proposalDetail.expiration_time * 1000) >
+                        new Date(proposalDetails.expiration_time * 1000) >
                         new Date()
                           ? 's'
                           : 'd'
                       } on: 
                     ${formatDate(
-                      new Date(proposalDetail.expiration_time * 1000),
+                      new Date(proposalDetails.expiration_time * 1000),
                       {
                         year: 'numeric',
                         month: 'short',
@@ -486,8 +610,8 @@ export default function ProposalVote() {
                   Title
                 </Typography>
                 <Typography variant="h6" lineHeight={1}>
-                  {proposalDetail ? (
-                    proposalDetail.title
+                  {proposalDetails ? (
+                    proposalDetails.title
                   ) : (
                     <Skeleton
                       animation="wave"
@@ -501,8 +625,8 @@ export default function ProposalVote() {
             </Box>
 
             <Typography variant="body2">
-              {proposalDetail ? (
-                proposalDetail.description
+              {proposalDetails ? (
+                proposalDetails.description
               ) : (
                 <>
                   <Skeleton
@@ -549,40 +673,40 @@ export default function ProposalVote() {
                         Instruction type
                       </Typography>
                       <Typography>
-                        {!proposalDetail || isProposalDetailLoading ? (
+                        {!proposalDetails || isProposalDetailLoading ? (
                           <Skeleton
                             animation="wave"
                             width={100}
                             component="span"
                             sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
                           />
-                        ) : proposalDetail.programUpgrade ? (
+                        ) : proposalDetails.programUpgrade ? (
                           'Program upgrade'
-                        ) : proposalDetail.voteAccount ? (
+                        ) : proposalDetails.voteAccount ? (
                           `Vote account: ${
-                            proposalDetail.voteAccount.vote_type ===
+                            proposalDetails.voteAccount.vote_type ===
                             VoteAccountEnum.Commission
                               ? 'swap commission'
                               : 'swap validator ID'
                           }`
-                        ) : proposalDetail.configAccount ? (
+                        ) : proposalDetails.configAccount ? (
                           `Config account: ${
-                            proposalDetail.configAccount.config_type ===
+                            proposalDetails.configAccount.config_type ===
                             ConfigAccountEnum.DiscordInvite
                               ? 'change discord invite'
-                              : proposalDetail.configAccount.config_type ===
+                              : proposalDetails.configAccount.config_type ===
                                 ConfigAccountEnum.InitialRedemptionFee
                               ? 'change initial redemption fee'
-                              : proposalDetail.configAccount.config_type ===
+                              : proposalDetails.configAccount.config_type ===
                                 ConfigAccountEnum.MaxPrimaryStake
                               ? 'change max primary stake'
-                              : proposalDetail.configAccount.config_type ===
+                              : proposalDetails.configAccount.config_type ===
                                 ConfigAccountEnum.NftHolderShare
                               ? 'change NFT holder share'
-                              : proposalDetail.configAccount.config_type ===
+                              : proposalDetails.configAccount.config_type ===
                                 ConfigAccountEnum.RedemptionFeeDuration
                               ? 'change redemption fee duration'
-                              : proposalDetail.configAccount.config_type ===
+                              : proposalDetails.configAccount.config_type ===
                                 ConfigAccountEnum.TwitterHandle
                               ? 'change twitter handle'
                               : 'change validator name'
@@ -605,8 +729,8 @@ export default function ProposalVote() {
                       >
                         State changes
                       </Typography>
-                      {proposalDetail ? (
-                        proposalDetail.programUpgrade ? (
+                      {proposalDetails ? (
+                        proposalDetails.programUpgrade ? (
                           <Box display="grid" rowGap={2}>
                             <PropoposalVoteLine
                               color="#D5F2E3"
@@ -616,7 +740,7 @@ export default function ProposalVote() {
                                 programVersion.status === VersionStatus.Unsafe
                               }
                               value={
-                                proposalDetail.programUpgrade.buffer_account
+                                proposalDetails.programUpgrade.buffer_account
                               }
                             />
                             <PropoposalVoteLine
@@ -640,7 +764,7 @@ export default function ProposalVote() {
                             />
                             <PropoposalVoteLine
                               title="Code link"
-                              value={proposalDetail.programUpgrade.code_link}
+                              value={proposalDetails.programUpgrade.code_link}
                             />
                             <Box
                               display="grid"
@@ -708,18 +832,18 @@ export default function ProposalVote() {
                               />
                             </Box>
                           </Box>
-                        ) : proposalDetail.voteAccount ? (
+                        ) : proposalDetails.voteAccount ? (
                           <Box display="grid" rowGap={2}>
                             <PropoposalVoteLine
                               color="#D5F2E3"
                               title={
-                                proposalDetail.voteAccount.vote_type ===
+                                proposalDetails.voteAccount.vote_type ===
                                 VoteAccountEnum.Commission
                                   ? 'New initial commission'
                                   : 'New validator ID'
                               }
-                              value={`${proposalDetail.voteAccount.value}${
-                                proposalDetail.voteAccount.vote_type ===
+                              value={`${proposalDetails.voteAccount.value}${
+                                proposalDetails.voteAccount.vote_type ===
                                 VoteAccountEnum.Commission
                                   ? '%'
                                   : null
@@ -727,7 +851,7 @@ export default function ProposalVote() {
                             />
                             <PropoposalVoteLine
                               title={
-                                proposalDetail.voteAccount.vote_type ===
+                                proposalDetails.voteAccount.vote_type ===
                                 VoteAccountEnum.Commission
                                   ? 'Current initial commission'
                                   : 'Current validator ID'
@@ -736,7 +860,7 @@ export default function ProposalVote() {
                               value={
                                 validatorDetails &&
                                 !areValidatorDetailsLoading ? (
-                                  proposalDetail.voteAccount.vote_type ===
+                                  proposalDetails.voteAccount.vote_type ===
                                   VoteAccountEnum.Commission ? (
                                     `${validatorDetails.init_commission}%`
                                   ) : (
@@ -755,41 +879,49 @@ export default function ProposalVote() {
                               }
                             />
                           </Box>
-                        ) : proposalDetail.configAccount ? (
+                        ) : proposalDetails.configAccount ? (
                           <Box display="grid" rowGap={2}>
                             <PropoposalVoteLine
                               color="#D5F2E3"
                               title={
-                                proposalDetail.configAccount.config_type ===
+                                proposalDetails.configAccount.config_type ===
                                 ConfigAccountEnum.MaxPrimaryStake
                                   ? 'New max primary stake'
-                                  : proposalDetail.configAccount.config_type ===
+                                  : proposalDetails.configAccount
+                                      .config_type ===
                                     ConfigAccountEnum.InitialRedemptionFee
                                   ? `New initial redemption fee`
-                                  : proposalDetail.configAccount.config_type ===
+                                  : proposalDetails.configAccount
+                                      .config_type ===
                                     ConfigAccountEnum.NftHolderShare
                                   ? `New NFT holder's share`
-                                  : proposalDetail.configAccount.config_type ===
+                                  : proposalDetails.configAccount
+                                      .config_type ===
                                     ConfigAccountEnum.RedemptionFeeDuration
                                   ? `New redemption duration`
-                                  : proposalDetail.configAccount.config_type ===
+                                  : proposalDetails.configAccount
+                                      .config_type ===
                                     ConfigAccountEnum.DiscordInvite
                                   ? `New discord invite`
-                                  : proposalDetail.configAccount.config_type ===
+                                  : proposalDetails.configAccount
+                                      .config_type ===
                                     ConfigAccountEnum.TwitterHandle
                                   ? `New twitter handle`
                                   : `New validator name`
                               }
-                              value={`${proposalDetail.configAccount.value} ${
-                                proposalDetail.configAccount.config_type ===
+                              value={`${proposalDetails.configAccount.value} ${
+                                proposalDetails.configAccount.config_type ===
                                 ConfigAccountEnum.MaxPrimaryStake
                                   ? 'SOL'
-                                  : proposalDetail.configAccount.config_type ===
+                                  : proposalDetails.configAccount
+                                      .config_type ===
                                       ConfigAccountEnum.InitialRedemptionFee ||
-                                    proposalDetail.configAccount.config_type ===
+                                    proposalDetails.configAccount
+                                      .config_type ===
                                       ConfigAccountEnum.NftHolderShare
                                   ? '%'
-                                  : proposalDetail.configAccount.config_type ===
+                                  : proposalDetails.configAccount
+                                      .config_type ===
                                     ConfigAccountEnum.RedemptionFeeDuration
                                   ? 'days'
                                   : null
@@ -798,22 +930,27 @@ export default function ProposalVote() {
                             <PropoposalVoteLine
                               strikethrough
                               title={
-                                proposalDetail.configAccount.config_type ===
+                                proposalDetails.configAccount.config_type ===
                                 ConfigAccountEnum.MaxPrimaryStake
                                   ? 'Current max primary stake'
-                                  : proposalDetail.configAccount.config_type ===
+                                  : proposalDetails.configAccount
+                                      .config_type ===
                                     ConfigAccountEnum.InitialRedemptionFee
                                   ? `Current initial redemption fee`
-                                  : proposalDetail.configAccount.config_type ===
+                                  : proposalDetails.configAccount
+                                      .config_type ===
                                     ConfigAccountEnum.NftHolderShare
                                   ? `Current NFT holder's share`
-                                  : proposalDetail.configAccount.config_type ===
+                                  : proposalDetails.configAccount
+                                      .config_type ===
                                     ConfigAccountEnum.RedemptionFeeDuration
                                   ? `Current redemption duration`
-                                  : proposalDetail.configAccount.config_type ===
+                                  : proposalDetails.configAccount
+                                      .config_type ===
                                     ConfigAccountEnum.DiscordInvite
                                   ? `Current discord invite`
-                                  : proposalDetail.configAccount.config_type ===
+                                  : proposalDetails.configAccount
+                                      .config_type ===
                                     ConfigAccountEnum.TwitterHandle
                                   ? `Current twitter handle`
                                   : `Current validator name`
@@ -821,26 +958,26 @@ export default function ProposalVote() {
                               value={
                                 validatorDetails &&
                                 !areValidatorDetailsLoading ? (
-                                  proposalDetail.configAccount.config_type ===
+                                  proposalDetails.configAccount.config_type ===
                                   ConfigAccountEnum.MaxPrimaryStake ? (
                                     `${validatorDetails.max_primary_stake} SOL`
-                                  ) : proposalDetail.configAccount
+                                  ) : proposalDetails.configAccount
                                       .config_type ===
                                     ConfigAccountEnum.InitialRedemptionFee ? (
                                     `${validatorDetails.initial_redemption_fee} %`
-                                  ) : proposalDetail.configAccount
+                                  ) : proposalDetails.configAccount
                                       .config_type ===
                                     ConfigAccountEnum.NftHolderShare ? (
                                     `${validatorDetails.nft_holders_share} %`
-                                  ) : proposalDetail.configAccount
+                                  ) : proposalDetails.configAccount
                                       .config_type ===
                                     ConfigAccountEnum.RedemptionFeeDuration ? (
                                     `${validatorDetails.redemption_fee_duration}`
-                                  ) : proposalDetail.configAccount
+                                  ) : proposalDetails.configAccount
                                       .config_type ===
                                     ConfigAccountEnum.DiscordInvite ? (
                                     `${validatorDetails.discord_invite}`
-                                  ) : proposalDetail.configAccount
+                                  ) : proposalDetails.configAccount
                                       .config_type ===
                                     ConfigAccountEnum.TwitterHandle ? (
                                     `${validatorDetails.twitter_handle}`
@@ -882,6 +1019,17 @@ export default function ProposalVote() {
               alignContent: 'start',
             }}
           >
+            {voteChoice !== undefined && (
+              <Typography
+                padding={theme.spacing(1)}
+                borderRadius="10px"
+                textAlign="center"
+                bgcolor="#D5F2E3"
+                color="text.primary"
+                variant="body2"
+                fontSize="1rem"
+              >{`Casted a ${voteChoice ? 'Yes' : 'No'} vote`}</Typography>
+            )}
             <Box
               sx={{
                 display: 'grid',
@@ -900,7 +1048,8 @@ export default function ProposalVote() {
                 disabled={
                   isVoting ||
                   areValidatorDetailsLoading ||
-                  isProposalDetailLoading
+                  isProposalDetailLoading ||
+                  voteChoice
                 }
                 onClick={() => {
                   setVoteChoice(true);
@@ -925,7 +1074,8 @@ export default function ProposalVote() {
                 disabled={
                   isVoting ||
                   areValidatorDetailsLoading ||
-                  isProposalDetailLoading
+                  isProposalDetailLoading ||
+                  voteChoice === false
                 }
                 fullWidth
               >
@@ -933,6 +1083,56 @@ export default function ProposalVote() {
               </Button>
             </Box>
             <GovernancePower areNftsLoading={areNftsLoading} nfts={nfts} />
+            {proposalDetails &&
+              validatorDetails &&
+              voteChoice !== undefined && (
+                <Box>
+                  {proposalDetails.date_finalize ? (
+                    <>
+                      <Typography>{`Finalize on ${formatDate(
+                        new Date(proposalDetails.date_finalize * 1000)
+                      )}`}</Typography>
+                      {proposalDetails.is_proposal_executed ? (
+                        <Typography>{`Proposal has been executed`}</Typography>
+                      ) : (
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => setIsExecutingProposalDialogOpen(true)}
+                          disabled={
+                            isVoting ||
+                            isExecutingProposal ||
+                            areValidatorDetailsLoading
+                          }
+                          fullWidth
+                        >
+                          Execute proposal
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    (proposalDetails.number_of_no_votes +
+                      proposalDetails.number_of_yes_votes) *
+                      validatorDetails.unit_backing >=
+                      proposalDetails.proposal_quorum *
+                        validatorDetails.max_primary_stake && (
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => setIsFinalizingProposalDialogOpen(true)}
+                        disabled={
+                          isVoting ||
+                          isFinalizingProposal ||
+                          areValidatorDetailsLoading
+                        }
+                        fullWidth
+                      >
+                        Finalize proposal
+                      </Button>
+                    )
+                  )}
+                </Box>
+              )}
           </Box>
         </Box>
       </Box>

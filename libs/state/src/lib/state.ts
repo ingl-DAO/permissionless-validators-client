@@ -73,10 +73,10 @@ export class Undelegated extends FundsLocation {}
 
 export class Vote {
   @field({ type: 'u32' })
-  public index!: number;
+  public numeration!: number;
 
   @field({ type: 'bool' })
-  public value!: boolean;
+  public vote!: boolean;
 
   constructor(properties: Vote) {
     Object.assign(this, properties);

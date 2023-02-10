@@ -769,16 +769,17 @@ export class NftService {
     }
     const accountInfo = await this.connection.getAccountInfo(nftPubkey);
     if (accountInfo) {
-      const { funds_location, numeration, rarity } = deserialize(
+      const { funds_location, numeration, rarity, all_votes } = deserialize(
         accountInfo?.data as Buffer,
         NftData,
         { unchecked: true }
       );
       return {
+        numeration,
+        votes: all_votes,
         nft_mint_id: mintAddress.toBase58(),
         image_ref: jsonData?.image as string,
         is_delegated: funds_location instanceof Delegated,
-        numeration,
         rarity: rarity
           ? jsonData?.attributes?.find((_) => _.trait_type === 'Rarity')?.value
           : undefined,
