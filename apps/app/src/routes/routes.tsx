@@ -8,7 +8,7 @@ import Rewards from '../pages/[validator_program_id]/rewards/index';
 import ValidatorStats from '../pages/[validator_program_id]/validatorStats';
 import Dao from '../pages/[validator_program_id]/dao';
 import ProposalCreation from '../pages/[validator_program_id]/dao/create';
-import ProposalVote from '../pages/[validator_program_id]/dao/[proposal_id]';
+import ProposalVote from '../pages/[validator_program_id]/dao/[numeration]';
 
 export const routes = [
   { path: '/', element: <Navigate to="/programs" /> },

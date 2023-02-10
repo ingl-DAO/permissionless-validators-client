@@ -17,7 +17,7 @@ import {
   InglNft,
   InglValidator,
   VoteAccountEnum,
-} from '../../../..//interfaces';
+} from '../../../../interfaces';
 import ErrorMessage from '../../../../common/components/ErrorMessage';
 import useNotification from '../../../../common/utils/notification';
 import ConfirmDialog from '../../../../components/confirmDialog';
