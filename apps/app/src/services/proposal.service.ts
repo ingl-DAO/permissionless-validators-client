@@ -350,7 +350,9 @@ export class ProposalService {
     );
   }
 
-  async loadProposalDetail(proposalNumeration: number) {
+  async loadProposalDetail(
+    proposalNumeration: number
+  ): Promise<GovernanceInterface> {
     const [inglConfigKey] = PublicKey.findProgramAddressSync(
       [Buffer.from(INGL_CONFIG_SEED)],
       this.programId
@@ -363,10 +365,70 @@ export class ProposalService {
       ValidatorConfig,
       { unchecked: true }
     );
-    const proposal = await this.deserializeProposal(proposalNumeration);
+    const { governance_type, ...proposal } = await this.deserializeProposal(
+      proposalNumeration
+    );
     return {
       ...proposal,
       proposal_quorum,
+      programUpgrade:
+        governance_type instanceof ProgramUpgrade
+          ? {
+              buffer_account: new PublicKey(
+                governance_type.buffer_account
+              ).toBase58(),
+              code_link: governance_type.code_link,
+            }
+          : undefined,
+      voteAccount:
+        governance_type instanceof ValidatorID
+          ? {
+              vote_type: VoteAccountEnum.ValidatorID,
+              value: new PublicKey(governance_type.value).toBase58(),
+            }
+          : governance_type instanceof Commission
+          ? {
+              vote_type: VoteAccountEnum.Commission,
+              value: governance_type.value,
+            }
+          : undefined,
+      configAccount:
+        governance_type instanceof MaxPrimaryStake
+          ? {
+              config_type: ConfigAccountEnum.MaxPrimaryStake,
+              value: governance_type.value.toNumber() / LAMPORTS_PER_SOL,
+            }
+          : governance_type instanceof NftHolderShare
+          ? {
+              config_type: ConfigAccountEnum.NftHolderShare,
+              value: governance_type.value,
+            }
+          : governance_type instanceof InitialRedemptionFee
+          ? {
+              config_type: ConfigAccountEnum.InitialRedemptionFee,
+              value: governance_type.value,
+            }
+          : governance_type instanceof RedemptionFeeDuration
+          ? {
+              config_type: ConfigAccountEnum.RedemptionFeeDuration,
+              value: governance_type.value * (24 * 3600),
+            }
+          : governance_type instanceof ValidatorName
+          ? {
+              config_type: ConfigAccountEnum.ValidatorName,
+              value: governance_type.value,
+            }
+          : governance_type instanceof TwitterHandle
+          ? {
+              config_type: ConfigAccountEnum.TwitterHandle,
+              value: governance_type.value,
+            }
+          : governance_type instanceof DiscordInvite
+          ? {
+              config_type: ConfigAccountEnum.DiscordInvite,
+              value: governance_type.value,
+            }
+          : undefined,
     };
   }
 
@@ -390,6 +452,7 @@ export class ProposalService {
     );
     return {
       ...proposal,
+      governance_type,
       number_of_no_votes,
       number_of_yes_votes,
       proposal_numeration,

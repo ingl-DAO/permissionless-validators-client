@@ -4,8 +4,13 @@ import {
   DoNotDisturbAltOutlined,
   ReportRounded,
 } from '@mui/icons-material';
-import ErrorMessage from '../../../../common/components/ErrorMessage';
-import useNotification from '../../../../common/utils/notification';
+import { Box, Button, Chip, Skeleton, Typography } from '@mui/material';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+import Scrollbars from 'rc-scrollbars';
+import { useEffect, useMemo, useState } from 'react';
+import { useIntl } from 'react-intl';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import {
   ConfigAccountEnum,
   GovernanceInterface,
@@ -13,24 +18,19 @@ import {
   InglValidator,
   VoteAccountEnum,
 } from '../../../..//interfaces';
-import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { ValidatorService } from '../../../../services/validator.service';
-import { PublicKey } from '@solana/web3.js';
-import { Box, Button, Chip, Skeleton, Typography } from '@mui/material';
-import theme from '../../../../theme/theme';
-import Scrollbars from 'rc-scrollbars';
+import ErrorMessage from '../../../../common/components/ErrorMessage';
+import useNotification from '../../../../common/utils/notification';
+import ConfirmDialog from '../../../../components/confirmDialog';
 import GovernancePower from '../../../../components/dao/governancePower';
-import { useIntl } from 'react-intl';
 import PropoposalVoteLine from '../../../../components/dao/proposalVoteLine';
+import { NftService } from '../../../../services/nft.service';
 import {
   ProgramVersion,
   ProposalService,
   VersionStatus,
 } from '../../../../services/proposal.service';
-import ConfirmDialog from '../../../../components/confirmDialog';
-import { NftService } from 'apps/app/src/services/nft.service';
+import { ValidatorService } from '../../../../services/validator.service';
+import theme from '../../../../theme/theme';
 
 export default function ProposalVote() {
   const navigate = useNavigate();
@@ -167,6 +167,10 @@ export default function ProposalVote() {
     proposalService
       ?.loadProposalDetail(numeration)
       .then((proposalDetail) => {
+        if (proposalDetail.programUpgrade)
+          loadProgramVersion(
+            new PublicKey(proposalDetail.programUpgrade.buffer_account)
+          );
         setProposalDetail(proposalDetail);
         setIsProposalDetailLoading(false);
         notif.dismiss();
@@ -184,7 +188,44 @@ export default function ProposalVote() {
               notification={notif}
               message={
                 error?.message ||
-                'There was an error loading proposals. please retry!!!'
+                'There was an error loading proposal details. please retry!!!'
+              }
+            />
+          ),
+          autoClose: false,
+          icon: () => <ReportRounded fontSize="medium" color="error" />,
+        });
+      });
+  };
+
+  const loadProgramVersion = (programId?: PublicKey) => {
+    const notif = new useNotification();
+    if (proposalNotif) {
+      proposalNotif.dismiss();
+    }
+    setProposalNotif(notif);
+    proposalService
+      ?.verifyVersion(programId)
+      .then((programVersion) => {
+        if (programId) setBufferVersion(programVersion);
+        setProgramVersion(programVersion);
+        notif.dismiss();
+      })
+      .catch((error) => {
+        notif.notify({
+          render: 'Loading proposals...',
+        });
+        notif.update({
+          type: 'ERROR',
+          render: (
+            <ErrorMessage
+              retryFunction={() => loadProgramVersion(programId)}
+              notification={notif}
+              message={
+                error?.message ||
+                `There was an error loading program ${
+                  programId?.toBase58() ?? ''
+                } version. please retry!!!`
               }
             />
           ),
@@ -203,6 +244,7 @@ export default function ProposalVote() {
   }, [nftService]);
   useEffect(() => {
     if (validator_program_id && numeration) {
+      loadProgramVersion();
       loadProposalDetail(Number(numeration));
       loadValidatorDetails(validator_program_id);
     }
@@ -212,13 +254,8 @@ export default function ProposalVote() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [validator_program_id, numeration]);
 
-  //TODO: load program status here
-  const [programStatus, setProgramStatus] = useState<ProgramVersion>({
-    program_data_hash: 'lsdiel',
-    released_on: new Date(),
-    status: VersionStatus.Safe,
-    version: 2.0,
-  });
+  const [programVersion, setProgramVersion] = useState<ProgramVersion | null>();
+  const [bufferVersion, setBufferVersion] = useState<ProgramVersion | null>();
 
   const [
     isConfirmUnsafeProposalVoteDialogOpen,
@@ -349,19 +386,20 @@ export default function ProposalVote() {
               position: 'relative',
             }}
           >
-            {programStatus.status === VersionStatus.Unsafe && (
-              <Chip
-                icon={<DoNotDisturbAltOutlined sx={{ color: 'white' }} />}
-                label="We recommend voting against the proposal"
-                color="primary"
-                sx={{
-                  position: 'absolute',
-                  top: 0,
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                }}
-              />
-            )}
+            {!programVersion ||
+              (programVersion.status === VersionStatus.Unsafe && (
+                <Chip
+                  icon={<DoNotDisturbAltOutlined sx={{ color: 'white' }} />}
+                  label="We recommend voting against the proposal"
+                  color="primary"
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                />
+              ))}
             <Box display="grid" rowGap={1}>
               <Box
                 sx={{
@@ -571,7 +609,8 @@ export default function ProposalVote() {
                               color="#D5F2E3"
                               title="Buffer address of new program"
                               unsafe={
-                                programStatus.status === VersionStatus.Unsafe
+                                !programVersion ||
+                                programVersion.status === VersionStatus.Unsafe
                               }
                               value={
                                 proposalDetail.programUpgrade.buffer_account
@@ -598,10 +637,7 @@ export default function ProposalVote() {
                             />
                             <PropoposalVoteLine
                               title="Code link"
-                              // TODO: get github link here
-                              value={
-                                'https://github.com/ingl-DAO/permissionless-validators/v2.0.1'
-                              }
+                              value={proposalDetail.programUpgrade.code_link}
                             />
                             <Box
                               display="grid"
@@ -612,27 +648,8 @@ export default function ProposalVote() {
                             >
                               <PropoposalVoteLine
                                 title="Current program version"
-                                // TODO: get current program version here
-                                value={`Version 2.0.1`}
-                                color="#E5B800"
-                                titleColor="rgba(255, 204, 0, 0.5)"
-                              />
-                              <PropoposalVoteLine
-                                title="New program version"
-                                titleColor={
-                                  programStatus.status === VersionStatus.Unsafe
-                                    ? 'rgba(239, 35, 60, 0.5)'
-                                    : 'rgba(2, 195, 154, 1)'
-                                }
                                 value={
-                                  programStatus ? (
-                                    programStatus.status ===
-                                    VersionStatus.Unsafe ? (
-                                      'UNSAFE - Not a version of ingl program'
-                                    ) : (
-                                      `Version ${programStatus.version}`
-                                    )
-                                  ) : (
+                                  bufferVersion === undefined ? (
                                     <Skeleton
                                       animation="wave"
                                       height="80%"
@@ -642,10 +659,47 @@ export default function ProposalVote() {
                                           'rgb(137 127 127 / 43%)',
                                       }}
                                     />
+                                  ) : !bufferVersion ||
+                                    bufferVersion.status ===
+                                      VersionStatus.Unsafe ? (
+                                    'UNSAFE - Not a version of ingl program'
+                                  ) : (
+                                    `Version ${bufferVersion.version}`
+                                  )
+                                }
+                                color="#E5B800"
+                                titleColor="rgba(255, 204, 0, 0.5)"
+                              />
+                              <PropoposalVoteLine
+                                title="New program version"
+                                titleColor={
+                                  !programVersion ||
+                                  programVersion.status === VersionStatus.Unsafe
+                                    ? 'rgba(239, 35, 60, 0.5)'
+                                    : 'rgba(2, 195, 154, 1)'
+                                }
+                                value={
+                                  programVersion === undefined ? (
+                                    <Skeleton
+                                      animation="wave"
+                                      height="80%"
+                                      component="span"
+                                      sx={{
+                                        backgroundColor:
+                                          'rgb(137 127 127 / 43%)',
+                                      }}
+                                    />
+                                  ) : !programVersion ||
+                                    programVersion.status ===
+                                      VersionStatus.Unsafe ? (
+                                    'UNSAFE - Not a version of ingl program'
+                                  ) : (
+                                    `Version ${programVersion.version}`
                                   )
                                 }
                                 unsafe={
-                                  programStatus.status === VersionStatus.Unsafe
+                                  !programVersion ||
+                                  programVersion.status === VersionStatus.Unsafe
                                 }
                                 color="#02C39A"
                               />
@@ -834,7 +888,8 @@ export default function ProposalVote() {
             >
               <Button
                 variant={
-                  programStatus.status === VersionStatus.Unsafe
+                  !programVersion ||
+                  programVersion.status === VersionStatus.Unsafe
                     ? 'text'
                     : 'contained'
                 }
@@ -846,7 +901,10 @@ export default function ProposalVote() {
                 }
                 onClick={() => {
                   setVoteChoice(true);
-                  if (programStatus.status === VersionStatus.Unsafe)
+                  if (
+                    !programVersion ||
+                    programVersion.status === VersionStatus.Unsafe
+                  )
                     setIsConfirmUnsafeProposalVoteDialogOpen(true);
                   else setIsConfirmVoteProposalDialogOpen(true);
                 }}

@@ -35,7 +35,7 @@ export default function ProposalCard({
         rowGap: theme.spacing(2),
         cursor: 'pointer',
       }}
-      onClick={() => navigate(numeration)}
+      onClick={() => navigate(`${numeration}`)}
     >
       <Box
         sx={{
