@@ -277,24 +277,28 @@ export default function ProposalVote() {
     notif.notify({
       render: 'Voting Proposal...',
     });
-    setTimeout(() => {
-      //TODO: call api here vote proposal with data voteChoice
-      // eslint-disable-next-line no-constant-condition
-      if (6 > 5) {
+    proposalService
+      ?.voteGovernance(
+        Number(numeration),
+        voteChoice,
+        nfts.map((_) => new PublicKey(_.nft_mint_id))
+      )
+      .then(() => {
         setIsVoting(false);
         notif.update({
           render: 'proposal voted successfully',
         });
         setVoteNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
               retryFunction={() => voteProposal(voteChoice)}
               notification={notif}
-              //TODO: message should come from backend
               message={
+                error?.message ||
                 'There was an error casting your vote. Please try again!!!'
               }
             />
@@ -302,8 +306,7 @@ export default function ProposalVote() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   };
   return (
     <>
@@ -316,7 +319,7 @@ export default function ProposalVote() {
             </Typography>
             <Typography component="span" marginLeft={'4px'}>
               This is a suspicious proposal and could potentially lead to loss
-              of all DAO memebers. We recommend voting against the proposal for
+              of all DAO members. We recommend voting against the proposal for
               the safety of all DAO members.
             </Typography>
           </Typography>

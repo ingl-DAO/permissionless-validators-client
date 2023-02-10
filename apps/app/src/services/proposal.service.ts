@@ -462,8 +462,8 @@ export class ProposalService {
   }
 
   async voteGovernance(
-    vote: boolean,
     proposal_numeration: number,
+    vote: boolean,
     tokenMints: PublicKey[]
   ) {
     const payerPubkey = this.walletContext.publicKey;
@@ -483,7 +483,7 @@ export class ProposalService {
       { unchecked: true }
     );
     if (!is_still_ongoing) throw new Error('This proposal is currently closed');
-    if (new Date(expiration_time) < new Date())
+    if (new Date(expiration_time * 1000) < new Date())
       throw new Error('This proposal has expired');
 
     const payerAccount: AccountMeta = {
@@ -497,6 +497,8 @@ export class ProposalService {
       isWritable: true,
     };
 
+    if (tokenMints.length === 0)
+      throw new Error('Insufficient governance power');
     const cntAccounts = tokenMints.reduce<AccountMeta[]>(
       (accounts, tokenMint) => {
         const mintAccount: AccountMeta = {
@@ -510,18 +512,23 @@ export class ProposalService {
           isWritable: false,
         };
         const [nftPubkey] = PublicKey.findProgramAddressSync(
-          [Buffer.from(NFT_ACCOUNT_CONST)],
+          [Buffer.from(NFT_ACCOUNT_CONST), mintAccount.pubkey.toBuffer()],
           this.programId
         );
         const nftAccount: AccountMeta = {
           pubkey: nftPubkey,
           isSigner: false,
-          isWritable: false,
+          isWritable: true,
         };
         return [...accounts, nftAccount, mintAccount, associatedTokenAccount];
       },
       []
     );
+    const systemProgramAccount: AccountMeta = {
+      pubkey: SystemProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    };
     const voteInstruction = new TransactionInstruction({
       programId: this.programId,
       data: Buffer.from(
@@ -534,7 +541,13 @@ export class ProposalService {
           })
         )
       ),
-      keys: [payerAccount, proposalAccount, ...cntAccounts],
+      keys: [
+        payerAccount,
+        proposalAccount,
+        ...cntAccounts,
+
+        systemProgramAccount,
+      ],
     });
 
     try {
