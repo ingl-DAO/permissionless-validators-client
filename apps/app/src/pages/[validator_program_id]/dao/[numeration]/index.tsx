@@ -127,7 +127,7 @@ export default function ProposalVote() {
     nftService
       ?.loadNFTs()
       .then((nfts) => {
-        setNfts(nfts);
+        setNfts(nfts.filter((_) => _.is_delegated));
         setVoteChoice(
           nfts.reduce<boolean | undefined>(
             (choice, { votes }) =>
@@ -288,7 +288,7 @@ export default function ProposalVote() {
       ?.voteGovernance(
         Number(numeration),
         voteChoice,
-        nfts.map((_) => new PublicKey(_.nft_mint_id))
+        nfts
       )
       .then(() => {
         setIsVoting(false);

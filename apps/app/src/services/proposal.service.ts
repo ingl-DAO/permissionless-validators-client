@@ -50,6 +50,7 @@ import {
   ConfigAccountEnum,
   CreateProposal,
   GovernanceInterface,
+  InglNft,
   VoteAccountEnum,
 } from '../interfaces';
 
@@ -468,8 +469,13 @@ export class ProposalService {
   async voteGovernance(
     proposal_numeration: number,
     vote: boolean,
-    tokenMints: PublicKey[]
+    governancePower: InglNft[]
   ) {
+    if (governancePower.find((_) => !_.is_delegated))
+      throw new Error(
+        'Each Nft constituting the governance power must be delegated'
+      );
+    const tokenMints = governancePower.map((_) => new PublicKey(_.nft_mint_id));
     const payerPubkey = this.walletContext.publicKey;
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
