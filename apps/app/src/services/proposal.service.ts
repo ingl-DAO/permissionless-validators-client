@@ -1,6 +1,8 @@
 import { deserialize, serialize } from '@dao-xyz/borsh';
 import { http } from '@ingl-permissionless/axios';
 import {
+  AUTHORIZED_WITHDRAWER_KEY,
+  BPF_LOADER_UPGRADEABLE_ID,
   Commission,
   DiscordInvite,
   ExecuteGovernance,
@@ -12,6 +14,7 @@ import {
   GovernanceType,
   GOVERNANCE_SAFETY_LEEWAY,
   INGL_CONFIG_SEED,
+  INGL_PROGRAM_AUTHORITY_KEY,
   INGL_PROPOSAL_KEY,
   InitGovernance,
   InitialRedemptionFee,
@@ -25,6 +28,7 @@ import {
   ValidatorConfig,
   ValidatorID,
   ValidatorName,
+  VoteAccountGovernance,
   VoteGovernance,
   VOTE_ACCOUNT_KEY,
 } from '@ingl-permissionless/state';
@@ -680,6 +684,7 @@ export class ProposalService {
     );
     const {
       date_finalized,
+      governance_type,
       is_still_ongoing,
       did_proposal_pass,
       is_proposal_executed,
@@ -722,6 +727,80 @@ export class ProposalService {
       isSigner: false,
       isWritable: false,
     };
+    const instructionAccounts = [
+      payerAccount,
+      sysvarClockAccount,
+      proposalAccount,
+      configAccount,
+      generalAccount,
+    ];
+    if (governance_type instanceof ProgramUpgrade) {
+      const upgradedProgramAccount: AccountMeta = {
+        pubkey: this.programId,
+        isSigner: false,
+        isWritable: false,
+      };
+      const bufferAddressAccount: AccountMeta = {
+        pubkey: new PublicKey(governance_type.buffer_account),
+        isSigner: false,
+        isWritable: true,
+      };
+      const [programdataKey] = PublicKey.findProgramAddressSync(
+        [this.programId.toBuffer()],
+        BPF_LOADER_UPGRADEABLE_ID
+      );
+      const programdataAccount: AccountMeta = {
+        pubkey: programdataKey,
+        isSigner: false,
+        isWritable: true,
+      };
+      const [upgradeAuthorityKey] = PublicKey.findProgramAddressSync(
+        [Buffer.from(INGL_PROGRAM_AUTHORITY_KEY), this.programId.toBuffer()],
+        this.programId
+      );
+      const upgradeAuthorityAccount: AccountMeta = {
+        pubkey: upgradeAuthorityKey,
+        isSigner: false,
+        isWritable: true,
+      };
+      const sysvarRentAccount: AccountMeta = {
+        pubkey: SYSVAR_RENT_PUBKEY,
+        isSigner: false,
+        isWritable: false,
+      };
+      instructionAccounts.push(
+        upgradedProgramAccount,
+        bufferAddressAccount,
+        payerAccount,
+        programdataAccount,
+        upgradeAuthorityAccount,
+        sysvarRentAccount,
+        sysvarClockAccount
+      );
+    } else if (governance_type instanceof VoteAccountGovernance) {
+      const [voteAccountKey] = PublicKey.findProgramAddressSync(
+        [Buffer.from(VOTE_ACCOUNT_KEY)],
+        this.programId
+      );
+      const voteAccount: AccountMeta = {
+        pubkey: voteAccountKey,
+        isSigner: false,
+        isWritable: false,
+      };
+      const [authorizedWithdrawerKey] = PublicKey.findProgramAddressSync(
+        [Buffer.from(AUTHORIZED_WITHDRAWER_KEY)],
+        this.programId
+      );
+      const authorizedWithdrawerAccount: AccountMeta = {
+        pubkey: authorizedWithdrawerKey,
+        isSigner: false,
+        isWritable: false,
+      };
+      instructionAccounts.push(voteAccount, authorizedWithdrawerAccount);
+      if (governance_type instanceof ValidatorID) {
+        instructionAccounts.push(sysvarClockAccount, payerAccount);
+      }
+    }
     const executeGovernanceInstruction = new TransactionInstruction({
       programId: this.programId,
       data: Buffer.from(
@@ -732,13 +811,7 @@ export class ProposalService {
           })
         )
       ),
-      keys: [
-        payerAccount,
-        sysvarClockAccount,
-        proposalAccount,
-        configAccount,
-        generalAccount,
-      ],
+      keys: instructionAccounts,
     });
     try {
       return forwardLegacyTransaction(
