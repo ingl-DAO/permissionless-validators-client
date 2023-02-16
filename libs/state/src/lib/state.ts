@@ -41,7 +41,9 @@ export const INGL_TEAM_ID = new PublicKey(
 export const METAPLEX_PROGRAM_ID = new PublicKey(
   'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
 );
-
+export const BPF_LOADER_UPGRADEABLE_ID = new PublicKey(
+  'BPFLoaderUpgradeab1e11111111111111111111111'
+);
 export const GOVERNANCE_SAFETY_LEEWAY = 86400 * 30; //1 month
 
 export const INGL_CONFIG_SEED = 'ingl_config';
@@ -69,7 +71,23 @@ export class Delegated extends FundsLocation {}
 @variant(1)
 export class Undelegated extends FundsLocation {}
 
-export class Vote extends Map<number, boolean> {}
+export class Vote {
+  @field({ type: 'u32' })
+  public numeration!: number;
+
+  @field({ type: 'bool' })
+  public vote!: boolean;
+
+  constructor(properties: Vote) {
+    Object.assign(this, properties);
+  }
+}
+
+export class VoteMap extends Map<number, boolean>{
+
+}
+const a = new VoteMap();
+a.entries()
 
 export class NftData {
   @field({ type: 'u32' })
@@ -99,8 +117,8 @@ export class NftData {
   @field({ type: vec('u64') })
   public all_withdraws!: BN[];
 
-  @field({ type: Vote })
-  public all_votes!: Vote;
+  @field({ type: vec(Vote) })
+  public all_votes!: Vote[];
 
   constructor(properties: NftData) {
     Object.assign(this, properties);
@@ -210,8 +228,8 @@ export class GovernanceData {
   @field({ type: 'string' })
   public description!: string;
 
-  @field({ type: Vote })
-  public votes!: Vote;
+  @field({ type: vec(Vote) })
+  public votes!: Vote[];
 
   @field({ type: GovernanceType })
   public governance_type!: GovernanceType;

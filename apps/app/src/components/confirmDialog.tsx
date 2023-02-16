@@ -16,13 +16,15 @@ export default function ConfirmDialog({
   dialogMessage,
   dialogTitle = 'Confirm',
   confirmButton = 'Confirm',
+  isCancelContained = false,
 }: {
   isDialogOpen: boolean;
   closeDialog: () => void;
   confirm: () => void;
-  dialogMessage: string;
+  dialogMessage: string | JSX.Element;
   dialogTitle?: string;
   confirmButton?: string;
+  isCancelContained?: boolean;
 }) {
   return (
     <Dialog
@@ -37,7 +39,14 @@ export default function ConfirmDialog({
         },
       }}
     >
-      <DialogTitle sx={{ fontSize: '28px' }}>{dialogTitle}</DialogTitle>
+      <DialogTitle
+        sx={{
+          fontSize: '28px',
+          color: isCancelContained ? theme.palette.primary.main : 'white',
+        }}
+      >
+        {dialogTitle}
+      </DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ color: '#ffffff99' }}>
           {dialogMessage}
@@ -45,9 +54,12 @@ export default function ConfirmDialog({
       </DialogContent>
       <DialogActions>
         <Button
-          sx={{ textTransform: 'none' }}
-          color="error"
-          variant="text"
+          sx={{
+            textTransform: 'none',
+            color: isCancelContained ? 'black' : theme.palette.error.main,
+          }}
+          color={isCancelContained ? 'inherit' : 'error'}
+          variant={isCancelContained ? 'contained' : 'text'}
           onClick={closeDialog}
         >
           Cancel

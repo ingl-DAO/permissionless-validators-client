@@ -1,6 +1,8 @@
 import { deserialize, serialize } from '@dao-xyz/borsh';
 import { http } from '@ingl-permissionless/axios';
 import {
+  AUTHORIZED_WITHDRAWER_KEY,
+  BPF_LOADER_UPGRADEABLE_ID,
   Commission,
   DiscordInvite,
   ExecuteGovernance,
@@ -12,6 +14,7 @@ import {
   GovernanceType,
   GOVERNANCE_SAFETY_LEEWAY,
   INGL_CONFIG_SEED,
+  INGL_PROGRAM_AUTHORITY_KEY,
   INGL_PROPOSAL_KEY,
   InitGovernance,
   InitialRedemptionFee,
@@ -25,6 +28,7 @@ import {
   ValidatorConfig,
   ValidatorID,
   ValidatorName,
+  VoteAccountGovernance,
   VoteGovernance,
   VOTE_ACCOUNT_KEY,
 } from '@ingl-permissionless/state';
@@ -36,6 +40,7 @@ import {
   Connection,
   LAMPORTS_PER_SOL,
   PublicKey,
+  SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
@@ -45,6 +50,7 @@ import {
   ConfigAccountEnum,
   CreateProposal,
   GovernanceInterface,
+  InglNft,
   VoteAccountEnum,
 } from '../interfaces';
 
@@ -68,9 +74,11 @@ export class ProposalService {
     private readonly walletContext: WalletContextState
   ) {}
 
-  async verifyProgramVersion(programId: PublicKey) {
+  async verifyVersion(programId?: PublicKey) {
     const { data: programVersion } = await http.get<ProgramVersion | null>(
-      `/program-versions/verify?program_id=${programId.toBase58()}`
+      `/program-versions/verify?program_id=${(
+        programId ?? this.programId
+      ).toBase58()}`
     );
     return programVersion;
   }
@@ -106,7 +114,11 @@ export class ProposalService {
     } else if (programUpgrade) {
       const { buffer_account, code_link } = programUpgrade;
       const bufferAccountKey = new PublicKey(buffer_account);
-      const isBufferProgramVerified = await this.verifyProgramVersion(
+      const bufferAccount = await this.connection.getAccountInfo(
+        bufferAccountKey
+      );
+      if (!bufferAccount) throw new Error("Buffer account info doesn't exist");
+      const isBufferProgramVerified = await this.verifyVersion(
         bufferAccountKey
       );
       if (!isBufferProgramVerified)
@@ -272,8 +284,13 @@ export class ProposalService {
         isSigner: false,
         isWritable: false,
       });
+    const systemProgramAccount: AccountMeta = {
+      pubkey: SystemProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    };
     const initGovernanaceInstruction = new TransactionInstruction({
-      keys: instructionAccounts,
+      keys: [...instructionAccounts, systemProgramAccount],
       programId: this.programId,
       data: Buffer.from(
         serialize(
@@ -328,42 +345,137 @@ export class ProposalService {
       { unchecked: true }
     );
     return Promise.all(
-      new Array(proposal_numeration).map(async (_, numeration) => {
-        const [proposalAccountKey] = PublicKey.findProgramAddressSync(
-          [Buffer.from(INGL_PROPOSAL_KEY), toBytesInt32(numeration)],
-          this.programId
-        );
-        const proposalAccountInfo = await this.connection.getAccountInfo(
-          proposalAccountKey
-        );
-        const { governance_type, votes, ...proposal } = deserialize(
-          proposalAccountInfo?.data as Buffer,
-          GovernanceData,
-          { unchecked: true }
-        );
-        let number_of_no_votes = 0;
-        let number_of_yes_votes = 0;
-        new Map(votes).forEach((value) =>
-          value ? number_of_yes_votes++ : number_of_no_votes++
-        );
+      [...new Array(proposal_numeration)].map(async (_, numeration) => {
+        const proposal = await this.deserializeProposal(numeration);
         return {
           ...proposal,
           proposal_quorum,
-          number_of_no_votes,
-          number_of_yes_votes,
-          proposal_numeration: numeration,
-          program_id: this.programId.toBase58(),
-          proposal_id: proposalAccountKey.toBase58(),
         };
       })
     );
   }
 
+  async loadProposalDetail(
+    proposalNumeration: number
+  ): Promise<GovernanceInterface> {
+    const [inglConfigKey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(INGL_CONFIG_SEED)],
+      this.programId
+    );
+    const configAccountInfo = await this.connection.getAccountInfo(
+      inglConfigKey
+    );
+    const { proposal_quorum } = deserialize(
+      configAccountInfo?.data as Buffer,
+      ValidatorConfig,
+      { unchecked: true }
+    );
+    const { governance_type, ...proposal } = await this.deserializeProposal(
+      proposalNumeration
+    );
+    return {
+      ...proposal,
+      proposal_quorum,
+      programUpgrade:
+        governance_type instanceof ProgramUpgrade
+          ? {
+              buffer_account: new PublicKey(
+                governance_type.buffer_account
+              ).toBase58(),
+              code_link: governance_type.code_link,
+            }
+          : undefined,
+      voteAccount:
+        governance_type instanceof ValidatorID
+          ? {
+              vote_type: VoteAccountEnum.ValidatorID,
+              value: new PublicKey(governance_type.value).toBase58(),
+            }
+          : governance_type instanceof Commission
+          ? {
+              vote_type: VoteAccountEnum.Commission,
+              value: governance_type.value,
+            }
+          : undefined,
+      configAccount:
+        governance_type instanceof MaxPrimaryStake
+          ? {
+              config_type: ConfigAccountEnum.MaxPrimaryStake,
+              value: governance_type.value.toNumber() / LAMPORTS_PER_SOL,
+            }
+          : governance_type instanceof NftHolderShare
+          ? {
+              config_type: ConfigAccountEnum.NftHolderShare,
+              value: governance_type.value,
+            }
+          : governance_type instanceof InitialRedemptionFee
+          ? {
+              config_type: ConfigAccountEnum.InitialRedemptionFee,
+              value: governance_type.value,
+            }
+          : governance_type instanceof RedemptionFeeDuration
+          ? {
+              config_type: ConfigAccountEnum.RedemptionFeeDuration,
+              value: governance_type.value * (24 * 3600),
+            }
+          : governance_type instanceof ValidatorName
+          ? {
+              config_type: ConfigAccountEnum.ValidatorName,
+              value: governance_type.value,
+            }
+          : governance_type instanceof TwitterHandle
+          ? {
+              config_type: ConfigAccountEnum.TwitterHandle,
+              value: governance_type.value,
+            }
+          : governance_type instanceof DiscordInvite
+          ? {
+              config_type: ConfigAccountEnum.DiscordInvite,
+              value: governance_type.value,
+            }
+          : undefined,
+    };
+  }
+
+  private async deserializeProposal(proposal_numeration: number) {
+    const [proposalAccountKey] = PublicKey.findProgramAddressSync(
+      [Buffer.from(INGL_PROPOSAL_KEY), toBytesInt32(proposal_numeration)],
+      this.programId
+    );
+    const proposalAccountInfo = await this.connection.getAccountInfo(
+      proposalAccountKey
+    );
+    const { governance_type, votes, ...proposal } = deserialize(
+      proposalAccountInfo?.data as Buffer,
+      GovernanceData,
+      { unchecked: true }
+    );
+    let number_of_no_votes = 0;
+    let number_of_yes_votes = 0;
+    votes.forEach((value) =>
+      value ? number_of_yes_votes++ : number_of_no_votes++
+    );
+    return {
+      ...proposal,
+      governance_type,
+      number_of_no_votes,
+      number_of_yes_votes,
+      proposal_numeration,
+      program_id: this.programId.toBase58(),
+      proposal_id: proposalAccountKey.toBase58(),
+    };
+  }
+
   async voteGovernance(
-    vote: boolean,
     proposal_numeration: number,
-    tokenMints: PublicKey[]
+    vote: boolean,
+    governancePower: InglNft[]
   ) {
+    if (governancePower.find((_) => !_.is_delegated))
+      throw new Error(
+        'Each Nft constituting the governance power must be delegated'
+      );
+    const tokenMints = governancePower.map((_) => new PublicKey(_.nft_mint_id));
     const payerPubkey = this.walletContext.publicKey;
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
@@ -381,7 +493,7 @@ export class ProposalService {
       { unchecked: true }
     );
     if (!is_still_ongoing) throw new Error('This proposal is currently closed');
-    if (new Date(expiration_time) < new Date())
+    if (new Date(expiration_time * 1000) < new Date())
       throw new Error('This proposal has expired');
 
     const payerAccount: AccountMeta = {
@@ -395,6 +507,8 @@ export class ProposalService {
       isWritable: true,
     };
 
+    if (tokenMints.length === 0)
+      throw new Error('Insufficient governance power');
     const cntAccounts = tokenMints.reduce<AccountMeta[]>(
       (accounts, tokenMint) => {
         const mintAccount: AccountMeta = {
@@ -408,18 +522,23 @@ export class ProposalService {
           isWritable: false,
         };
         const [nftPubkey] = PublicKey.findProgramAddressSync(
-          [Buffer.from(NFT_ACCOUNT_CONST)],
+          [Buffer.from(NFT_ACCOUNT_CONST), mintAccount.pubkey.toBuffer()],
           this.programId
         );
         const nftAccount: AccountMeta = {
           pubkey: nftPubkey,
           isSigner: false,
-          isWritable: false,
+          isWritable: true,
         };
         return [...accounts, nftAccount, mintAccount, associatedTokenAccount];
       },
       []
     );
+    const systemProgramAccount: AccountMeta = {
+      pubkey: SystemProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    };
     const voteInstruction = new TransactionInstruction({
       programId: this.programId,
       data: Buffer.from(
@@ -432,7 +551,13 @@ export class ProposalService {
           })
         )
       ),
-      keys: [payerAccount, proposalAccount, ...cntAccounts],
+      keys: [
+        payerAccount,
+        proposalAccount,
+        ...cntAccounts,
+
+        systemProgramAccount,
+      ],
     });
 
     try {
@@ -565,6 +690,7 @@ export class ProposalService {
     );
     const {
       date_finalized,
+      governance_type,
       is_still_ongoing,
       did_proposal_pass,
       is_proposal_executed,
@@ -607,6 +733,80 @@ export class ProposalService {
       isSigner: false,
       isWritable: false,
     };
+    const instructionAccounts = [
+      payerAccount,
+      sysvarClockAccount,
+      proposalAccount,
+      configAccount,
+      generalAccount,
+    ];
+    if (governance_type instanceof ProgramUpgrade) {
+      const upgradedProgramAccount: AccountMeta = {
+        pubkey: this.programId,
+        isSigner: false,
+        isWritable: false,
+      };
+      const bufferAddressAccount: AccountMeta = {
+        pubkey: new PublicKey(governance_type.buffer_account),
+        isSigner: false,
+        isWritable: true,
+      };
+      const [programdataKey] = PublicKey.findProgramAddressSync(
+        [this.programId.toBuffer()],
+        BPF_LOADER_UPGRADEABLE_ID
+      );
+      const programdataAccount: AccountMeta = {
+        pubkey: programdataKey,
+        isSigner: false,
+        isWritable: true,
+      };
+      const [upgradeAuthorityKey] = PublicKey.findProgramAddressSync(
+        [Buffer.from(INGL_PROGRAM_AUTHORITY_KEY), this.programId.toBuffer()],
+        this.programId
+      );
+      const upgradeAuthorityAccount: AccountMeta = {
+        pubkey: upgradeAuthorityKey,
+        isSigner: false,
+        isWritable: true,
+      };
+      const sysvarRentAccount: AccountMeta = {
+        pubkey: SYSVAR_RENT_PUBKEY,
+        isSigner: false,
+        isWritable: false,
+      };
+      instructionAccounts.push(
+        upgradedProgramAccount,
+        bufferAddressAccount,
+        payerAccount,
+        programdataAccount,
+        upgradeAuthorityAccount,
+        sysvarRentAccount,
+        sysvarClockAccount
+      );
+    } else if (governance_type instanceof VoteAccountGovernance) {
+      const [voteAccountKey] = PublicKey.findProgramAddressSync(
+        [Buffer.from(VOTE_ACCOUNT_KEY)],
+        this.programId
+      );
+      const voteAccount: AccountMeta = {
+        pubkey: voteAccountKey,
+        isSigner: false,
+        isWritable: false,
+      };
+      const [authorizedWithdrawerKey] = PublicKey.findProgramAddressSync(
+        [Buffer.from(AUTHORIZED_WITHDRAWER_KEY)],
+        this.programId
+      );
+      const authorizedWithdrawerAccount: AccountMeta = {
+        pubkey: authorizedWithdrawerKey,
+        isSigner: false,
+        isWritable: false,
+      };
+      instructionAccounts.push(voteAccount, authorizedWithdrawerAccount);
+      if (governance_type instanceof ValidatorID) {
+        instructionAccounts.push(sysvarClockAccount, payerAccount);
+      }
+    }
     const executeGovernanceInstruction = new TransactionInstruction({
       programId: this.programId,
       data: Buffer.from(
@@ -617,13 +817,7 @@ export class ProposalService {
           })
         )
       ),
-      keys: [
-        payerAccount,
-        sysvarClockAccount,
-        proposalAccount,
-        configAccount,
-        generalAccount,
-      ],
+      keys: instructionAccounts,
     });
     try {
       return forwardLegacyTransaction(

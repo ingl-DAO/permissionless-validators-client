@@ -19,6 +19,10 @@ export interface InglNft {
   is_delegated: boolean;
   video_ref?: string;
   numeration: number;
+  votes: {
+    numeration: number;
+    vote: boolean;
+  }[];
 }
 
 export interface NftReward {
@@ -132,7 +136,7 @@ export interface GovernanceInterface
   is_still_ongoing: boolean; //can vote
   did_proposal_pass?: boolean; //succeded a few second ago
   is_proposal_executed: boolean;
-  date_finalize?: boolean; //completed
+  date_finalize?: number; //completed
   expiration_time: number; //in seconds
   proposal_numeration: number;
   proposal_quorum: number;
