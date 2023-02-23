@@ -244,6 +244,7 @@ export class ValidatorService {
           GeneralData,
           { unchecked: true }
         );
+        console.log(generalData)
         const { uri, json, jsonLoaded } = collectionNfts[index];
         let jsonData = json;
         if (!jsonLoaded) {

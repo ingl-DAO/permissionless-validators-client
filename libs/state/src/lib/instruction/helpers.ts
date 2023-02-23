@@ -59,7 +59,7 @@ export const forwardLegacyTransaction = async (
     throw new Error(
       'Transaction must always be signed. Please use your browser wallet and/or your keypair to sign.'
     );
-
+  console.log(signedTransaction?.serialize().length);
   const signature = await connection.sendRawTransaction(
     (signedTransaction as Transaction).serialize()
   );
@@ -258,7 +258,7 @@ export async function computeVoteAccountRewardAPY(
   const latestVoteRewards = (function () {
     const voteRewards = generalData?.vote_rewards;
     const latestEpoch = Number(
-      voteRewards[voteRewards.length - 1].epoch_number
+      voteRewards[voteRewards.length - 1]?.epoch_number
     );
     const finalVoteReward = [voteRewards[voteRewards.length - 1]];
     const diffEpoch = 20; // 20 epochs difference
@@ -281,7 +281,7 @@ export async function computeVoteAccountRewardAPY(
       : latestVoteRewards.reduce(
           (acc, curr) =>
             acc +
-            Number(new BN(curr.nft_holders_reward)) /
+            Number(new BN(curr?.nft_holders_reward)) /
               Number(new BN(generalData.total_delegated)),
           0
         ) / latestVoteRewards.length;
@@ -384,14 +384,22 @@ export async function forwardExistingTransactions(
     connection: Connection;
     signAllTransactions?: SignerWalletAdapterProps['signAllTransactions'];
   },
-  transactions: Transaction[]
+  transactions: Transaction[],
+  additionalUnits?: number
 ) {
   const { connection, signAllTransactions } = walletConnection;
 
   const blockhashObj = await connection.getLatestBlockhash();
-  console.log(
-    transactions.map((transaction) => transaction.feePayer?.toBase58())
-  );
+  transactions.map((transaction) => {
+    if (additionalUnits) {
+      const additionalComputeBudgetInstruction =
+        ComputeBudgetProgram.setComputeUnitLimit({
+          units: additionalUnits,
+        });
+      return transaction.add(additionalComputeBudgetInstruction);
+    }
+    return transaction;
+  });
   const signedTransactions = signAllTransactions
     ? await signAllTransactions(transactions)
     : null;
@@ -401,7 +409,6 @@ export async function forwardExistingTransactions(
       const signature = await connection.sendRawTransaction(
         (signedTransaction as Transaction).serialize()
       );
-      console.log(signature);
       await connection.confirmTransaction({
         signature,
         ...blockhashObj,

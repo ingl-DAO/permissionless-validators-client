@@ -83,12 +83,6 @@ export class Vote {
   }
 }
 
-export class VoteMap extends Map<number, boolean>{
-
-}
-const a = new VoteMap();
-a.entries()
-
 export class NftData {
   @field({ type: 'u32' })
   public validation_phrase!: number;
@@ -197,6 +191,9 @@ export class GeneralData {
 
   @field({ type: vec(VoteReward) })
   public vote_rewards!: VoteReward[];
+  
+  // @field({ type: Map<number, number> })
+  // public unfinalized_proposals!: number[];
 
   constructor(properties: GeneralData) {
     Object.assign(this, properties);
