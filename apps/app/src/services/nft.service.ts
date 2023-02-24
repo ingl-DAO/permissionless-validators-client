@@ -9,6 +9,7 @@ import {
   forwardV0Transaction,
   GeneralData,
   GENERAL_ACCOUNT_SEED,
+  getTxSize,
   ImprintRarity,
   INGL_CONFIG_SEED,
   INGL_MINT_AUTHORITY_KEY,
@@ -47,11 +48,14 @@ import {
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
   AccountMeta,
+  ComputeBudgetProgram,
   Keypair,
   LAMPORTS_PER_SOL,
+  PACKET_DATA_SIZE,
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
+  Transaction,
   TransactionInstruction,
   type Connection,
 } from '@solana/web3.js';
@@ -822,6 +826,12 @@ export class NftService {
       isSigner: false,
       isWritable: true,
     };
+    const systemProgramAccount: AccountMeta = {
+      pubkey: SystemProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    };
+
     const cntAccounts = tokenMints.reduce<AccountMeta[]>(
       (accounts, tokenMint, index) => {
         const [nftPubkey] = PublicKey.findProgramAddressSync(
@@ -844,10 +854,60 @@ export class NftService {
       []
     );
 
+    const emptyInstruction = {
+      instructions: [
+        new TransactionInstruction({
+          programId: this.programId,
+          data: Buffer.from(serialize(new NFTWithdraw(0, 0))),
+          keys: [
+            payerAccount,
+            voteAccount,
+            generalAccount,
+            validatorConfigAccount,
+            authorizedWithdrawerAccount,
+            //cnt accounts normally here
+            systemProgramAccount,
+          ],
+        }),
+      ],
+      additionalUnits: 0,
+      signingKeypairs: [],
+    };
+    const sizeOfEmptyTransaction = await (async function (
+      connection: Connection,
+      transactionInstruction: {
+        instructions: TransactionInstruction[];
+        additionalUnits?: number;
+        signingKeypairs?: Keypair[];
+      },
+      payerPubkey: PublicKey
+    ) {
+      const blockhashObj = await connection.getLatestBlockhash();
+      const { instructions, additionalUnits, signingKeypairs } =
+        transactionInstruction;
+      const transaction = new Transaction();
+      if (additionalUnits) {
+        const additionalComputeBudgetInstruction =
+          ComputeBudgetProgram.setComputeUnitLimit({
+            units: additionalUnits,
+          });
+        transaction.add(additionalComputeBudgetInstruction);
+      }
+      transaction.add(...instructions).feePayer = payerPubkey as PublicKey;
+      transaction.recentBlockhash = blockhashObj.blockhash;
+      if (signingKeypairs && signingKeypairs.length > 0)
+        transaction.sign(...signingKeypairs);
+
+      return getTxSize(transaction, payerPubkey);
+    })(this.connection, emptyInstruction, payerPubkey);
+
+    const maxNumberOfNftsPerClaim = Math.round(
+      Math.round((PACKET_DATA_SIZE - sizeOfEmptyTransaction - 64) / 33) / 3
+    );
+
     let splittedCntAccountsPerClaim = [];
-    const NUM_TOKENS_PER_CLAIM_TXN = 3;
     const numberOfClaims = Math.ceil(
-      tokenMints.length / NUM_TOKENS_PER_CLAIM_TXN
+      tokenMints.length / maxNumberOfNftsPerClaim
     );
     if (numberOfClaims === 0) throw new Error('No rewards to claim');
 
@@ -858,10 +918,10 @@ export class NftService {
       splittedCntAccountsPerClaim = new Array(numberOfClaims);
       const copyCntAccounts = [...cntAccounts];
       while (count < numberOfClaims) {
-        if (copyCntAccounts.length >= NUM_TOKENS_PER_CLAIM_TXN * 3) {
+        if (copyCntAccounts.length >= maxNumberOfNftsPerClaim * 3) {
           splittedCntAccountsPerClaim[count] = copyCntAccounts.splice(
             0,
-            NUM_TOKENS_PER_CLAIM_TXN * 3
+            maxNumberOfNftsPerClaim * 3
           );
         } else {
           splittedCntAccountsPerClaim[count] = copyCntAccounts;
@@ -869,55 +929,15 @@ export class NftService {
         count++;
       }
     }
-    const systemProgramAccount: AccountMeta = {
-      pubkey: SystemProgram.programId,
-      isSigner: false,
-      isWritable: false,
-    };
-    const claimRewardInstructionsPerTransaction = [];
-
+    const claimRewardInstructions = [];
     for (let i = 0; i < numberOfClaims; i++) {
-      const claimRewardInstructions: TransactionInstruction[] = [];
-      const NUM_TOKEN_IN_INSTRUCTION = 2;
-      const numberOfInstructions = Math.ceil(
-        splittedCntAccountsPerClaim[i].length / (NUM_TOKEN_IN_INSTRUCTION * 3)
-      );
-      let splittedCntAccountsPerInstruction = [];
-      if (numberOfInstructions === 1) {
-        splittedCntAccountsPerInstruction = [splittedCntAccountsPerClaim[i]];
-      } else {
-        let count = 0;
-        splittedCntAccountsPerInstruction = new Array(numberOfInstructions);
-        const copyCntAccountPerTransaction = splittedCntAccountsPerClaim[i];
-
-        while (count < numberOfInstructions) {
-          if (
-            copyCntAccountPerTransaction.length >=
-            NUM_TOKEN_IN_INSTRUCTION * 3
-          ) {
-            splittedCntAccountsPerInstruction[count] =
-              copyCntAccountPerTransaction.splice(
-                0,
-                NUM_TOKEN_IN_INSTRUCTION * 3
-              );
-          } else {
-            splittedCntAccountsPerInstruction[count] =
-              copyCntAccountPerTransaction;
-          }
-          count++;
-        }
-      }
-
-      for (let j = 0; j < numberOfInstructions; j++) {
-        claimRewardInstructions.push(
+      claimRewardInstructions.push({
+        instructions: [
           new TransactionInstruction({
             programId: this.programId,
             data: Buffer.from(
               serialize(
-                new NFTWithdraw(
-                  splittedCntAccountsPerInstruction[j].length / 3,
-                  0
-                )
+                new NFTWithdraw(splittedCntAccountsPerClaim[i].length / 3, 0)
               )
             ),
             keys: [
@@ -926,17 +946,12 @@ export class NftService {
               generalAccount,
               validatorConfigAccount,
               authorizedWithdrawerAccount,
-              //cntAccounts
-              ...splittedCntAccountsPerInstruction[j],
-
+              ...splittedCntAccountsPerClaim[i],
               systemProgramAccount,
             ],
-          })
-        );
-      }
-      claimRewardInstructionsPerTransaction.push({
-        instructions: claimRewardInstructions,
-        additionalUnits: 1_000_000,
+          }),
+        ],
+        additionalUnits: 400_000,
         signingKeypairs: [],
       });
     }
@@ -948,7 +963,7 @@ export class NftService {
           signAllTransaction: this.walletContext
             .signAllTransactions as SignerWalletAdapterProps['signAllTransactions'],
         },
-        claimRewardInstructionsPerTransaction
+        claimRewardInstructions
       );
       return result[result.length - 1];
     } catch (error) {
