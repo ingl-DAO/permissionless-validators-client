@@ -1,9 +1,13 @@
-import { ArrowBackIosNewOutlined } from '@mui/icons-material';
+import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
+import CopyTransactionId from '../../common/components/copyTransactionId';
+import ErrorMessage from '../../common/components/ErrorMessage';
+import useNotification from '../../common/utils/notification';
 import CollectionInformation from '../../components/register-validator/collectionInformation';
 import DaoInformation, {
   DaoInfo
@@ -129,7 +133,7 @@ export default function Register() {
     ),
   };
 
-  // const [validatorNotif, setValidatorNotif] = useState<useNotification>();
+  const [validatorNotif, setValidatorNotif] = useState<useNotification>();
 
   function createValidator(
     validatorId: string,

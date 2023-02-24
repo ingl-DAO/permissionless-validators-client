@@ -24,7 +24,7 @@ export class RegistryService {
   }
 
   async useProgramId(programId: string) {
-    await http.put(`/${programId}/use`);
+    await http.put(`/programs/${programId}/use`);
   }
 
   async registerProgram(
@@ -47,19 +47,32 @@ export class RegistryService {
       { payer_id: payerPubkey.toBase58(), rarities: registrationData.rarities }
     );
     try {
-      const signatures = await forwardExistingTransactions(
+      const [initProgramSignature] = await forwardExistingTransactions(
         {
           connection: this.connection,
           payerKey: payerPubkey,
           signAllTransactions: this.walletContext
             .signAllTransactions as SignerWalletAdapterProps['signAllTransactions'],
         },
-        [transaction, ...uploadUritransactions].map((wireTransaction) =>
+        [transaction].map((wireTransaction) =>
           Transaction.from(Buffer.from(wireTransaction))
-        )
+        ),
+        240_000
       );
       this.useProgramId(programId);
-      return signatures;
+      // const uploadUrisSignatures = await forwardExistingTransactions(
+      //   {
+      //     connection: this.connection,
+      //     payerKey: payerPubkey,
+      //     signAllTransactions: this.walletContext
+      //       .signAllTransactions as SignerWalletAdapterProps['signAllTransactions'],
+      //   },
+      //   uploadUritransactions.map((wireTransaction) =>
+      //     Transaction.from(Buffer.from(wireTransaction))
+      //   ),
+      //   240_000
+      // );
+      return [initProgramSignature];
     } catch (error) {
       throw new Error(
         'Validator program registration failed with the following errors:' +

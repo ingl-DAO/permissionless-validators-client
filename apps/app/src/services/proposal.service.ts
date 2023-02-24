@@ -509,31 +509,31 @@ export class ProposalService {
 
     if (tokenMints.length === 0)
       throw new Error('Insufficient governance power');
-    const cntAccounts = tokenMints.reduce<AccountMeta[]>(
-      (accounts, tokenMint) => {
-        const mintAccount: AccountMeta = {
-          pubkey: tokenMint,
-          isSigner: false,
-          isWritable: false,
-        };
-        const associatedTokenAccount: AccountMeta = {
-          pubkey: getAssociatedTokenAddressSync(tokenMint, payerPubkey),
-          isSigner: false,
-          isWritable: false,
-        };
-        const [nftPubkey] = PublicKey.findProgramAddressSync(
-          [Buffer.from(NFT_ACCOUNT_CONST), mintAccount.pubkey.toBuffer()],
-          this.programId
-        );
-        const nftAccount: AccountMeta = {
-          pubkey: nftPubkey,
-          isSigner: false,
-          isWritable: true,
-        };
-        return [...accounts, nftAccount, mintAccount, associatedTokenAccount];
-      },
-      []
-    );
+    // const cntAccounts = tokenMints.reduce<AccountMeta[]>(
+    //   (accounts, tokenMint) => {
+    //     const mintAccount: AccountMeta = {
+    //       pubkey: tokenMint,
+    //       isSigner: false,
+    //       isWritable: false,
+    //     };
+    //     const associatedTokenAccount: AccountMeta = {
+    //       pubkey: getAssociatedTokenAddressSync(tokenMint, payerPubkey),
+    //       isSigner: false,
+    //       isWritable: false,
+    //     };
+    //     const [nftPubkey] = PublicKey.findProgramAddressSync(
+    //       [Buffer.from(NFT_ACCOUNT_CONST), mintAccount.pubkey.toBuffer()],
+    //       this.programId
+    //     );
+    //     const nftAccount: AccountMeta = {
+    //       pubkey: nftPubkey,
+    //       isSigner: false,
+    //       isWritable: true,
+    //     };
+    //     return [...accounts, nftAccount, mintAccount, associatedTokenAccount];
+    //   },
+    //   []
+    // );
     const systemProgramAccount: AccountMeta = {
       pubkey: SystemProgram.programId,
       isSigner: false,
@@ -554,7 +554,7 @@ export class ProposalService {
       keys: [
         payerAccount,
         proposalAccount,
-        ...cntAccounts,
+        // ...cntAccounts,
 
         systemProgramAccount,
       ],
