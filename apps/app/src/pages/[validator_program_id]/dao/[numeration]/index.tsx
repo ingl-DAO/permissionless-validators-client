@@ -285,11 +285,7 @@ export default function ProposalVote() {
       render: 'Voting Proposal...',
     });
     proposalService
-      ?.voteGovernance(
-        Number(numeration),
-        voteChoice,
-        nfts
-      )
+      ?.voteGovernance(Number(numeration), voteChoice, nfts)
       .then(() => {
         setIsVoting(false);
         notif.update({
@@ -924,7 +920,7 @@ export default function ProposalVote() {
                                       .config_type ===
                                     ConfigAccountEnum.RedemptionFeeDuration
                                   ? 'days'
-                                  : null
+                                  : ''
                               }`}
                             />
                             <PropoposalVoteLine

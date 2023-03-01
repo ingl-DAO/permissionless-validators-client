@@ -328,7 +328,17 @@ export default function ProposalCreation() {
         } else alert('testing new stuff');
 
         submitProposal(submitData);
-      } else formik.submitForm();
+      } else {
+        const tt = new useNotification();
+        tt.notify({ render: 'Notifying' });
+        tt.update({
+          autoClose: 5000,
+          type: 'ERROR',
+          icon: () => <DangerousOutlined color="error" />,
+          render:
+            'You must fill in the title and description fields correctly!!!',
+        });
+      }
     } else {
       const tt = new useNotification();
       tt.notify({ render: 'Notifying' });
@@ -453,7 +463,7 @@ export default function ProposalCreation() {
                   label="Description"
                   multiline
                   rows={3}
-                  subLabel="Tell more about of your proposal or just use a github gist link (optional)"
+                  subLabel="Tell more about of your proposal or just use a github gist link"
                 />
                 <Typography
                   variant="caption"

@@ -146,7 +146,9 @@ export class ValidatorService {
         validatorConfigAccountData.validator_id
       ).toString(),
       validator_name: validatorConfigAccountData.validator_name,
-      vote_account_id: voteAccountKey.toString(),
+      vote_account_id: new PublicKey(
+        validatorConfigAccountData.vote_account
+      ).toString(),
       website: validatorConfigAccountData.website,
       discord_invite: validatorConfigAccountData.discord_invite,
       twitter_handle: validatorConfigAccountData.twitter_handle,
@@ -236,6 +238,7 @@ export class ValidatorService {
           nft_holders_share,
           max_primary_stake,
           unit_backing,
+          vote_account,
         } = deserialize(accountInfo?.data as Buffer, ValidatorConfig, {
           unchecked: true,
         });
@@ -244,16 +247,13 @@ export class ValidatorService {
           GeneralData,
           { unchecked: true }
         );
-        console.log(generalData)
+        console.log(generalData);
         const { uri, json, jsonLoaded } = collectionNfts[index];
         let jsonData = json;
         if (!jsonLoaded) {
           jsonData = await (await fetch(uri)).json();
         }
-        const [voteAccountKey] = PublicKey.findProgramAddressSync(
-          [Buffer.from(VOTE_ACCOUNT_KEY)],
-          new PublicKey(programIds[index])
-        );
+
         return {
           apy: await computeVoteAccountRewardAPY(this.connection, generalData),
           validator_name,
@@ -261,7 +261,7 @@ export class ValidatorService {
           nft_share: nft_holders_share,
           image_ref: jsonData?.image as string,
           total_requested_stake: max_primary_stake,
-          vote_account_id: new PublicKey(voteAccountKey).toBase58(),
+          vote_account_id: new PublicKey(vote_account).toString(),
           validator_program_id: new PublicKey(programIds[index]).toBase58(),
           unit_backing: new BN(unit_backing),
         };

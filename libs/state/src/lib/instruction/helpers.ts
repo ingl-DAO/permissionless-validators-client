@@ -257,10 +257,10 @@ export async function computeVoteAccountRewardAPY(
 ) {
   const latestVoteRewards = (function () {
     const voteRewards = generalData?.vote_rewards;
-    const latestEpoch = Number(
-      voteRewards[voteRewards.length - 1]?.epoch_number
-    );
+
+    if (!voteRewards || voteRewards.length === 0) return [];
     const finalVoteReward = [voteRewards[voteRewards.length - 1]];
+    const latestEpoch = Number(finalVoteReward[0]?.epoch_number);
     const diffEpoch = 20; // 20 epochs difference
 
     for (let i = voteRewards.length - 2; i >= 0; i--) {
@@ -275,6 +275,7 @@ export async function computeVoteAccountRewardAPY(
     return finalVoteReward;
   })();
 
+  console.log(latestVoteRewards);
   const rewardPerPrimaryLamportPerEpoch =
     latestVoteRewards.length === 0
       ? 0
@@ -296,17 +297,6 @@ export async function computeVoteAccountRewardAPY(
   const rewardPerYear = rewardPerPrimaryLamportPerEpoch * (365 / timePerEpoch);
   let apy = rewardPerYear * 100;
   apy = Math.trunc(apy * 100) / 100; // just truncating apy to 2 decimal places here
-
-  // console.log('latestVoteRewards', latestVoteRewards);
-  // console.log(
-  //   'rewardPerPrimaryLamportPerEpoch',
-  //   rewardPerPrimaryLamportPerEpoch
-  // );
-  // console.log('numberOfSlotsInCurrentEpoch', numberOfSlotsInCurrentEpoch);
-  // console.log('timePerSlot', timePerSlot);
-  // console.log('timePerEpoch', timePerEpoch);
-  // console.log('rewardPerYear', rewardPerYear);
-  // console.log('APY', apy);
   return apy;
 }
 
@@ -324,7 +314,6 @@ export const isMaximumPrimaryStakeReached = async (
   if (!validatorConfigAccountInfo)
     throw new Error('Validator config not found');
   if (!generalAccountInfo) throw new Error('General account not found');
-
   const validatorConfigData = deserialize<ValidatorConfig>(
     validatorConfigAccountInfo.data,
     ValidatorConfig
@@ -418,11 +407,6 @@ export async function forwardExistingTransactions(
   );
 }
 
-/**
- * @param tx a solana transaction
- * @param feePayer the publicKey of the signer
- * @returns size in bytes of the transaction
- */
 export const getTxSize = (tx: Transaction, feePayer: PublicKey): number => {
   const feePayerPk = [feePayer.toBase58()];
 
@@ -458,8 +442,6 @@ export const getTxSize = (tx: Transaction, feePayer: PublicKey): number => {
     ixsSize
   );
 };
-
-// COMPACT ARRAY
 
 const LOW_VALUE = 127; // 0x7f
 const HIGH_VALUE = 16383; // 0x3fff

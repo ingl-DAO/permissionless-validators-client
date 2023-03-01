@@ -36,6 +36,7 @@ export default function ConfirmDialog({
         '.MuiPaper-root': {
           backgroundColor: theme.common.dialogBackground,
           color: 'white',
+          maxWidth: '765px',
         },
       }}
     >

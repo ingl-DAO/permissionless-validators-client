@@ -1,4 +1,11 @@
-import { field, fixedArray, option, variant, vec } from '@dao-xyz/borsh';
+import {
+  field,
+  fixedArray,
+  FixedArrayKind,
+  option,
+  variant,
+  vec,
+} from '@dao-xyz/borsh';
 import { PublicKey } from '@solana/web3.js';
 import * as BN from 'bn.js';
 import { GovernanceType } from './instruction/gov-type';
@@ -82,6 +89,8 @@ export class Vote {
     Object.assign(this, properties);
   }
 }
+
+export class ProposalNumeration {}
 
 export class NftData {
   @field({ type: 'u32' })
@@ -189,11 +198,11 @@ export class GeneralData {
   @field({ type: RebalancingData })
   public rebalancing_data!: RebalancingData;
 
+  @field({ type: vec('u32') })
+  public unfinalized_proposals!: number[];
+
   @field({ type: vec(VoteReward) })
   public vote_rewards!: VoteReward[];
-  
-  // @field({ type: Map<number, number> })
-  // public unfinalized_proposals!: number[];
 
   constructor(properties: GeneralData) {
     Object.assign(this, properties);
@@ -269,6 +278,9 @@ export class ValidatorConfig {
 
   @field({ type: fixedArray('u8', 32) })
   validator_id!: Uint8Array;
+
+  @field({ type: fixedArray('u8', 32) })
+  vote_account!: Uint8Array;
 
   @field({ type: 'u32' })
   governance_expiration_time!: number;

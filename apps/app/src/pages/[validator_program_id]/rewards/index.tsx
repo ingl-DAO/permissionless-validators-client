@@ -265,10 +265,7 @@ export default function Rewards() {
                   <TableLaneSkeleton cols={5} key={index} />
                 ))
               ) : rewards.length === 0 ? (
-                <NoTableElement
-                  message="No NFTS to calculate rewards on"
-                  colSpan={5}
-                />
+                <NoTableElement message="No Rewards to claim" colSpan={5} />
               ) : (
                 rewards.map((reward, index) => (
                   <RewardLine

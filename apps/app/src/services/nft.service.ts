@@ -126,7 +126,7 @@ export class NftService {
     const payerPubkey = this.walletContext.publicKey;
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
-
+    console.log('0');
     // Check if max primary stake already reached
     await isMaximumPrimaryStakeReached(
       'You can not mint anymore, the maximum delegable stake is currently attained',
@@ -134,7 +134,7 @@ export class NftService {
       this.generalAccountPDA[0],
       this.connection
     );
-
+    console.log('1');
     await willExceedMaximumPrimaryStake(
       "All the NFTs can't be minted, it will exceed the maximum delegable stake",
       numberOfNfts,
@@ -142,6 +142,7 @@ export class NftService {
       this.generalAccountPDA[0],
       this.connection
     );
+    console.log('2');
 
     const payerAccount: AccountMeta = {
       pubkey: this.walletContext.publicKey as PublicKey,
@@ -314,7 +315,6 @@ export class NftService {
           associatedTokeProgramAccount,
           metaplexProgramAccount,
         ];
-
         const mintNftInstruction = new TransactionInstruction({
           programId: this.programId,
           data: Buffer.from(serialize(new MintNft(2))),
