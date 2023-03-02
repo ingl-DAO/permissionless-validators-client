@@ -28,6 +28,7 @@ export default function Header() {
           startIcon={<LocalMallOutlined />}
           variant="outlined"
           color="primary"
+          sx={{ textTransform: 'none' }}
         >
           My shopping bag
         </Button>
