@@ -54,9 +54,9 @@ export default function HomeSearchBar({
         variant="contained"
         color="primary"
         sx={{ textTransform: 'none' }}
-        onClick={() => navigate('/register-validator')}
+        onClick={() => navigate('/list-validator')}
       >
-        Register Validator
+        List Validator
       </Button>
     </Box>
   );
