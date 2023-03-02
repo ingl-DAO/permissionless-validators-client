@@ -12,20 +12,29 @@ export default function Layout() {
         height: '100vh',
         width: '100vw',
         display: 'grid',
-        gridTemplateRows: 'auto 1fr auto',
+        gridTemplateRows: '1fr auto',
       }}
     >
-      <Header />
       <Box
         sx={{
           height: '100%',
-          padding: `0 ${theme.spacing(4.75)}`,
-          color: 'white',
+          display: 'grid',
+          gridTemplateRows: 'auto 1fr',
+          rowGap: theme.spacing(4.375),
         }}
       >
-        <Scrollbars autoHide>
-          <Outlet />
-        </Scrollbars>
+        <Header />
+        <Box
+          sx={{
+            height: '100%',
+            padding: `0 ${theme.spacing(4.75)}`,
+            color: 'white',
+          }}
+        >
+          <Scrollbars autoHide>
+            <Outlet />
+          </Scrollbars>
+        </Box>
       </Box>
       <Box>
         <Footer />
