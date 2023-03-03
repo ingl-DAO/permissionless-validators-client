@@ -42,6 +42,12 @@ export class List extends Instruction {
   @field({ type: vec(SecondaryItem) })
   public secondary_items: SecondaryItem[];
 
+  @field({ type: 'string' })
+  validator_name!: string;
+
+  @field({ type: 'string' })
+  validator_logo_url!: string;
+  
   constructor({ log_level, ...properties }: Omit<List, 'serialize'>) {
     super(log_level);
     Object.assign(this, properties);

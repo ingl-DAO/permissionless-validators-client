@@ -120,6 +120,12 @@ export class Storage implements Space {
   @field({ type: 'string' })
   public description!: string;
 
+  @field({ type: 'string' })
+  validator_name!: string;
+
+  @field({ type: 'string' })
+  validator_logo_url!: string;
+
   constructor(properties: Storage) {
     Object.assign(properties);
   }

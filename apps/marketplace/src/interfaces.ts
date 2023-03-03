@@ -16,7 +16,7 @@ export interface ValidatorSecondaryItem {
 export interface ValidatorListing
   extends Omit<Validator, 'number_of_unique_stakers' | 'total_stake'> {
   description: string;
-  mediatable_date?: number; // optional
+  mediatable_date: number;
   secondary_items?: ValidatorSecondaryItem[]; // optional
 }
 
@@ -26,6 +26,7 @@ export interface StakePerEpoch {
 }
 
 export interface ValidatorDetails extends ValidatorListing, Validator {
+  validator_id: string;
   validator_initial_epoch: number;
   total_validator_rewards: number;
   date_validated: number; // in seconds
@@ -33,7 +34,7 @@ export interface ValidatorDetails extends ValidatorListing, Validator {
   requested_mediation_date?: number; //in seconds
 
   stake_per_epochs: StakePerEpoch[];
-  confirmed_secondary_items: ValidatorSecondaryItem[]; // optional
+  secondary_items: ValidatorSecondaryItem[];
 }
 
 export type PurchasedValidator = Pick<
