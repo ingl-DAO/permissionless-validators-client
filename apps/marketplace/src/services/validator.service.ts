@@ -4,15 +4,17 @@ import {
   DeList,
   forwardLegacyTransaction,
   List,
+  MARKETPLACE_STORAGE_SEED,
   PDA_AUTHORIZED_WITHDRAWER_SEED,
   PDA_UPGRADE_AUTHORITY_SEED,
-  PROGRAM_STORAGE_SEED,
-  Storage,
+  ProgramStorage,
+  PROGRAM_STORAGE_SEED, REGISTRY_PROGRAM_ID,
+  Storage
 } from '@ingl-permissionless/state';
 import { PublicKey } from '@metaplex-foundation/js';
 import {
   WalletAdapterNetwork,
-  WalletNotConnectedError,
+  WalletNotConnectedError
 } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
@@ -22,10 +24,14 @@ import {
   Connection,
   LAMPORTS_PER_SOL,
   SYSVAR_CLOCK_PUBKEY,
-  TransactionInstruction,
+  TransactionInstruction
 } from '@solana/web3.js';
 import BN from 'bn.js';
-import { ValidatorListing, ValidatorSecondaryItem } from '../interfaces';
+import {
+  Validator,
+  ValidatorListing,
+  ValidatorSecondaryItem
+} from '../interfaces';
 
 enum ProgramUsage {
   Maketplace = 'Maketplace',
@@ -236,5 +242,52 @@ export class ValidatorService {
       pdaAuthorityAccountMeta,
       sysvarClockAccountMeta,
     ];
+  }
+
+  async loadValidators(): Promise<Validator[]> {
+    const [marketplaceStorageAddress] = PublicKey.findProgramAddressSync(
+      [Buffer.from(MARKETPLACE_STORAGE_SEED)],
+      REGISTRY_PROGRAM_ID
+    );
+    const marketplaceStorageAccountInfo = await this.connection.getAccountInfo(
+      marketplaceStorageAddress
+    );
+    if (!marketplaceStorageAccountInfo)
+      throw new Error('Marketplace registry storage account not found');
+
+    const { programs } = deserialize(
+      marketplaceStorageAccountInfo.data,
+      ProgramStorage,
+      { unchecked: true }
+    );
+    const programStorageAccountInfos = await Promise.all(
+      programs.map((program) => {
+        const [programStorageAddress] = PublicKey.findProgramAddressSync(
+          [Buffer.from(PROGRAM_STORAGE_SEED)],
+          new PublicKey(program)
+        );
+        return this.connection.getAccountInfo(programStorageAddress);
+      })
+    );
+    return programStorageAccountInfos
+      .filter((_) => _ !== null)
+      .map((accounInfo) => {
+        const {
+          validator_name,
+          validator_logo_url,
+          vote_account,
+          authorized_withdrawer_cost,
+        } = deserialize(accounInfo?.data as Buffer, Storage);
+        return {
+          validator_name,
+          validator_logo_url,
+          price:
+            new BN(authorized_withdrawer_cost).toNumber() / LAMPORTS_PER_SOL,
+          vote_account_id: new PublicKey(vote_account).toBase58(),
+          //TODO @artemesian can you please handle this
+          total_stake: 0,
+          number_of_unique_stakers: 0,
+        };
+      });
   }
 }
