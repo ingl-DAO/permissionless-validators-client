@@ -8,13 +8,14 @@ import {
   PDA_AUTHORIZED_WITHDRAWER_SEED,
   PDA_UPGRADE_AUTHORITY_SEED,
   ProgramStorage,
-  PROGRAM_STORAGE_SEED, REGISTRY_PROGRAM_ID,
-  Storage
+  PROGRAM_STORAGE_SEED,
+  REGISTRY_PROGRAM_ID,
+  Storage,
 } from '@ingl-permissionless/state';
 import { PublicKey } from '@metaplex-foundation/js';
 import {
   WalletAdapterNetwork,
-  WalletNotConnectedError
+  WalletNotConnectedError,
 } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
@@ -24,13 +25,13 @@ import {
   Connection,
   LAMPORTS_PER_SOL,
   SYSVAR_CLOCK_PUBKEY,
-  TransactionInstruction
+  TransactionInstruction,
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import {
   Validator,
   ValidatorListing,
-  ValidatorSecondaryItem
+  ValidatorSecondaryItem,
 } from '../interfaces';
 
 enum ProgramUsage {
@@ -260,34 +261,41 @@ export class ValidatorService {
       ProgramStorage,
       { unchecked: true }
     );
+    const programPubkeys: PublicKey[] = [];
     const programStorageAccountInfos = await Promise.all(
       programs.map((program) => {
+        const programId = new PublicKey(program);
         const [programStorageAddress] = PublicKey.findProgramAddressSync(
           [Buffer.from(PROGRAM_STORAGE_SEED)],
-          new PublicKey(program)
+          programId
         );
+        programPubkeys.push(programId);
         return this.connection.getAccountInfo(programStorageAddress);
       })
     );
     return programStorageAccountInfos
-      .filter((_) => _ !== null)
-      .map((accounInfo) => {
-        const {
-          validator_name,
-          validator_logo_url,
-          vote_account,
-          authorized_withdrawer_cost,
-        } = deserialize(accounInfo?.data as Buffer, Storage);
-        return {
-          validator_name,
-          validator_logo_url,
-          price:
-            new BN(authorized_withdrawer_cost).toNumber() / LAMPORTS_PER_SOL,
-          vote_account_id: new PublicKey(vote_account).toBase58(),
-          //TODO @artemesian can you please handle this
-          total_stake: 0,
-          number_of_unique_stakers: 0,
-        };
-      });
+      .map((accounInfo, index) => {
+        if (accounInfo) {
+          const {
+            validator_name,
+            validator_logo_url,
+            vote_account,
+            authorized_withdrawer_cost,
+          } = deserialize(accounInfo.data, Storage);
+          return {
+            validator_name,
+            validator_logo_url,
+            price:
+              new BN(authorized_withdrawer_cost).toNumber() / LAMPORTS_PER_SOL,
+            program_id: programPubkeys[index].toBase58(),
+            vote_account_id: new PublicKey(vote_account).toBase58(),
+            //TODO @artemesian can you please handle this
+            total_stake: 0,
+            number_of_unique_stakers: 0,
+          };
+        }
+        return null;
+      })
+      .filter((_) => _ !== null) as Validator[];
   }
 }

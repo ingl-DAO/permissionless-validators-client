@@ -19,6 +19,7 @@ export default function ValidatorCard({
     total_stake: ts,
     validator_name: name,
     vote_account_id: va_id,
+    program_id,
   },
   searchValue,
 }: {
@@ -33,7 +34,7 @@ export default function ValidatorCard({
 
   const handleOnClick = (type: 'open' | 'copy') => {
     if (type === 'open') {
-      navigate(va_id);
+      navigate(program_id);
     } else {
       if (validatorCardNotif) validatorCardNotif.dismiss();
       const notif = new useNotification();

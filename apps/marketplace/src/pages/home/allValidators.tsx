@@ -28,6 +28,7 @@ export default function AllValidators({
       if (5 > 4) {
         const newValidators: Validator[] = [
           {
+            program_id: 'aslkLKklOqWlMLPolkAsaslkadPLKDLjLkalkadOj',
             number_of_unique_stakers: 215,
             price: 520,
             total_stake: 2000,
