@@ -1,6 +1,7 @@
 import { field, fixedArray, option, vec } from '@dao-xyz/borsh';
 import { PublicKey } from '@solana/web3.js';
 import * as BN from 'bn.js';
+import { MediationShares } from './intructions';
 
 export * from './intructions';
 
@@ -21,10 +22,6 @@ export const MEDIATORS = [
   new PublicKey('Et2tm6NsfBZJbEYXtWTv9k51V4tWtQvufexSgXoDRGVA'),
 ];
 
-export const INGL_MARKET_REGISTRY_PROGRAM_ID = new PublicKey(
-  'InglMarketplace11111111111111111111111111111'
-);
-
 interface Space {
   getSpace(): number;
 }
@@ -44,24 +41,6 @@ export class Purchase implements Space {
   }
   getSpace(): number {
     return 32 + 32 / 8 + 1 + 32 / 8;
-  }
-}
-
-export class MediationShares implements Space {
-  @field({ type: 'u64' })
-  public buyer!: BN;
-
-  @field({ type: 'u64' })
-  public seller!: BN;
-
-  @field({ type: 'u64' })
-  public team!: BN;
-
-  constructor(properties: MediationShares) {
-    Object.assign(properties);
-  }
-  getSpace(): number {
-    return 64 / 8 + 64 / 8 + 64 / 8;
   }
 }
 

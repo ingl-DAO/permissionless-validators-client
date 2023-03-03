@@ -5,7 +5,6 @@ import {
   vec,
 } from '@dao-xyz/borsh';
 import * as BN from 'bn.js';
-import { MediationShares } from '..';
 
 export class Instruction {
   @field({ type: 'u8' })
@@ -29,6 +28,24 @@ export class SecondaryItem {
 
   @field({ type: 'string' })
   public description!: string;
+}
+
+export class MediationShares {
+  @field({ type: 'u64' })
+  public buyer!: BN;
+
+  @field({ type: 'u64' })
+  public seller!: BN;
+
+  @field({ type: 'u64' })
+  public team!: BN;
+
+  constructor(properties: MediationShares) {
+    Object.assign(properties);
+  }
+  getSpace(): number {
+    return 64 / 8 + 64 / 8 + 64 / 8;
+  }
 }
 
 @variant(0)

@@ -1,9 +1,11 @@
 import { ReportRounded } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useEffect, useMemo, useState } from 'react';
 import ErrorMessage from '../../common/components/ErrorMessage';
 import useNotification from '../../common/utils/notification';
 import { Validator } from '../../interfaces';
+import { ValidatorService } from '../../services/validator.service';
 import ValidatorCard, { ValidatorSkeleton } from './validatorCard';
 
 export default function AllValidators({
@@ -16,6 +18,13 @@ export default function AllValidators({
     useState<boolean>(false);
   const [validatorsNotif, setValidatorsNotif] = useState<useNotification>();
 
+  const walletContext = useWallet();
+  const { connection } = useConnection();
+  const validatorService = useMemo(
+    () => new ValidatorService(connection, walletContext),
+    [connection, walletContext]
+  );
+
   const loadValidators = () => {
     setAreValidatorsLoading(true);
     const notif = new useNotification();
@@ -23,26 +32,15 @@ export default function AllValidators({
       validatorsNotif.dismiss();
     }
     setValidatorsNotif(notif);
-    setTimeout(() => {
-      // eslint-disable-next-line no-constant-condition
-      if (5 > 4) {
-        const newValidators: Validator[] = [
-          {
-            program_id: 'aslkLKklOqWlMLPolkAsaslkadPLKDLjLkalkadOj',
-            number_of_unique_stakers: 215,
-            price: 520,
-            total_stake: 2000,
-            validator_logo_url:
-              'https://solana.blog/wp-content/uploads/sites/8/2020/06/valid-blocks-blockchain-validator-1024x694.png',
-            validator_name: 'Laine.SOL',
-            vote_account_id: '0x89790qw8e0r9w...',
-          },
-        ];
-        setValidators(newValidators);
+    validatorService
+      .loadValidators()
+      .then((validators) => {
+        setValidators(validators);
         setAreValidatorsLoading(false);
         notif.dismiss();
         setValidatorsNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
         notif.notify({
           render: 'Loading validators...',
         });
@@ -52,14 +50,16 @@ export default function AllValidators({
             <ErrorMessage
               retryFunction={loadValidators}
               notification={notif}
-              message={'There was an error loading validators. please retry!!!'}
+              message={
+                error?.message ||
+                'There was an error loading validators. please retry!!!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   };
 
   const [displayValidators, setDisplayValidators] = useState<Validator[]>([]);
