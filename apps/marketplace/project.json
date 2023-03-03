@@ -21,7 +21,7 @@
         ],
         "styles": ["apps/marketplace/src/styles.css"],
         "scripts": [],
-        "webpackConfig": "apps/marketplace/webpack.config.js"
+        "webpackConfig": "./config-overrides.js"
       },
       "configurations": {
         "development": {
