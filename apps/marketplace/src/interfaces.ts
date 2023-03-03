@@ -30,9 +30,9 @@ export interface ValidatorDetails extends ValidatorListing, Validator {
   validator_id: string;
   validator_initial_epoch: number;
   total_validator_rewards: number;
-  date_validated: number; // in seconds
+  date_validated?: number; // in seconds
   buyer_public_key?: string; // optional
-  requested_mediation_date?: number; //in seconds
+  request_mediation_date?: number; //in seconds
 
   stake_per_epochs: StakePerEpoch[];
   secondary_items: ValidatorSecondaryItem[];

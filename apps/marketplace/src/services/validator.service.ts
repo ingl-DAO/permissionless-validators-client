@@ -30,6 +30,7 @@ import {
 import BN from 'bn.js';
 import {
   Validator,
+  ValidatorDetails,
   ValidatorListing,
   ValidatorSecondaryItem,
 } from '../interfaces';
@@ -297,5 +298,64 @@ export class ValidatorService {
         return null;
       })
       .filter((_) => _ !== null) as Validator[];
+  }
+
+  async loadValidatorDetails(programId: PublicKey): Promise<ValidatorDetails> {
+    const [programStorageAddress] = PublicKey.findProgramAddressSync(
+      [Buffer.from(PROGRAM_STORAGE_SEED)],
+      programId
+    );
+    const proramAccountInfo = await this.connection.getAccountInfo(
+      programStorageAddress
+    );
+    if (!proramAccountInfo) throw new Error('Program account info not found');
+
+    const {
+      validator_name,
+      validator_logo_url,
+      vote_account,
+      description,
+      mediatable_date,
+      request_mediation_date,
+      purchase,
+      secondary_items,
+      authorized_withdrawer_cost,
+    } = deserialize(proramAccountInfo.data, Storage);
+
+    const voteAccounts = await this.connection.getVoteAccounts();
+    const { current, delinquent } = voteAccounts;
+    const voteAccountInfo =
+      [...current, ...delinquent].find((voteAccount) => {
+        return (
+          voteAccount.votePubkey === new PublicKey(vote_account).toBase58()
+        );
+      }) ?? null;
+    if (!voteAccountInfo) throw new Error('Vote account not found');
+    const { nodePubkey: validator_id } = voteAccountInfo;
+    return {
+      description,
+      validator_id,
+      validator_name,
+      mediatable_date,
+      validator_logo_url,
+      date_validated: purchase?.date_finalized,
+      secondary_items: secondary_items.map(({ cost, ...item }) => ({
+        price: new BN(cost).toNumber() / LAMPORTS_PER_SOL,
+        ...item,
+      })),
+      buyer_public_key: purchase
+        ? new PublicKey(purchase.buyer).toBase58()
+        : undefined,
+      request_mediation_date,
+      price: new BN(authorized_withdrawer_cost).toNumber() / LAMPORTS_PER_SOL,
+      program_id: programId.toBase58(),
+      vote_account_id: new PublicKey(vote_account).toBase58(),
+      //TODO @artemesian can you please handle this
+      total_stake: 0,
+      stake_per_epochs: [],
+      validator_initial_epoch: 0,
+      total_validator_rewards: 0,
+      number_of_unique_stakers: 0,
+    };
   }
 }

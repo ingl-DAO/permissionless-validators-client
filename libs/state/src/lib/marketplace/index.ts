@@ -73,7 +73,7 @@ export class StoredSecondaryItem implements Space {
   public name!: string;
 
   @field({ type: 'string' })
-  public decription!: string;
+  public description!: string;
 
   @field({ type: option('u32') })
   public date_validated?: number;
@@ -82,7 +82,7 @@ export class StoredSecondaryItem implements Space {
     Object.assign(properties);
   }
   getSpace(): number {
-    return 64 / 8 + 4 * this.name.length + 4 * this.decription.length + 1 + 4;
+    return 64 / 8 + 4 * this.name.length + 4 * this.description.length + 1 + 4;
   }
 }
 
