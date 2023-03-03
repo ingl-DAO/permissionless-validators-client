@@ -5,7 +5,6 @@ import ErrorMessage from '../../common/components/ErrorMessage';
 import useNotification from '../../common/utils/notification';
 import { Validator } from '../../interfaces';
 import ValidatorCard, { ValidatorSkeleton } from './validatorCard';
-import BN from 'bn.js';
 
 export default function AllValidators({
   searchValue,
@@ -30,8 +29,8 @@ export default function AllValidators({
         const newValidators: Validator[] = [
           {
             number_of_unique_stakers: 215,
-            price: new BN(520),
-            total_stake: new BN(2000),
+            price: 520,
+            total_stake: 2000,
             validator_logo_url:
               'https://solana.blog/wp-content/uploads/sites/8/2020/06/valid-blocks-blockchain-validator-1024x694.png',
             validator_name: 'Laine.SOL',
