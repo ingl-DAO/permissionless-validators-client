@@ -109,7 +109,7 @@ export class Storage implements Space {
   public request_mediation_date?: number;
 
   @field({ type: option('u32') })
-  public mediation_date: number;
+  public mediation_date!: number;
 
   @field({ type: option(MediationShares) })
   public mediation_shares?: MediationShares;
@@ -136,10 +136,10 @@ export class Storage implements Space {
       64 / 8 +
       32 / 8 +
       1 +
-      this.purchase.getSpace() +
+      (this.purchase ? this.purchase.getSpace() : 0) +
       (32 / 8) * 2 +
       1 +
-      this.mediation_shares.getSpace() +
+      (this.mediation_shares ? this.mediation_shares.getSpace() : 0) +
       4 +
       this.secondary_items.reduce((size, item) => size + item.getSpace(), 0)
     );

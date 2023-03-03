@@ -40,7 +40,7 @@ export class List extends Instruction {
   public mediatable_date!: number;
 
   @field({ type: vec(SecondaryItem) })
-  public secondary_items: SecondaryItem[];
+  public secondary_items!: SecondaryItem[];
 
   @field({ type: 'string' })
   validator_name!: string;
