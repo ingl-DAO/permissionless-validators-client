@@ -1,8 +1,6 @@
 import { ContentCopyRounded } from '@mui/icons-material';
 import { Skeleton } from '@mui/material';
 import { Box } from '@mui/system';
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { BN } from 'bn.js';
 import { useState } from 'react';
 import { useIntl } from 'react-intl';
 import { useNavigate } from 'react-router';
@@ -121,25 +119,19 @@ export default function ValidatorCard({
             />
             <ValidatorCardContent
               title="Total Stake"
-              value={formatNumber(
-                new BN(ts ?? 0).toNumber() / LAMPORTS_PER_SOL,
-                {
-                  style: 'currency',
-                  currency: 'SOL',
-                }
-              )}
+              value={formatNumber(ts, {
+                style: 'currency',
+                currency: 'SOL',
+              })}
               right
             />
           </Box>
           <ValidatorCardContent
             title="Price"
-            value={formatNumber(
-              new BN(price ?? 0).toNumber() / LAMPORTS_PER_SOL,
-              {
-                style: 'currency',
-                currency: 'SOL',
-              }
-            )}
+            value={formatNumber(price, {
+              style: 'currency',
+              currency: 'SOL',
+            })}
           />
         </Box>
       </Box>
