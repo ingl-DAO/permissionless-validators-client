@@ -2,6 +2,8 @@ import { field, fixedArray, option, vec } from '@dao-xyz/borsh';
 import { PublicKey } from '@solana/web3.js';
 import * as BN from 'bn.js';
 
+export * from './intructions';
+
 export const PDA_AUTHORIZED_WITHDRAWER_SEED = 'authorized_withdrawer';
 export const PROGRAM_STORAGE_SEED = 'program_storage';
 export const PDA_UPGRADE_AUTHORITY_SEED = 'upgrade_authority';

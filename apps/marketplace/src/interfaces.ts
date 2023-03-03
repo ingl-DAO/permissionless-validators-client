@@ -9,7 +9,8 @@ export interface Validator {
   total_stake: BN;
 }
 export interface ValidatorSecondaryItem {
-  desciption: string;
+  description: string;
+  name: string;
   price: BN;
 }
 

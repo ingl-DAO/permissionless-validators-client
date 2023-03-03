@@ -7,7 +7,7 @@ import {
 import * as BN from 'bn.js';
 import { MediationShares } from '..';
 
-export abstract class Instruction {
+export class Instruction {
   @field({ type: 'u8' })
   log_level!: number;
 
@@ -28,7 +28,7 @@ export class SecondaryItem {
   public name!: string;
 
   @field({ type: 'string' })
-  public decription!: string;
+  public description!: string;
 }
 
 @variant(0)
@@ -42,7 +42,7 @@ export class List extends Instruction {
   @field({ type: vec(SecondaryItem) })
   public secondary_items: SecondaryItem[];
 
-  constructor({ log_level, ...properties }: List) {
+  constructor({ log_level, ...properties }: Omit<List, 'serialize'>) {
     super(log_level);
     Object.assign(this, properties);
   }
