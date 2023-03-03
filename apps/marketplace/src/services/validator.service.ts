@@ -1,21 +1,30 @@
+import { deserialize } from '@dao-xyz/borsh';
 import { http } from '@ingl-permissionless/axios';
 import {
-  forwardLegacyTransaction, List,
+  DeList,
+  forwardLegacyTransaction,
+  List,
   PDA_AUTHORIZED_WITHDRAWER_SEED,
   PDA_UPGRADE_AUTHORITY_SEED,
-  PROGRAM_STORAGE_SEED
+  PROGRAM_STORAGE_SEED,
+  Storage,
 } from '@ingl-permissionless/state';
 import { PublicKey } from '@metaplex-foundation/js';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import {
+  WalletAdapterNetwork,
+  WalletNotConnectedError,
+} from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
   AccountMeta,
   BPF_LOADER_PROGRAM_ID,
   clusterApiUrl,
   Connection,
+  LAMPORTS_PER_SOL,
   SYSVAR_CLOCK_PUBKEY,
-  TransactionInstruction
+  TransactionInstruction,
 } from '@solana/web3.js';
+import BN from 'bn.js';
 import { ValidatorListing, ValidatorSecondaryItem } from '../interfaces';
 
 enum ProgramUsage {
@@ -48,13 +57,14 @@ export class ValidatorService {
 
   async listValidator({
     vote_account_id,
-    authorized_withdrawer_id,
-    description,
-    mediation_time,
     price,
-    validator_secondary_item,
+    secondary_items,
     ...newValidator
   }: ValidatorListing) {
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey)
+      throw new WalletNotConnectedError('Please connect your wallet !!!');
+
     const voteAccounts = await this.connection.getVoteAccounts();
     const { current, delinquent } = voteAccounts;
     const voteAccountInfo =
@@ -62,19 +72,103 @@ export class ValidatorService {
         return voteAccount.votePubkey === vote_account_id;
       }) ?? null;
     if (!voteAccountInfo) throw new Error('Invalid vote account id');
+
+    const { program_id } = await this.getProgramId(ProgramUsage.Maketplace);
+    const programId = new PublicKey(program_id);
+    const listIntruction = new List({
+      log_level: 0,
+      ...newValidator,
+      authorized_withdrawer_cost: new BN(price * LAMPORTS_PER_SOL),
+      secondary_items: (secondary_items as ValidatorSecondaryItem[]).map(
+        ({ price, ...item }) => ({
+          cost: new BN(price * LAMPORTS_PER_SOL),
+          ...item,
+        })
+      ),
+    });
+    const accounts = await this.getListingAccounts(
+      programId,
+      new PublicKey(vote_account_id)
+    );
+    const listTransactionInstruction = new TransactionInstruction({
+      programId,
+      data: Buffer.from(listIntruction.serialize()),
+      keys: accounts,
+    });
+
+    try {
+      const signature = await forwardLegacyTransaction(
+        {
+          publicKey: payerPubkey,
+          connection: this.connection,
+          signTransaction: this.walletContext.signTransaction,
+        },
+        [listTransactionInstruction]
+      );
+      this.useProgramId(programId.toBase58());
+      return signature;
+    } catch (error) {
+      throw new Error(
+        'Validator listing failed with the following error:' + error
+      );
+    }
+  }
+
+  async delistValidator(programId: PublicKey) {
+    const payerPubkey = this.walletContext.publicKey;
+    if (!payerPubkey)
+      throw new WalletNotConnectedError('Please connect your wallet !!!');
+
+    const [storageAddress] = PublicKey.findProgramAddressSync(
+      [Buffer.from(PROGRAM_STORAGE_SEED)],
+      programId
+    );
+    const storage = await this.connection.getAccountInfo(storageAddress);
+    const { vote_account } = deserialize(storage?.data as Buffer, Storage, {
+      unchecked: true,
+    });
+    const accounts = await this.getListingAccounts(
+      programId,
+      new PublicKey(vote_account)
+    );
+    const delistTransactionInstruction = new TransactionInstruction({
+      programId,
+      data: Buffer.from(new DeList(0).serialize()),
+      keys: accounts,
+    });
+
+    try {
+      const signature = await forwardLegacyTransaction(
+        {
+          publicKey: payerPubkey,
+          connection: this.connection,
+          signTransaction: this.walletContext.signTransaction,
+        },
+        [delistTransactionInstruction]
+      );
+      return signature;
+    } catch (error) {
+      throw new Error(
+        'Validator listing failed with the following error:' + error
+      );
+    }
+  }
+
+  private async getListingAccounts(
+    programId: PublicKey,
+    voteAccountPubkey: PublicKey
+  ) {
     const authorizedWithdrawerAccountMeta: AccountMeta = {
-      pubkey: new PublicKey(authorized_withdrawer_id),
+      pubkey: this.walletContext.publicKey as PublicKey,
       isSigner: true,
       isWritable: true,
     };
 
     const voteAccountMeta: AccountMeta = {
-      pubkey: new PublicKey(vote_account_id),
+      pubkey: voteAccountPubkey,
       isSigner: false,
       isWritable: true,
     };
-    const { program_id } = await this.getProgramId(ProgramUsage.Maketplace);
-    const programId = new PublicKey(program_id);
     const [pdaAuhorizedWithdrawer] = PublicKey.findProgramAddressSync(
       [Buffer.from(PDA_AUTHORIZED_WITHDRAWER_SEED)],
       programId
@@ -131,48 +225,16 @@ export class ValidatorService {
       isSigner: false,
       isWritable: false,
     };
-    const listIntruction = new List({
-      log_level: 0,
-      authorized_withdrawer_cost: price,
-      mediatable_date: mediation_time as number,
-      secondary_items: (
-        validator_secondary_item as ValidatorSecondaryItem[]
-      ).map(({ price: cost, ...item }) => ({
-        cost,
-        ...item,
-      })),
-    });
-    const listTransactionInstruction = new TransactionInstruction({
-      programId,
-      data: Buffer.from(listIntruction.serialize()),
-      keys: [
-        authorizedWithdrawerAccountMeta,
-        voteAccountMeta,
-        pdaAuthorizedWithdrawerAccountMeta,
-        storageAccountMeta,
-        programAccountMeta,
-        programDataAccountMeta,
-        currentAuthorityAccountMeta,
-        pdaAuthorityAccountMeta,
-        sysvarClockAccountMeta,
-      ],
-    });
-
-    try {
-      const signature = await forwardLegacyTransaction(
-        {
-          publicKey: authorizedWithdrawerAccountMeta.pubkey,
-          connection: this.connection,
-          signTransaction: this.walletContext.signTransaction,
-        },
-        [listTransactionInstruction]
-      );
-      this.useProgramId(programId.toBase58());
-      return signature;
-    } catch (error) {
-      throw new Error(
-        'Validator listing failed with the following error:' + error
-      );
-    }
+    return [
+      authorizedWithdrawerAccountMeta,
+      voteAccountMeta,
+      pdaAuthorizedWithdrawerAccountMeta,
+      storageAccountMeta,
+      programAccountMeta,
+      programDataAccountMeta,
+      currentAuthorityAccountMeta,
+      pdaAuthorityAccountMeta,
+      sysvarClockAccountMeta,
+    ];
   }
 }
