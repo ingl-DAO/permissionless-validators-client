@@ -1,51 +1,39 @@
-import BN from 'bn.js';
-
 export interface Validator {
   validator_name: string;
   validator_logo_url: string;
   vote_account_id: string;
   number_of_unique_stakers: number;
-  price: BN;
-  total_stake: BN;
+  price: number; //in sol
+  total_stake: number; //in sol
 }
 export interface ValidatorSecondaryItem {
+  date_validated?: number;
+  price: number; //in sol
   description: string;
   name: string;
-  price: BN;
 }
 
 export interface ValidatorListing
   extends Omit<Validator, 'number_of_unique_stakers' | 'total_stake'> {
-  validator_id: string;
-  authorized_withdrawer_id: string;
   description: string;
-  should_transfer_validator_secondary_items: boolean;
-  mediation_time: number | undefined; // optional
-  validator_secondary_item: ValidatorSecondaryItem[] | undefined; // optional
-  seller_public_key: string;
+  mediatable_date?: number; // optional
+  secondary_items?: ValidatorSecondaryItem[]; // optional
 }
 
 export interface StakePerEpoch {
   epoch: number;
-  stake: BN;
+  stake: number; //in sol
 }
 
-export interface ConfirmedValidatorSecondaryItem
-  extends ValidatorSecondaryItem {
-  confirmed: boolean;
-}
-
-export interface ValidatorDetails extends ValidatorListing {
-  is_sold: boolean;
-  number_of_unique_stakers: number;
-  total_stake: BN;
+export interface ValidatorDetails extends ValidatorListing, Validator {
   validator_initial_epoch: number;
+  total_validator_rewards: number;
+  date_validated: number; // in seconds
+  buyer_public_key?: string; // optional
+  requested_mediation_date?: number; //in seconds
+
   stake_per_epochs: StakePerEpoch[];
-  total_validator_rewards: BN;
-  buyer_public_key: string | undefined; // optional
-  confirmed_secondary_items: ConfirmedValidatorSecondaryItem[] | undefined; // optional
-  is_mediation_requested: boolean | undefined; // optional
-  requested_mediation_date: Date | undefined;
+  confirmed_secondary_items: ValidatorSecondaryItem[]; // optional
 }
 
 export type PurchasedValidator = Pick<
