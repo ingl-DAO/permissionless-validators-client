@@ -11,11 +11,12 @@ import {
   PROGRAM_STORAGE_SEED,
   REGISTRY_PROGRAM_ID,
   Storage,
+  TEAM_ADDRESS
 } from '@ingl-permissionless/state';
 import { PublicKey } from '@metaplex-foundation/js';
 import {
   WalletAdapterNetwork,
-  WalletNotConnectedError,
+  WalletNotConnectedError
 } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
@@ -24,15 +25,17 @@ import {
   clusterApiUrl,
   Connection,
   LAMPORTS_PER_SOL,
+  SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
   TransactionInstruction,
+  VoteProgram
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import {
   Validator,
   ValidatorDetails,
   ValidatorListing,
-  ValidatorSecondaryItem,
+  ValidatorSecondaryItem
 } from '../interfaces';
 
 enum ProgramUsage {
@@ -98,10 +101,53 @@ export class ValidatorService {
       programId,
       new PublicKey(vote_account_id)
     );
+    const teamAccountMeta: AccountMeta = {
+      pubkey: TEAM_ADDRESS,
+      isSigner: false,
+      isWritable: true,
+    };
+    const [marketplaceStorageAddress] = PublicKey.findProgramAddressSync(
+      [Buffer.from(MARKETPLACE_STORAGE_SEED)],
+      REGISTRY_PROGRAM_ID
+    );
+    const registryStorageAccountMeta: AccountMeta = {
+      pubkey: marketplaceStorageAddress,
+      isSigner: false,
+      isWritable: true,
+    };
+    const systemProgramAccountMeta: AccountMeta = {
+      pubkey: SystemProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    };
+    const bpfloaderAccountMeta: AccountMeta = {
+      pubkey: BPF_LOADER_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    };
+    const voteProgramAccountMeta: AccountMeta = {
+      pubkey: VoteProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    };
+    const registryProgramAccountMeta: AccountMeta = {
+      pubkey: REGISTRY_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    };
     const listTransactionInstruction = new TransactionInstruction({
       programId,
       data: Buffer.from(listIntruction.serialize()),
-      keys: accounts,
+      keys: [
+        ...accounts,
+        teamAccountMeta,
+        registryStorageAccountMeta,
+        systemProgramAccountMeta,
+
+        bpfloaderAccountMeta,
+        voteProgramAccountMeta,
+        registryProgramAccountMeta,
+      ],
     });
 
     try {
@@ -139,10 +185,20 @@ export class ValidatorService {
       programId,
       new PublicKey(vote_account)
     );
+    const bpfloaderAccountMeta: AccountMeta = {
+      pubkey: BPF_LOADER_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    };
+    const voteProgramAccountMeta: AccountMeta = {
+      pubkey: VoteProgram.programId,
+      isSigner: false,
+      isWritable: false,
+    };
     const delistTransactionInstruction = new TransactionInstruction({
       programId,
       data: Buffer.from(new DeList(0).serialize()),
-      keys: accounts,
+      keys: [...accounts, bpfloaderAccountMeta, voteProgramAccountMeta],
     });
 
     try {
