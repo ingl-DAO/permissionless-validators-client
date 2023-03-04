@@ -13,12 +13,14 @@ import theme from './theme/theme';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import {
   ConnectionProvider,
-  WalletProvider
+  WalletProvider,
 } from '@solana/wallet-adapter-react';
 // Default styles that can be overridden by your app
 import '@solana/wallet-adapter-react-ui/styles.css';
 import { clusterApiUrl } from '@solana/web3.js';
 import { useMemo } from 'react';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 export function App() {
   const { activeLanguage } = useLanguage();
@@ -38,19 +40,21 @@ export function App() {
             locale={activeLanguage}
             defaultLocale="en"
           >
-            <ThemeProvider theme={theme}>
-              <ToastContainer
-                position="top-right"
-                autoClose={5000}
-                newestOnTop
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                transition={Flip}
-              />
-              {routing}
-            </ThemeProvider>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <ThemeProvider theme={theme}>
+                <ToastContainer
+                  position="top-right"
+                  autoClose={5000}
+                  newestOnTop
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  transition={Flip}
+                />
+                {routing}
+              </ThemeProvider>
+            </LocalizationProvider>
           </IntlProvider>
         </WalletModalProvider>
       </WalletProvider>
