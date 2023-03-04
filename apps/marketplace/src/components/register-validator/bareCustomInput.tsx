@@ -60,6 +60,10 @@ export default function BareCustomInput({
               color: 'white',
             },
           },
+          '& :disabled': {
+            color: 'grey',
+            WebkitTextFillColor: 'grey',
+          },
         }}
       />
     </Box>
