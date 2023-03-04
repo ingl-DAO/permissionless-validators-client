@@ -19,7 +19,7 @@ import ValidatorCardContent from '../home/validatorCardContent';
 
 export default function Register() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<number>(3);
+  const [step, setStep] = useState<number>(1);
   const [validatorImageUrl, setValidatorImageUrl] = useState<string>('');
   const [validatorInfo, setValidatorInfo] = useState<ValidatorInfo>();
   const [moreValidatorInfo, setMoreValidatorInfo] =
