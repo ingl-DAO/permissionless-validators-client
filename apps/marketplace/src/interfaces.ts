@@ -15,7 +15,10 @@ export interface ValidatorSecondaryItem {
 }
 
 export interface ValidatorListing
-  extends Omit<Validator, 'number_of_unique_stakers' | 'total_stake'> {
+  extends Omit<
+    Validator,
+    'number_of_unique_stakers' | 'total_stake' | 'program_id'
+  > {
   description: string;
   mediatable_date: number;
   secondary_items?: ValidatorSecondaryItem[]; // optional
