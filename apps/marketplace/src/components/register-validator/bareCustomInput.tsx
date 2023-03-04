@@ -25,21 +25,30 @@ export default function BareCustomInput({
   subLabel,
   value,
   onChange,
+  type = 'date',
+  disabled = false,
 }: {
   label: string;
   subLabel: string;
-  value: Date;
-  onChange: (val: Date) => void;
+  value: Date | string;
+  onChange?: (val: Date) => void;
+  type?: 'string' | 'date';
+  disabled?: boolean;
 }) {
   return (
     <Box>
       <Label label={label} subLabel={subLabel} />
-      <Typography>{value.toDateString()}</Typography>
+      {type === 'date' && (
+        <Typography>{(value as Date).toDateString()}</Typography>
+      )}
       <TextField
         size="small"
-        value={value.toLocaleDateString()}
-        onChange={(event) => onChange(new Date(event.target.value))}
-        type="date"
+        value={type === 'date' ? (value as Date).toLocaleDateString() : value}
+        onChange={(event) =>
+          onChange ? onChange(new Date(event.target.value)) : null
+        }
+        type={type}
+        disabled={disabled}
         placeholder={label}
         fullWidth
         required
