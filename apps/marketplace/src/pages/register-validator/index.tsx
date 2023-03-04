@@ -1,7 +1,9 @@
 import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
 import { Avatar, Box, TextField, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
+import CopyTransactionId from '../../common/components/copyTransactionId';
 import ErrorMessage from '../../common/components/ErrorMessage';
 import useNotification from '../../common/utils/notification';
 import MoreValidatorInformation, {
@@ -14,6 +16,7 @@ import ValidatorInformation, {
   ValidatorInfo,
 } from '../../components/register-validator/validatorInformation';
 import { ValidatorListing, ValidatorSecondaryItem } from '../../interfaces';
+import { ValidatorService } from '../../services/validator.service';
 import theme from '../../theme/theme';
 import ValidatorCardContent from '../home/validatorCardContent';
 
@@ -32,6 +35,13 @@ export default function Register() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submissionNotif, setSubmissionNotif] = useState<useNotification>();
 
+  const walletContext = useWallet();
+  const { connection } = useConnection();
+  const validatorService = useMemo(
+    () => new ValidatorService(connection, walletContext),
+    [connection, walletContext]
+  );
+
   function listValidator(val: ValidatorListing) {
     setIsSubmitting(true);
     const notif = new useNotification();
@@ -42,31 +52,37 @@ export default function Register() {
     notif.notify({
       render: 'Listing validator',
     });
-    setTimeout(() => {
-      //TODO: CALL API HERE TO list validator
-      // eslint-disable-next-line no-constant-condition
-      if (5 > 4) {
+    validatorService
+      .listValidator(val)
+      .then((signature) => {
         setIsSubmitting(false);
         notif.update({
-          render: 'Validator listed successfully',
+          render: (
+            <CopyTransactionId
+              transaction_id={signature}
+              message="Validator listed successfully"
+            />
+          ),
         });
         setSubmissionNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
               retryFunction={() => listValidator(val)}
               notification={notif}
-              //TODO: message should come from backend
-              message="Something happened when listing the validator. Please try again!"
+              message={
+                error?.message ||
+                'Something happened when listing the validator. Please try again!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   }
 
   return (

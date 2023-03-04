@@ -1,4 +1,5 @@
 import { Box, Button, Typography } from '@mui/material';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useFormik } from 'formik';
 import Scrollbars from 'rc-scrollbars';
 import { useEffect, useState } from 'react';
@@ -51,17 +52,39 @@ export default function ValidatorInformation({
     validator_id: string;
     authorized_withdrawer_id: string;
   }>();
+  const wallet = useWallet();
+  const { connection } = useConnection();
 
   useEffect(() => {
     if (
       formik.values.vote_account_id.length === 44 ||
       (validatorInfo && validatorInfo.vote_account_id.length === 44)
-    )
-      //TODO: call api here to get extra data from vote_account_id
-      setProgramData({
-        authorized_withdrawer_id: '0x89790qw8e0r9w3S.....MmHkzL3cL',
-        validator_id: '0x89790qw8e0r9w3S.....MmHkzL3cL',
-      });
+    ) {
+      connection
+        .getVoteAccounts()
+        .then((voteAccounts) => {
+          const { current, delinquent } = voteAccounts;
+          const voteAccountInfo =
+            [...current, ...delinquent].find((voteAccount) => {
+              return voteAccount.votePubkey === validatorInfo?.vote_account_id;
+            }) ?? null;
+          if (!wallet.publicKey || !voteAccountInfo)
+            return formik.setFieldError(
+              'vote_account_id',
+              'Invalid vote account ID.'
+            );
+          setProgramData({
+            authorized_withdrawer_id: wallet.publicKey.toBase58(),
+            validator_id: voteAccountInfo.nodePubkey,
+          });
+        })
+        .catch((error) =>
+          formik.setFieldError(
+            'vote_account_id',
+            error?.message || 'Network error !!!'
+          )
+        );
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.vote_account_id, validatorInfo?.vote_account_id]);
 
@@ -111,7 +134,7 @@ export default function ValidatorInformation({
             color="inherit"
             type="submit"
             sx={{ color: 'black' }}
-            disabled={isCreating}
+            disabled={isCreating || !programData}
           >
             Next
           </Button>
