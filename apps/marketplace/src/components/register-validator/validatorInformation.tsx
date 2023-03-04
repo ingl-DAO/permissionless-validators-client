@@ -53,11 +53,16 @@ export default function ValidatorInformation({
   }>();
 
   useEffect(() => {
-    //TODO: call api here to get extra data from vote_account_id
-    setProgramData({
-      authorized_withdrawer_id: '0x89790qw8e0r9w3S.....MmHkzL3cL',
-      validator_id: '0x89790qw8e0r9w3S.....MmHkzL3cL',
-    });
+    if (
+      formik.values.vote_account_id.length === 44 ||
+      (validatorInfo && validatorInfo.vote_account_id.length === 44)
+    )
+      //TODO: call api here to get extra data from vote_account_id
+      setProgramData({
+        authorized_withdrawer_id: '0x89790qw8e0r9w3S.....MmHkzL3cL',
+        validator_id: '0x89790qw8e0r9w3S.....MmHkzL3cL',
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.vote_account_id, validatorInfo?.vote_account_id]);
 
   return (
@@ -135,44 +140,48 @@ export default function ValidatorInformation({
               type={'string'}
             />
           ))}
-          {programData && (
-            <Box
-              sx={{
-                display: 'grid',
-                gridAutoFlow: 'column',
-                alignItems: 'center',
-                columnGap: 2,
-              }}
-            >
-              {[
-                {
-                  label: 'Validator ID',
-                  description: 'Solana public key of the validator account🗝️ ',
-                  programDataKey: 'validator_id',
-                },
-                {
-                  label: 'Authorized withdrawer ID',
-                  description: 'Id of the authorized withdrawer🗝️',
-                  programDataKey: 'authorized_withdrawer_id',
-                },
-              ].map(({ description, label, programDataKey }, index) => (
-                <BareCustomInput
-                  key={index}
-                  label={label}
-                  subLabel={description}
-                  type="string"
-                  disabled
-                  value={
-                    programData[
-                      programDataKey as
-                        | 'validator_id'
-                        | 'authorized_withdrawer_id'
-                    ]
-                  }
-                />
-              ))}
-            </Box>
-          )}
+          {programData &&
+            (formik.values.vote_account_id.length === 44 ||
+              (validatorInfo &&
+                validatorInfo.vote_account_id.length === 44)) && (
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridAutoFlow: 'column',
+                  alignItems: 'center',
+                  columnGap: 2,
+                }}
+              >
+                {[
+                  {
+                    label: 'Validator ID',
+                    description:
+                      'Solana public key of the validator account🗝️ ',
+                    programDataKey: 'validator_id',
+                  },
+                  {
+                    label: 'Authorized withdrawer ID',
+                    description: 'Id of the authorized withdrawer🗝️',
+                    programDataKey: 'authorized_withdrawer_id',
+                  },
+                ].map(({ description, label, programDataKey }, index) => (
+                  <BareCustomInput
+                    key={index}
+                    label={label}
+                    subLabel={description}
+                    type="string"
+                    disabled
+                    value={
+                      programData[
+                        programDataKey as
+                          | 'validator_id'
+                          | 'authorized_withdrawer_id'
+                      ]
+                    }
+                  />
+                ))}
+              </Box>
+            )}
           <CustomInput
             formik={formik}
             formikKey={'price'}
