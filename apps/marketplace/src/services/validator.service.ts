@@ -11,12 +11,12 @@ import {
   PROGRAM_STORAGE_SEED,
   REGISTRY_PROGRAM_ID,
   Storage,
-  TEAM_ADDRESS
+  TEAM_ADDRESS,
 } from '@ingl-permissionless/state';
 import { PublicKey } from '@metaplex-foundation/js';
 import {
   WalletAdapterNetwork,
-  WalletNotConnectedError
+  WalletNotConnectedError,
 } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
@@ -28,14 +28,14 @@ import {
   SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
   TransactionInstruction,
-  VoteProgram
+  VoteProgram,
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import {
   Validator,
   ValidatorDetails,
   ValidatorListing,
-  ValidatorSecondaryItem
+  ValidatorSecondaryItem,
 } from '../interfaces';
 
 enum ProgramUsage {
@@ -310,8 +310,8 @@ export class ValidatorService {
     const marketplaceStorageAccountInfo = await this.connection.getAccountInfo(
       marketplaceStorageAddress
     );
-    if (!marketplaceStorageAccountInfo)
-      throw new Error('Marketplace registry storage account not found');
+    if (!marketplaceStorageAccountInfo) return [];
+    // throw new Error('Marketplace registry storage account not found');
 
     const { programs } = deserialize(
       marketplaceStorageAccountInfo.data,
