@@ -1,13 +1,14 @@
 import { Box, Button, Typography } from '@mui/material';
 import { useFormik } from 'formik';
 import Scrollbars from 'rc-scrollbars';
+import { useEffect, useState } from 'react';
 import * as Yup from 'yup';
 import theme from '../../theme/theme';
+import BareCustomInput from './bareCustomInput';
 import { CustomInput } from './moreValidatorInformation';
 
 export interface ValidatorInfo {
   validator_name: string;
-  validator_id: string;
   vote_account_id: string;
   price: number;
 }
@@ -25,7 +26,6 @@ export default function ValidatorInformation({
 }) {
   const initialValues: ValidatorInfo = validatorInfo ?? {
     price: 0,
-    validator_id: '',
     validator_name: '',
     vote_account_id: '',
   };
@@ -46,6 +46,19 @@ export default function ValidatorInformation({
       resetForm();
     },
   });
+
+  const [programData, setProgramData] = useState<{
+    validator_id: string;
+    authorized_withdrawer_id: string;
+  }>();
+
+  useEffect(() => {
+    //TODO: call api here to get extra data from vote_account_id
+    setProgramData({
+      authorized_withdrawer_id: '0x89790qw8e0r9w3S.....MmHkzL3cL',
+      validator_id: '0x89790qw8e0r9w3S.....MmHkzL3cL',
+    });
+  }, [formik.values.vote_account_id, validatorInfo?.vote_account_id]);
 
   return (
     <Box
@@ -81,7 +94,6 @@ export default function ValidatorInformation({
             onClick={() =>
               onPrev({
                 price: formik.values.price,
-                validator_id: formik.values.validator_id,
                 validator_name: formik.values.validator_name,
                 vote_account_id: formik.values.vote_account_id,
               })
@@ -109,11 +121,6 @@ export default function ValidatorInformation({
               formikKey: 'validator_name',
             },
             {
-              label: 'Validator ID',
-              description: 'Solana public key of the validator account🗝️ ',
-              formikKey: 'validator_id',
-            },
-            {
               label: 'Vote account ID',
               description: 'Solana public key of the vote account🗝️',
               formikKey: 'vote_account_id',
@@ -128,6 +135,44 @@ export default function ValidatorInformation({
               type={'string'}
             />
           ))}
+          {programData && (
+            <Box
+              sx={{
+                display: 'grid',
+                gridAutoFlow: 'column',
+                alignItems: 'center',
+                columnGap: 2,
+              }}
+            >
+              {[
+                {
+                  label: 'Validator ID',
+                  description: 'Solana public key of the validator account🗝️ ',
+                  programDataKey: 'validator_id',
+                },
+                {
+                  label: 'Authorized withdrawer ID',
+                  description: 'Id of the authorized withdrawer🗝️',
+                  programDataKey: 'authorized_withdrawer_id',
+                },
+              ].map(({ description, label, programDataKey }, index) => (
+                <BareCustomInput
+                  key={index}
+                  label={label}
+                  subLabel={description}
+                  type="string"
+                  disabled
+                  value={
+                    programData[
+                      programDataKey as
+                        | 'validator_id'
+                        | 'authorized_withdrawer_id'
+                    ]
+                  }
+                />
+              ))}
+            </Box>
+          )}
           <CustomInput
             formik={formik}
             formikKey={'price'}
