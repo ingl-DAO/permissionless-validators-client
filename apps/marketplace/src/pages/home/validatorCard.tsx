@@ -35,7 +35,7 @@ export default function ValidatorCard({
 
   const handleOnClick = (type: 'open' | 'copy') => {
     if (type === 'open') {
-      navigate(program_id);
+      navigate(`/${program_id}`);
     } else {
       if (validatorCardNotif) validatorCardNotif.dismiss();
       const notif = new useNotification();
