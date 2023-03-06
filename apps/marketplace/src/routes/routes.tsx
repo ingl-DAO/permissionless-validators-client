@@ -28,6 +28,10 @@ export const routes = [
           { path: 'purchases', element: <MyBag usage="Purchases" /> },
         ],
       },
+      {
+        path: ':program_id',
+        element: <Typography>Program Details</Typography>,
+      },
     ],
   },
   { path: '*', element: <Navigate to="/" /> },
