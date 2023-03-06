@@ -132,6 +132,7 @@ export default function Register() {
                   validator_logo_url: validatorImageUrl,
                   validator_name: validatorInfo.validator_name,
                   vote_account_id: validatorInfo.vote_account_id,
+                  secondary_items: [],
                 });
             }}
             onNext={(val: MoreValidatorInfo) => {
