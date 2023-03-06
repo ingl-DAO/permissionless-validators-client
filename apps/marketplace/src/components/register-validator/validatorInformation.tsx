@@ -33,7 +33,6 @@ export default function ValidatorInformation({
   };
 
   const validationSchema = Yup.object().shape({
-    validator_id: Yup.string().required('required'),
     validator_name: Yup.string().required('required'),
     vote_account_id: Yup.string().required('required'),
     price: Yup.number().required('required'),
