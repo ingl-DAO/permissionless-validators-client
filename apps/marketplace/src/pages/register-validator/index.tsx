@@ -130,6 +130,7 @@ export default function Register() {
         {step === 1 ? (
           <ValidatorInformation
             onNext={(val: ValidatorInfo) => {
+              console.log('Called Next....');
               setValidatorInfo(val);
               setStep(2);
             }}
@@ -215,7 +216,13 @@ export default function Register() {
             alt="Validator Avatar"
             src={validatorImageUrl}
           />
-          <Box sx={{ display: 'grid', justifyItems: 'center' }}>
+          <Box
+            sx={{
+              display: 'grid',
+              justifyItems: 'center',
+              textAlign: 'center',
+            }}
+          >
             <ValidatorCardContent
               title={step === 1 ? 'Enter your logo url' : ''}
               value={'Validator Image'}
@@ -225,7 +232,7 @@ export default function Register() {
               <TextField
                 size="small"
                 fullWidth
-                placeholder="https://image_ref.tld"
+                placeholder="https://arewave.net/image_ref"
                 onChange={(event) => setValidatorImageUrl(event.target.value)}
                 value={validatorImageUrl}
                 sx={{
