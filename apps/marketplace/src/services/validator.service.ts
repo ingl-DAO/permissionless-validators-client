@@ -387,6 +387,7 @@ export class ValidatorService {
       purchase,
       secondary_items,
       authorized_withdrawer_cost,
+      authorized_withdrawer,
     } = deserialize(proramAccountInfo.data, Storage);
 
     const { current, delinquent } = await this.connection.getVoteAccounts();
@@ -404,6 +405,7 @@ export class ValidatorService {
       validator_name,
       mediatable_date,
       validator_logo_url,
+      seller_public_key: new PublicKey(authorized_withdrawer).toBase58(),
       date_validated: purchase?.date_finalized,
       secondary_items: secondary_items.map(({ cost, ...item }) => ({
         price: new BN(cost).toNumber() / LAMPORTS_PER_SOL,

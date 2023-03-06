@@ -30,6 +30,7 @@ export default function Header() {
           variant="outlined"
           color="primary"
           sx={{ textTransform: 'none' }}
+          onClick={() => navigate('/my-bag')}
         >
           My shopping bag
         </Button>
