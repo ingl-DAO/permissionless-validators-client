@@ -330,6 +330,7 @@ export class ValidatorService {
         return this.connection.getAccountInfo(programStorageAddress);
       })
     );
+    const { current, delinquent } = await this.connection.getVoteAccounts();
     return programStorageAccountInfos
       .map((accounInfo, index) => {
         if (accounInfo) {
@@ -339,6 +340,14 @@ export class ValidatorService {
             vote_account,
             authorized_withdrawer_cost,
           } = deserialize(accounInfo.data, Storage);
+          const voteAccountInfo =
+            [...current, ...delinquent].find((voteAccount) => {
+              return (
+                voteAccount.votePubkey ===
+                new PublicKey(vote_account).toBase58()
+              );
+            }) ?? null;
+
           return {
             validator_name,
             validator_logo_url,
@@ -346,8 +355,10 @@ export class ValidatorService {
               new BN(authorized_withdrawer_cost).toNumber() / LAMPORTS_PER_SOL,
             program_id: programPubkeys[index].toBase58(),
             vote_account_id: new PublicKey(vote_account).toBase58(),
+            total_stake: voteAccountInfo?.activatedStake
+              ? voteAccountInfo.activatedStake / LAMPORTS_PER_SOL
+              : 0,
             //TODO @artemesian can you please handle this
-            total_stake: 0,
             number_of_unique_stakers: 0,
           };
         }
@@ -378,8 +389,7 @@ export class ValidatorService {
       authorized_withdrawer_cost,
     } = deserialize(proramAccountInfo.data, Storage);
 
-    const voteAccounts = await this.connection.getVoteAccounts();
-    const { current, delinquent } = voteAccounts;
+    const { current, delinquent } = await this.connection.getVoteAccounts();
     const voteAccountInfo =
       [...current, ...delinquent].find((voteAccount) => {
         return (
@@ -387,7 +397,7 @@ export class ValidatorService {
         );
       }) ?? null;
     if (!voteAccountInfo) throw new Error('Vote account not found');
-    const { nodePubkey: validator_id } = voteAccountInfo;
+    const { nodePubkey: validator_id, activatedStake } = voteAccountInfo;
     return {
       description,
       validator_id,
@@ -406,11 +416,11 @@ export class ValidatorService {
       price: new BN(authorized_withdrawer_cost).toNumber() / LAMPORTS_PER_SOL,
       program_id: programId.toBase58(),
       vote_account_id: new PublicKey(vote_account).toBase58(),
+      total_stake: activatedStake / LAMPORTS_PER_SOL,
       //TODO @artemesian can you please handle this
-      total_stake: 0,
       stake_per_epochs: [],
-      validator_initial_epoch: 0,
       total_validator_rewards: 0,
+      validator_initial_epoch: 0,
       number_of_unique_stakers: 0,
     };
   }
