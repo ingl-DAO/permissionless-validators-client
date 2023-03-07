@@ -6,6 +6,9 @@ export interface Validator {
   number_of_unique_stakers: number;
   price: number; //in sol
   total_stake: number; //in sol
+  seller_public_key: string;
+  buyer_public_key?: string; // optional
+  secondary_items: ValidatorSecondaryItem[];
 }
 export interface ValidatorSecondaryItem {
   date_validated?: number;
@@ -17,11 +20,13 @@ export interface ValidatorSecondaryItem {
 export interface ValidatorListing
   extends Omit<
     Validator,
-    'number_of_unique_stakers' | 'total_stake' | 'program_id'
+    | 'number_of_unique_stakers'
+    | 'total_stake'
+    | 'program_id'
+    | 'seller_public_key'
   > {
   description: string;
   mediatable_date: number;
-  secondary_items?: ValidatorSecondaryItem[]; // optional
 }
 
 export interface StakePerEpoch {
@@ -34,18 +39,7 @@ export interface ValidatorDetails extends ValidatorListing, Validator {
   validator_initial_epoch: number;
   total_validator_rewards: number;
   date_validated?: number; // in seconds
-  buyer_public_key?: string; // optional
   request_mediation_date?: number; //in seconds
 
   stake_per_epochs: StakePerEpoch[];
-  secondary_items: ValidatorSecondaryItem[];
-}
-
-export type PurchasedValidator = Pick<
-  Validator,
-  'validator_logo_url' | 'price' | 'vote_account_id'
->;
-
-export interface MyPurchases {
-  validators: PurchasedValidator[];
 }

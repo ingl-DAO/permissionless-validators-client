@@ -1,5 +1,5 @@
 import { ContentCopyRounded } from '@mui/icons-material';
-import { Skeleton } from '@mui/material';
+import { Chip, Skeleton } from '@mui/material';
 import { Box } from '@mui/system';
 import { useState } from 'react';
 import { useIntl } from 'react-intl';
@@ -9,6 +9,7 @@ import { Validator } from '../../interfaces';
 import theme from '../../theme/theme';
 import ValidatorCardContent from './validatorCardContent';
 
+type ValidatorCardChip = 'Ongoing' | 'Bought' | 'Sold';
 export default function ValidatorCard({
   validator: {
     validator_logo_url: image_ref,
@@ -20,9 +21,11 @@ export default function ValidatorCard({
     program_id,
   },
   searchValue,
+  chip,
 }: {
   validator: Validator;
   searchValue: string;
+  chip?: ValidatorCardChip;
 }) {
   const { formatNumber } = useIntl();
 
@@ -32,7 +35,7 @@ export default function ValidatorCard({
 
   const handleOnClick = (type: 'open' | 'copy') => {
     if (type === 'open') {
-      navigate(program_id);
+      navigate(`/${program_id}`);
     } else {
       if (validatorCardNotif) validatorCardNotif.dismiss();
       const notif = new useNotification();
@@ -59,8 +62,24 @@ export default function ValidatorCard({
           display: 'grid',
           rowGap: theme.spacing(2),
           width: '100%',
+          position: 'relative',
         }}
       >
+        {chip && (
+          <Chip
+            label={chip}
+            sx={{
+              backgroundColor: chip === 'Ongoing' ? '#28293D' : '#D5F2E3',
+              border: '1px solid #D5F2E3',
+              color: chip === 'Ongoing' ? '#D5F2E3' : '#1C1C28',
+              position: 'absolute',
+              top: 0,
+              left: '50%',
+              minWidth: '100px',
+              margin: '-15px 0 0 -50px',
+            }}
+          />
+        )}
         <img
           src={image_ref}
           width="100%"

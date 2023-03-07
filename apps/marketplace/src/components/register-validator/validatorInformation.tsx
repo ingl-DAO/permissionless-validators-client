@@ -1,4 +1,6 @@
 import { Box, Button, Typography } from '@mui/material';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey, VoteAccount } from '@solana/web3.js';
 import { useFormik } from 'formik';
 import Scrollbars from 'rc-scrollbars';
 import { useEffect, useState } from 'react';
@@ -31,7 +33,6 @@ export default function ValidatorInformation({
   };
 
   const validationSchema = Yup.object().shape({
-    validator_id: Yup.string().required('required'),
     validator_name: Yup.string().required('required'),
     vote_account_id: Yup.string().required('required'),
     price: Yup.number().required('required'),
@@ -42,6 +43,7 @@ export default function ValidatorInformation({
     validationSchema,
     enableReinitialize: true,
     onSubmit: (values, { resetForm }) => {
+      console.log(values);
       onNext(values);
       resetForm();
     },
@@ -51,17 +53,51 @@ export default function ValidatorInformation({
     validator_id: string;
     authorized_withdrawer_id: string;
   }>();
+  const wallet = useWallet();
+  const { connection } = useConnection();
 
   useEffect(() => {
+    const voteAccountKey =
+      formik.values.vote_account_id ||
+      (validatorInfo && validatorInfo.vote_account_id);
     if (
-      formik.values.vote_account_id.length === 44 ||
-      (validatorInfo && validatorInfo.vote_account_id.length === 44)
-    )
-      //TODO: call api here to get extra data from vote_account_id
-      setProgramData({
-        authorized_withdrawer_id: '0x89790qw8e0r9w3S.....MmHkzL3cL',
-        validator_id: '0x89790qw8e0r9w3S.....MmHkzL3cL',
-      });
+      voteAccountKey &&
+      (formik.values.vote_account_id.length > 32 ||
+        (validatorInfo && validatorInfo.vote_account_id.length > 32))
+    ) {
+      try {
+        connection
+          .getAccountInfo(new PublicKey(voteAccountKey))
+          .then((voteAccountInfo) => {
+            if (!voteAccountInfo)
+              return console.log(`formik.setFieldError(
+                'vote_account_id',
+                'Invalid vote account ID.'
+              )`);
+            const voteAccount = VoteAccount.fromAccountData(
+              voteAccountInfo.data
+            );
+            if (
+              wallet.publicKey?.toBase58() ===
+              voteAccount.authorizedWithdrawer.toBase58()
+            )
+              setProgramData({
+                authorized_withdrawer_id: wallet.publicKey.toBase58(),
+                validator_id: voteAccount.nodePubkey.toBase58(),
+              });
+          })
+          .catch((error) =>
+            console.log(`formik.setFieldError(
+              'vote_account_id',
+              error?.message || 'Network error !!!'
+            )`)
+          );
+      } catch (error) {
+        console.log(
+          `formik.setFieldError('vote_account_id', 'Invalid pubkey')`
+        );
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.vote_account_id, validatorInfo?.vote_account_id]);
 

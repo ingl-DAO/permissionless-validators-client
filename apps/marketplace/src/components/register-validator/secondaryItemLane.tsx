@@ -23,7 +23,6 @@ export default function SecondaryItemLane({
     >
       <TableCell>
         <TextField
-          disabled={newLane}
           size="small"
           fullWidth
           required
@@ -44,7 +43,6 @@ export default function SecondaryItemLane({
       </TableCell>
       <TableCell>
         <TextField
-          disabled={newLane}
           value={description}
           size="small"
           fullWidth
@@ -65,11 +63,10 @@ export default function SecondaryItemLane({
       </TableCell>
       <TableCell>
         <TextField
-          disabled={newLane}
           size="small"
           fullWidth
           required
-          value={newLane ? '' : price}
+          value={price}
           onChange={(event) =>
             handleChange({ ...item, price: Number(event.target.value) })
           }
@@ -92,6 +89,7 @@ export default function SecondaryItemLane({
           color={newLane ? 'inherit' : 'primary'}
           onClick={deleteItem}
           sx={{
+            padding: theme.spacing(1.5),
             color: newLane ? 'white' : theme.palette.primary.main,
             backgroundColor: theme.common.inputBackground,
             '& .MuiButton-startIcon': {

@@ -2,6 +2,7 @@ import { LocalMallOutlined } from '@mui/icons-material';
 import { Box, Button } from '@mui/material';
 import { useNavigate } from 'react-router';
 import theme from '../../theme/theme';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -29,20 +30,19 @@ export default function Header() {
           variant="outlined"
           color="primary"
           sx={{ textTransform: 'none' }}
+          onClick={() => navigate('/my-bag')}
         >
           My shopping bag
         </Button>
-        <Button
-          sx={{
+        <WalletMultiButton
+          style={{
             textTransform: 'none',
             backgroundColor: '#2A2B40',
             borderRadius: '15px',
             boxShadow:
               '0px 0px 1px rgba(239, 35, 60, 0.08), 0px 1px 2px rgba(239, 35, 60, 0.32)',
           }}
-        >
-          Connect
-        </Button>
+        />
       </Box>
     </Box>
   );
