@@ -1,7 +1,7 @@
-import { deserialize } from '@dao-xyz/borsh';
+import { Constructor, deserialize } from '@dao-xyz/borsh';
 import {
   SignerWalletAdapterProps,
-  WalletAdapterNetwork,
+  WalletAdapterNetwork
 } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
@@ -12,11 +12,12 @@ import {
   ComputeBudgetProgram,
   Connection,
   Keypair,
+  ParsedAccountData,
   PublicKey,
   Transaction,
   TransactionInstruction,
   TransactionMessage,
-  VersionedTransaction,
+  VersionedTransaction
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import { GeneralData, STAKE_PROGRAM_ID, ValidatorConfig } from '../state';
@@ -462,12 +463,11 @@ const compactHeader = (n: number) =>
 const compactArraySize = (n: number, size: number) =>
   compactHeader(n) + n * size;
 
-export const getDeserializedAccountData = async (
+export async function getDeserializedAccountData<T>(
   connection: Connection,
   publicKey: PublicKey,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema: any
-): Promise<any> => {
+  schema: Constructor<T>
+): Promise<T> {
   const accountInfo = await connection.getAccountInfo(publicKey);
   if (!accountInfo) {
     throw new Error('Account not found');
@@ -476,7 +476,7 @@ export const getDeserializedAccountData = async (
     deserialize(accountInfo.data as Buffer, schema, { unchecked: true })
   );
   return deserialize(accountInfo.data as Buffer, schema, { unchecked: true });
-};
+}
 
 export const getDelegatedStakeAccountOnVoteAccount = async (
   connection: Connection,
@@ -502,17 +502,15 @@ export const getUniqueStakersOnVoteAccount = async (
   connection: Connection,
   vote_pubkey: PublicKey
 ) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const accounts: any[] = await getDelegatedStakeAccountOnVoteAccount(
+  const accounts = await getDelegatedStakeAccountOnVoteAccount(
     connection,
     vote_pubkey
   );
   const UniqueStakers = new Set();
   for (let i = 0; i < accounts.length; i++) {
-    const staker =
-      accounts[i]['account']['data']['parsed']['info']['meta']['authorized'][
-        'withdrawer'
-      ];
+    const staker = (accounts[i].account.data as ParsedAccountData).parsed[
+      'info'
+    ]['meta']['authorized']['withdrawer'];
     if (!UniqueStakers.has(staker)) {
       UniqueStakers.add(staker);
     }
