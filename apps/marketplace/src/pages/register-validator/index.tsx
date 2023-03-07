@@ -98,7 +98,7 @@ export default function Register() {
     >
       <Box sx={{ display: 'grid', rowGap: theme.spacing(1) }}>
         <Box
-          onClick={() => navigate('/validators')}
+          onClick={() => navigate('/')}
           sx={{
             display: 'grid',
             justifyContent: 'start',
