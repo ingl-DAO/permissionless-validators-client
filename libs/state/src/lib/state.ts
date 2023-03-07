@@ -51,6 +51,9 @@ export const METAPLEX_PROGRAM_ID = new PublicKey(
 export const BPF_LOADER_UPGRADEABLE_ID = new PublicKey(
   'BPFLoaderUpgradeab1e11111111111111111111111'
 );
+export const STAKE_PROGRAM_ID = new PublicKey(
+  'Stake11111111111111111111111111111111111111'
+);
 export const GOVERNANCE_SAFETY_LEEWAY = 86400 * 30; //1 month
 
 export const INGL_CONFIG_SEED = 'ingl_config';

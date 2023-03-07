@@ -3,6 +3,7 @@ import { http } from '@ingl-permissionless/axios';
 import {
   DeList,
   forwardLegacyTransaction,
+  getUniqueStakersOnVoteAccount,
   List,
   MARKETPLACE_STORAGE_SEED,
   PDA_AUTHORIZED_WITHDRAWER_SEED,
@@ -11,12 +12,12 @@ import {
   PROGRAM_STORAGE_SEED,
   REGISTRY_PROGRAM_ID,
   Storage,
-  TEAM_ADDRESS
+  TEAM_ADDRESS,
 } from '@ingl-permissionless/state';
 import { PublicKey } from '@metaplex-foundation/js';
 import {
   WalletAdapterNetwork,
-  WalletNotConnectedError
+  WalletNotConnectedError,
 } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
@@ -28,14 +29,14 @@ import {
   SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
   TransactionInstruction,
-  VoteProgram
+  VoteProgram,
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import {
   Validator,
   ValidatorDetails,
   ValidatorListing,
-  ValidatorSecondaryItem
+  ValidatorSecondaryItem,
 } from '../interfaces';
 
 enum ProgramUsage {
@@ -428,12 +429,18 @@ export class ValidatorService {
       program_id: programId.toBase58(),
       vote_account_id: new PublicKey(vote_account).toBase58(),
       total_stake: activatedStake / LAMPORTS_PER_SOL,
+      number_of_unique_stakers:
+        (
+          await getUniqueStakersOnVoteAccount(
+            this.connection,
+            new PublicKey(vote_account)
+          )
+        ).size ?? 0,
       total_validator_rewards:
         (validatorAccount.lamports - rentExempt) / LAMPORTS_PER_SOL,
-      //TODO @artemesian can you please handle this
+      //TODO @manual test data shall be added here
       stake_per_epochs: [],
       validator_initial_epoch: 0,
-      number_of_unique_stakers: 0,
     };
   }
 }
