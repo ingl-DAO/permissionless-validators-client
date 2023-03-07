@@ -7,7 +7,7 @@ import {
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IntlProvider } from 'react-intl';
 import { useRoutes } from 'react-router';
 import { Flip, ToastContainer } from 'react-toastify';
@@ -19,19 +19,41 @@ import { routes } from './routes/routes';
 import theme from './theme/theme';
 // Default styles that can be overridden by your app
 import '@solana/wallet-adapter-react-ui/styles.css';
+import { CircularProgress } from '@mui/material';
+import { Box } from '@mui/system';
+import SignIn from './pages/sign-in';
 
 export function App() {
+  const [statusOfCodeValidation, setStatusOfCodeValidation] = useState<
+    'loading' | 'success' | 'failed'
+  >('loading');
   const { activeLanguage } = useLanguage();
   const activeMessage = activeLanguage === 'en' ? frMessages : enMessages;
   const routing = useRoutes(routes);
+
+  const verifyCodeFromLocalStorage = () => {
+    const getCodeInLocalStorage = localStorage.getItem('signin_token');
+    setTimeout(() => {
+      if (getCodeInLocalStorage) {
+        alert('Code validated');
+        //TODO: API call to verify code in backend here
+        setStatusOfCodeValidation('success');
+      } else setStatusOfCodeValidation('failed');
+    }, 3000);
+  };
 
   // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
   const network = WalletAdapterNetwork.Devnet;
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
+
+  useEffect(() => {
+    verifyCodeFromLocalStorage();
+  }, []);
+
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider wallets={wallets}>
         <WalletModalProvider>
           <IntlProvider
             messages={activeMessage}
@@ -49,7 +71,27 @@ export function App() {
                 draggable
                 transition={Flip}
               />
-              {routing}
+              {statusOfCodeValidation === 'loading' ? (
+                <Box
+                  sx={{
+                    width: '100vw',
+                    height: '100vh',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <CircularProgress
+                    color="primary"
+                    thickness={3}
+                    size={'250px'}
+                  />
+                </Box>
+              ) : statusOfCodeValidation === 'success' ? (
+                routing
+              ) : (
+                <SignIn />
+              )}
             </ThemeProvider>
           </IntlProvider>
         </WalletModalProvider>

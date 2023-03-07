@@ -18,7 +18,7 @@ export default function Header() {
       <img
         src={'/assets/full_logo.png'}
         alt="ingl-logo"
-        style={{ cursor: 'pointer' }}
+        style={{ cursor: 'pointer', height: '45px' }}
         onClick={() => navigate('/validators')}
       />
       <WalletMultiButton

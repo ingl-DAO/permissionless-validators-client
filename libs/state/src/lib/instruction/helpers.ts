@@ -59,7 +59,6 @@ export const forwardLegacyTransaction = async (
     throw new Error(
       'Transaction must always be signed. Please use your browser wallet and/or your keypair to sign.'
     );
-  console.log(signedTransaction?.serialize().length);
   const signature = await connection.sendRawTransaction(
     (signedTransaction as Transaction).serialize()
   );
@@ -462,3 +461,19 @@ const compactHeader = (n: number) =>
  */
 const compactArraySize = (n: number, size: number) =>
   compactHeader(n) + n * size;
+
+export const getDeserializedAccountData = async (
+  connection: Connection,
+  publicKey: PublicKey,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  schema: any
+): Promise<any> => {
+  const accountInfo = await connection.getAccountInfo(publicKey);
+  if (!accountInfo) {
+    throw new Error('Account not found');
+  }
+  console.log(
+    deserialize(accountInfo.data as Buffer, schema, { unchecked: true })
+  );
+  return deserialize(accountInfo.data as Buffer, schema, { unchecked: true });
+};
