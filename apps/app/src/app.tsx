@@ -2,7 +2,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import {
   ConnectionProvider,
-  WalletProvider,
+  WalletProvider
 } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
@@ -18,9 +18,10 @@ import frMessages from './languages/fr';
 import { routes } from './routes/routes';
 import theme from './theme/theme';
 // Default styles that can be overridden by your app
-import '@solana/wallet-adapter-react-ui/styles.css';
+import { verifyToken } from '@ingl-permissionless/axios';
 import { CircularProgress } from '@mui/material';
 import { Box } from '@mui/system';
+import '@solana/wallet-adapter-react-ui/styles.css';
 import SignIn from './pages/sign-in';
 
 export function App() {
@@ -32,14 +33,14 @@ export function App() {
   const routing = useRoutes(routes);
 
   const verifyCodeFromLocalStorage = () => {
-    const getCodeInLocalStorage = localStorage.getItem('signin_token');
-    setTimeout(() => {
-      if (getCodeInLocalStorage) {
-        alert('Code validated');
-        //TODO: API call to verify code in backend here
-        setStatusOfCodeValidation('success');
-      } else setStatusOfCodeValidation('failed');
-    }, 3000);
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken)
+      verifyToken(accessToken)
+        .then(() => {
+          setStatusOfCodeValidation('success');
+        })
+        .catch(() => setStatusOfCodeValidation('failed'));
+    else setStatusOfCodeValidation('failed');
   };
 
   // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.

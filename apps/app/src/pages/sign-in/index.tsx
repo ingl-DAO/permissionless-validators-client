@@ -10,19 +10,21 @@ import Footer from '../../components/footer';
 import theme from '../../theme/theme';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { ProgramUsage, signIn } from '@ingl-permissionless/axios';
+import { toast } from 'react-toastify';
 
 export default function SignIn() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleSubmit = (code: string) => {
     setIsLoading(true);
-    setTimeout(() => {
-      alert(code);
-      setIsLoading(false);
-      // TODO: API call here then save the return token in localStorage and reload window
-      localStorage.setItem('signin_token', code /* Replace by token here */);
-      window.location.reload();
-    }, 3000);
+    signIn(ProgramUsage.Permissionless, code)
+      .then((accessToken) => {
+        localStorage.setItem('accessToken', accessToken);
+        window.location.reload();
+      })
+      .catch((error) => toast.error(error?.message || 'Unexpected error !!!'))
+      .finally(() => setIsLoading(false));
   };
 
   const formik = useFormik({
@@ -99,6 +101,7 @@ export default function SignIn() {
               name="code"
               required
               fullWidth
+              type="password"
               value={formik.values.code}
               onChange={formik.handleChange}
               error={Boolean(formik.errors.code)}
