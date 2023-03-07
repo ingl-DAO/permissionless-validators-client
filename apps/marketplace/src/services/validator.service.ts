@@ -1,5 +1,5 @@
 import { deserialize } from '@dao-xyz/borsh';
-import { http } from '@ingl-permissionless/axios';
+import { http, ProgramUsage } from '@ingl-permissionless/axios';
 import {
   DeList,
   forwardLegacyTransaction,
@@ -39,10 +39,7 @@ import {
   ValidatorSecondaryItem,
 } from '../interfaces';
 
-enum ProgramUsage {
-  Maketplace = 'Maketplace',
-  Permissionless = 'Permissionless',
-}
+
 
 export class ValidatorService {
   constructor(
@@ -54,7 +51,7 @@ export class ValidatorService {
 
   async getProgramId(usage: ProgramUsage) {
     const { data } = await http.get<{ program_id: string } | null>(
-      '/program-id',
+      '/programs',
       {
         params: { usage },
       }
@@ -77,15 +74,13 @@ export class ValidatorService {
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
 
-    const voteAccounts = await this.connection.getVoteAccounts();
-    const { current, delinquent } = voteAccounts;
-    const voteAccountInfo =
-      [...current, ...delinquent].find((voteAccount) => {
-        return voteAccount.votePubkey === vote_account_id;
-      }) ?? null;
+    const voteAccountKey = new PublicKey(vote_account_id);
+    const voteAccountInfo = await this.connection.getAccountInfo(
+      voteAccountKey
+    );
     if (!voteAccountInfo) throw new Error('Invalid vote account id');
 
-    const { program_id } = await this.getProgramId(ProgramUsage.Maketplace);
+    const { program_id } = await this.getProgramId(ProgramUsage.Marketplace);
     const programId = new PublicKey(program_id);
     const listIntruction = new List({
       log_level: 0,

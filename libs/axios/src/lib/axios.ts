@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 
 export enum ProgramUsage {
-  Maketplace = 'Maketplace',
+  Marketplace = 'Marketplace',
   Permissionless = 'Permissionless',
 }
 //This is only use for beta environnement
