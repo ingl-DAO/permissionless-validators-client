@@ -1,10 +1,10 @@
-import { Typography } from '@mui/material';
 import { Navigate } from 'react-router';
 import Layout from '../pages';
 import Home from '../pages/home';
 import MyBag from '../pages/myBag';
 import MyBagLayout from '../pages/myBag/layout';
 import Register from '../pages/register-validator';
+import ValidatorDetailsPage from '../pages/validator-details';
 
 export const routes = [
   {
@@ -30,7 +30,7 @@ export const routes = [
       },
       {
         path: ':program_id',
-        element: <Typography>Program Details</Typography>,
+        element: <ValidatorDetailsPage />,
       },
     ],
   },
