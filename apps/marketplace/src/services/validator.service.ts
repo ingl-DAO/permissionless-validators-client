@@ -1,6 +1,7 @@
-import { deserialize } from '@dao-xyz/borsh';
+import { deserialize, serialize } from '@dao-xyz/borsh';
 import { http, ProgramUsage } from '@ingl-permissionless/axios';
 import {
+  BPF_LOADER_UPGRADEABLE_ID,
   DeList,
   forwardLegacyTransaction,
   getUniqueStakersOnVoteAccount,
@@ -32,14 +33,7 @@ import {
   VoteProgram,
 } from '@solana/web3.js';
 import BN from 'bn.js';
-import {
-  Validator,
-  ValidatorDetails,
-  ValidatorListing,
-  ValidatorSecondaryItem,
-} from '../interfaces';
-
-
+import { Validator, ValidatorDetails, ValidatorListing } from '../interfaces';
 
 export class ValidatorService {
   constructor(
@@ -51,7 +45,7 @@ export class ValidatorService {
 
   async getProgramId(usage: ProgramUsage) {
     const { data } = await http.get<{ program_id: string } | null>(
-      '/programs',
+      '/programs/available',
       {
         params: { usage },
       }
@@ -80,19 +74,19 @@ export class ValidatorService {
     );
     if (!voteAccountInfo) throw new Error('Invalid vote account id');
 
-    const { program_id } = await this.getProgramId(ProgramUsage.Marketplace);
-    const programId = new PublicKey(program_id);
-    const listIntruction = new List({
+    const listInstruction = new List({
       log_level: 0,
       ...newValidator,
       authorized_withdrawer_cost: new BN(price * LAMPORTS_PER_SOL),
-      secondary_items: (secondary_items as ValidatorSecondaryItem[]).map(
-        ({ price, ...item }) => ({
-          cost: new BN(price * LAMPORTS_PER_SOL),
-          ...item,
-        })
-      ),
+      secondary_items: secondary_items.map(({ price, ...item }) => ({
+        cost: new BN(price * LAMPORTS_PER_SOL),
+        ...item,
+      })),
     });
+    // const { program_id } = await this.getProgramId(ProgramUsage.Marketplace);
+    const programId = new PublicKey(
+      'DsYEU2LTTNUS4UgvWzddjxjWrvh88gvYeWP5JWW8vkZe'
+    );
     const accounts = await this.getListingAccounts(
       programId,
       new PublicKey(vote_account_id)
@@ -117,7 +111,7 @@ export class ValidatorService {
       isWritable: false,
     };
     const bpfloaderAccountMeta: AccountMeta = {
-      pubkey: BPF_LOADER_PROGRAM_ID,
+      pubkey: BPF_LOADER_UPGRADEABLE_ID,
       isSigner: false,
       isWritable: false,
     };
@@ -133,7 +127,7 @@ export class ValidatorService {
     };
     const listTransactionInstruction = new TransactionInstruction({
       programId,
-      data: Buffer.from(listIntruction.serialize()),
+      data: Buffer.from(serialize(listInstruction)),
       keys: [
         ...accounts,
         teamAccountMeta,
@@ -153,7 +147,10 @@ export class ValidatorService {
           connection: this.connection,
           signTransaction: this.walletContext.signTransaction,
         },
-        [listTransactionInstruction]
+        [listTransactionInstruction],
+        {
+          isSignatureRequired: true,
+        }
       );
       this.useProgramId(programId.toBase58());
       return signature;
@@ -193,7 +190,7 @@ export class ValidatorService {
     };
     const delistTransactionInstruction = new TransactionInstruction({
       programId,
-      data: Buffer.from(new DeList(0).serialize()),
+      data: Buffer.from(serialize(new DeList(0))),
       keys: [...accounts, bpfloaderAccountMeta, voteProgramAccountMeta],
     });
 
@@ -250,11 +247,11 @@ export class ValidatorService {
     const programAccountMeta: AccountMeta = {
       pubkey: programId,
       isSigner: false,
-      isWritable: true,
+      isWritable: false,
     };
     const [programDataAddress] = PublicKey.findProgramAddressSync(
-      [BPF_LOADER_PROGRAM_ID.toBuffer()],
-      programId
+      [programId.toBuffer()],
+      BPF_LOADER_UPGRADEABLE_ID
     );
     const programDataAccountMeta: AccountMeta = {
       pubkey: programDataAddress,
@@ -268,8 +265,8 @@ export class ValidatorService {
       throw new Error('Invalid program data account info');
     const currentAuthorityAccountMeta: AccountMeta = {
       pubkey: new PublicKey(programDataAccountInfo.data.slice(13, 45)),
-      isSigner: false,
-      isWritable: true,
+      isSigner: true,
+      isWritable: false,
     };
     const [pdaAuthority] = PublicKey.findProgramAddressSync(
       [Buffer.from(PDA_UPGRADE_AUTHORITY_SEED)],

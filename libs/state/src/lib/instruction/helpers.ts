@@ -1,7 +1,8 @@
 import { Constructor, deserialize } from '@dao-xyz/borsh';
+import { http } from '@ingl-permissionless/axios';
 import {
   SignerWalletAdapterProps,
-  WalletAdapterNetwork
+  WalletAdapterNetwork,
 } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
@@ -17,7 +18,7 @@ import {
   Transaction,
   TransactionInstruction,
   TransactionMessage,
-  VersionedTransaction
+  VersionedTransaction,
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import { GeneralData, STAKE_PROGRAM_ID, ValidatorConfig } from '../state';
@@ -32,12 +33,13 @@ export const forwardLegacyTransaction = async (
   options?: {
     additionalUnits?: number;
     signingKeypairs?: Keypair[];
+    isSignatureRequired?: boolean;
   }
 ) => {
   console.log('forwarding legacy transaction...');
   const { connection, publicKey: payerKey, signTransaction } = walletConnection;
 
-  const transaction = new Transaction();
+  let transaction = new Transaction();
   if (options?.additionalUnits) {
     const additionalComputeBudgetInstruction =
       ComputeBudgetProgram.setComputeUnitLimit({
@@ -51,6 +53,15 @@ export const forwardLegacyTransaction = async (
   transaction.recentBlockhash = blockhashObj.blockhash;
   if (options?.signingKeypairs && options?.signingKeypairs.length > 0)
     transaction.sign(...options.signingKeypairs);
+
+  if (options?.isSignatureRequired) {
+    const {
+      data: { data },
+    } = await http.post<{ data: Buffer }>(`/programs/sign-transaction`, {
+      transaction: transaction.serialize({ requireAllSignatures: false }),
+    });
+    transaction = Transaction.from(data);
+  }
 
   const signedTransaction = signTransaction
     ? await signTransaction(transaction)

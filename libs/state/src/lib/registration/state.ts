@@ -9,7 +9,7 @@ export const REGISTRY_PROGRAM_ID = new PublicKey(
   '38pfsot7kCZkrttx1THEDXEz4JJXmCCcaDoDieRtVuy5'
 );
 
-export const MARKETPLACE_STORAGE_SEED = 'storage';
+export const MARKETPLACE_STORAGE_SEED = 'marketplace_storage';
 
 export const CONFIG_VALIDATION_PHASE = 373_836_823;
 export const STORAGE_VALIDATION_PHASE = 332_049_381;
