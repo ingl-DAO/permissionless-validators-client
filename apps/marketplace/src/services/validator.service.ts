@@ -332,6 +332,9 @@ export class ValidatorService {
             validator_logo_url,
             vote_account,
             authorized_withdrawer_cost,
+            authorized_withdrawer,
+            secondary_items,
+            purchase,
           } = deserialize(accounInfo.data, Storage, { unchecked: true });
           const voteAccountInfo =
             [...current, ...delinquent].find((voteAccount) => {
@@ -344,7 +347,14 @@ export class ValidatorService {
           return {
             validator_name,
             validator_logo_url,
-            seller_public_key: '',
+            buyer_public_key: purchase
+              ? new PublicKey(purchase.buyer).toBase58()
+              : undefined,
+            secondary_items: secondary_items.map(({ cost, ...item }) => ({
+              price: new BN(cost).toNumber() / LAMPORTS_PER_SOL,
+              ...item,
+            })),
+            seller_public_key: new PublicKey(authorized_withdrawer).toString(),
             price:
               new BN(authorized_withdrawer_cost).toNumber() / LAMPORTS_PER_SOL,
             program_id: programPubkeys[index].toBase58(),

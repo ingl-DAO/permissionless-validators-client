@@ -22,6 +22,7 @@ export default function MyBag({ usage }: { usage: MyBagUsage }) {
   );
 
   const [validators, setValidators] = useState<Validator[]>([]);
+  const [displayValidators, setDisplayValidators] = useState<Validator[]>([]);
   const [validatorNotif, setValidatorNotif] = useState<useNotification>();
   const [areValidatorsLoading, setAreValidatorsLoading] =
     useState<boolean>(false);
@@ -36,13 +37,7 @@ export default function MyBag({ usage }: { usage: MyBagUsage }) {
     validatorService
       .loadValidators()
       .then((validators) => {
-        setValidators(
-          validators.filter(
-            (_) =>
-              wallet.publicKey?.toBase58() ===
-              (usage === 'Sales' ? _.seller_public_key : _.buyer_public_key)
-          )
-        );
+        setValidators(validators);
         setAreValidatorsLoading(false);
         notif.dismiss();
         setValidatorNotif(undefined);
@@ -68,6 +63,32 @@ export default function MyBag({ usage }: { usage: MyBagUsage }) {
         });
       });
   };
+  useEffect(() => {
+    const publicKey = wallet.publicKey;
+    if (!publicKey) {
+      setDisplayValidators([]);
+    } else {
+      switch (usage) {
+        case 'Purchases': {
+          setDisplayValidators(
+            validators.filter(
+              (_) => _.buyer_public_key === publicKey.toBase58()
+            )
+          );
+          break;
+        }
+        case 'Sales': {
+          setDisplayValidators(
+            validators.filter(
+              (_) => _.seller_public_key === publicKey.toBase58()
+            )
+          );
+          break;
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usage, validators]);
 
   useEffect(() => {
     loadValidators();
@@ -113,7 +134,7 @@ export default function MyBag({ usage }: { usage: MyBagUsage }) {
             <ValidatorSkeleton key={index} />
           ))}
         </Box>
-      ) : validators.length === 0 ? (
+      ) : displayValidators.length === 0 ? (
         <Typography variant="h6" sx={{ textAlign: 'center' }}>
           No validators to display
         </Typography>
@@ -128,7 +149,7 @@ export default function MyBag({ usage }: { usage: MyBagUsage }) {
             rowGap: '20px',
           }}
         >
-          {validators.map((validator, index) => (
+          {displayValidators.map((validator, index) => (
             <ValidatorCard
               validator={validator}
               key={index}
