@@ -452,9 +452,10 @@ export class ProposalService {
     );
     let number_of_no_votes = 0;
     let number_of_yes_votes = 0;
-    votes.forEach((value) =>
-      value ? number_of_yes_votes++ : number_of_no_votes++
-    );
+    votes
+      .forEach(({ vote }) =>
+        vote ? number_of_yes_votes++ : number_of_no_votes++
+      );
     return {
       ...proposal,
       governance_type,
