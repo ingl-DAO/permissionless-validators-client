@@ -12,7 +12,7 @@ export default function ValidatorCardContent({
   wrap = false,
   right = false,
 }: {
-  title: string|JSX.Element;
+  title: string | JSX.Element;
   value: string;
   revert?: boolean;
   skeleton?: boolean;
@@ -23,7 +23,11 @@ export default function ValidatorCardContent({
 }) {
   return (
     <Box
-      sx={{ display: 'flex', flexFlow: revert ? 'column-reverse' : 'column' }}
+      sx={{
+        maxWidth: '300px',
+        display: 'flex',
+        flexFlow: revert ? 'column-reverse' : 'column',
+      }}
     >
       <Typography
         variant="body2"

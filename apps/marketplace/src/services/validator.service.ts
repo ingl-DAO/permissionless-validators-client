@@ -332,7 +332,7 @@ export class ValidatorService {
             validator_logo_url,
             vote_account,
             authorized_withdrawer_cost,
-          } = deserialize(accounInfo.data, Storage);
+          } = deserialize(accounInfo.data, Storage, { unchecked: true });
           const voteAccountInfo =
             [...current, ...delinquent].find((voteAccount) => {
               return (

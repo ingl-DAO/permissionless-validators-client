@@ -84,7 +84,12 @@ export default function ValidatorCard({
           src={image_ref}
           width="100%"
           alt={name}
-          style={{ borderRadius: theme.spacing(1), cursor: 'pointer' }}
+          style={{
+            height: '267px',
+            objectFit: 'contain',
+            borderRadius: theme.spacing(1),
+            cursor: 'pointer',
+          }}
           onClick={() => handleOnClick('open')}
         />
 

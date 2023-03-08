@@ -1,7 +1,4 @@
-import {
-  field, variant,
-  vec
-} from '@dao-xyz/borsh';
+import { field, variant, vec } from '@dao-xyz/borsh';
 import * as BN from 'bn.js';
 
 export class Instruction {
@@ -54,10 +51,10 @@ export class List extends Instruction {
   public secondary_items!: SecondaryItem[];
 
   @field({ type: 'string' })
-  validator_name!: string;
-
-  @field({ type: 'string' })
   description!: string;
+ 
+  @field({ type: 'string' })
+  validator_name!: string;
 
   @field({ type: 'string' })
   validator_logo_url!: string;
