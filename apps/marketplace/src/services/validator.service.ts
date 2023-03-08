@@ -3,6 +3,7 @@ import { http } from '@ingl-permissionless/axios';
 import {
   DeList,
   forwardLegacyTransaction,
+  getUniqueStakersOnVoteAccount,
   List,
   MARKETPLACE_STORAGE_SEED,
   PDA_AUTHORIZED_WITHDRAWER_SEED,
@@ -351,6 +352,7 @@ export class ValidatorService {
           return {
             validator_name,
             validator_logo_url,
+            seller_public_key: '',
             price:
               new BN(authorized_withdrawer_cost).toNumber() / LAMPORTS_PER_SOL,
             program_id: programPubkeys[index].toBase58(),
@@ -399,6 +401,14 @@ export class ValidatorService {
       }) ?? null;
     if (!voteAccountInfo) throw new Error('Vote account not found');
     const { nodePubkey: validator_id, activatedStake } = voteAccountInfo;
+    const validatorAccount = await this.connection.getAccountInfo(
+      new PublicKey(validator_id)
+    );
+    if (!validatorAccount) throw new Error('Validator account not found');
+    const rentExempt = await this.connection.getMinimumBalanceForRentExemption(
+      validatorAccount.data.length
+    );
+
     return {
       description,
       validator_id,
@@ -419,11 +429,18 @@ export class ValidatorService {
       program_id: programId.toBase58(),
       vote_account_id: new PublicKey(vote_account).toBase58(),
       total_stake: activatedStake / LAMPORTS_PER_SOL,
-      //TODO @artemesian can you please handle this
+      number_of_unique_stakers:
+        (
+          await getUniqueStakersOnVoteAccount(
+            this.connection,
+            new PublicKey(vote_account)
+          )
+        ).size ?? 0,
+      total_validator_rewards:
+        (validatorAccount.lamports - rentExempt) / LAMPORTS_PER_SOL,
+      //TODO @manual test data shall be added here
       stake_per_epochs: [],
-      total_validator_rewards: 0,
       validator_initial_epoch: 0,
-      number_of_unique_stakers: 0,
     };
   }
 }

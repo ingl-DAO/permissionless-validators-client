@@ -23,7 +23,9 @@ import ValidatorCardContent from '../home/validatorCardContent';
 export default function Register() {
   const navigate = useNavigate();
   const [step, setStep] = useState<number>(1);
-  const [validatorImageUrl, setValidatorImageUrl] = useState<string>('');
+  const [validatorImageUrl, setValidatorImageUrl] = useState<string>();
+  const [isValidatorImageUrlSet, setIsValidatorImageUrlErrorSet] =
+    useState<boolean>();
   const [validatorInfo, setValidatorInfo] = useState<ValidatorInfo>();
   const [moreValidatorInfo, setMoreValidatorInfo] =
     useState<MoreValidatorInfo>();
@@ -55,7 +57,6 @@ export default function Register() {
     validatorService
       .listValidator(val)
       .then((signature) => {
-        setIsSubmitting(false);
         notif.update({
           render: (
             <CopyTransactionId
@@ -82,7 +83,8 @@ export default function Register() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      });
+      })
+      .finally(() => setIsSubmitting(false));
   }
 
   return (
@@ -130,8 +132,10 @@ export default function Register() {
         {step === 1 ? (
           <ValidatorInformation
             onNext={(val: ValidatorInfo) => {
-              setValidatorInfo(val);
-              setStep(2);
+              if (validatorImageUrl) {
+                setValidatorInfo(val);
+                setStep(2);
+              } else setIsValidatorImageUrlErrorSet(false);
             }}
             isCreating={false}
             onPrev={(val: ValidatorInfo) => setValidatorInfo(val)}
@@ -140,7 +144,7 @@ export default function Register() {
         ) : step === 2 ? (
           <MoreValidatorInformation
             handleSubmit={(val: MoreValidatorInfo) => {
-              if (validatorInfo)
+              if (validatorImageUrl && validatorInfo)
                 listValidator({
                   mediatable_date: mediatableDate.getTime(),
                   price: validatorInfo.price,
@@ -177,7 +181,7 @@ export default function Register() {
                   price,
                 };
               });
-              if (validatorInfo && moreValidatorInfo)
+              if (validatorImageUrl && validatorInfo && moreValidatorInfo)
                 listValidator({
                   mediatable_date: mediatableDate.getTime(),
                   price: validatorInfo.price,
@@ -215,7 +219,13 @@ export default function Register() {
             alt="Validator Avatar"
             src={validatorImageUrl}
           />
-          <Box sx={{ display: 'grid', justifyItems: 'center' }}>
+          <Box
+            sx={{
+              display: 'grid',
+              justifyItems: 'center',
+              textAlign: 'center',
+            }}
+          >
             <ValidatorCardContent
               title={step === 1 ? 'Enter your logo url' : ''}
               value={'Validator Image'}
@@ -225,9 +235,10 @@ export default function Register() {
               <TextField
                 size="small"
                 fullWidth
-                placeholder="https://image_ref.tld"
+                placeholder="https://arewave.net/image_ref"
                 onChange={(event) => setValidatorImageUrl(event.target.value)}
                 value={validatorImageUrl}
+                error={isValidatorImageUrlSet === false}
                 sx={{
                   '& input, & div': {
                     backgroundColor: theme.common.inputBackground,

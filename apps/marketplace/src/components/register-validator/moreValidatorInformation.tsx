@@ -91,7 +91,7 @@ export default function MoreValidatorInformation({
 
   const validationSchema = Yup.object().shape({
     website: Yup.string().required('required'),
-    description: Yup.string().required('required').max(32),
+    description: Yup.string().required('required'),
     can_transfer_secondary_items: Yup.boolean().required('required'),
   });
 

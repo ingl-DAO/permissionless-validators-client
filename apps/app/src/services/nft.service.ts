@@ -9,6 +9,7 @@ import {
   forwardV0Transaction,
   GeneralData,
   GENERAL_ACCOUNT_SEED,
+  getDeserializedAccountData,
   getTxSize,
   ImprintRarity,
   INGL_CONFIG_SEED,
@@ -25,7 +26,6 @@ import {
   UnDelegateNFT,
   URIS_ACCOUNT_SEED,
   ValidatorConfig,
-  VOTE_ACCOUNT_KEY,
   willExceedMaximumPrimaryStake,
 } from '@ingl-permissionless/state';
 import {
@@ -79,10 +79,6 @@ export class NftService {
     ),
     private readonly mintingPoolPDA = PublicKey.findProgramAddressSync(
       [Buffer.from(PD_POOL_ACCOUNT_KEY)],
-      programId
-    ),
-    private readonly voteAccountPDA = PublicKey.findProgramAddressSync(
-      [Buffer.from(VOTE_ACCOUNT_KEY)],
       programId
     ),
     private readonly urisAccountPDA = PublicKey.findProgramAddressSync(
@@ -492,10 +488,19 @@ export class NftService {
       isWritable: false,
     };
     const voteAccount: AccountMeta = {
-      pubkey: this.voteAccountPDA[0],
+      pubkey: new PublicKey(
+        (
+          await getDeserializedAccountData(
+            this.connection,
+            this.validatorConfigAccountPDA[0],
+            ValidatorConfig
+          )
+        )?.vote_account
+      ),
       isSigner: false,
-      isWritable: false,
+      isWritable: true,
     };
+    console.log('voteAccount: ', voteAccount);
     console.log('creating redeem instruction...');
     const redeemInglGemInstruction = new TransactionInstruction({
       programId: this.programId,
@@ -628,7 +633,15 @@ export class NftService {
     };
 
     const voteAccount: AccountMeta = {
-      pubkey: this.voteAccountPDA[0],
+      pubkey: new PublicKey(
+        (
+          await getDeserializedAccountData(
+            this.connection,
+            this.validatorConfigAccountPDA[0],
+            ValidatorConfig
+          )
+        )?.vote_account
+      ),
       isSigner: false,
       isWritable: false,
     };
@@ -804,7 +817,15 @@ export class NftService {
     };
 
     const voteAccount: AccountMeta = {
-      pubkey: this.voteAccountPDA[0],
+      pubkey: new PublicKey(
+        (
+          await getDeserializedAccountData(
+            this.connection,
+            this.validatorConfigAccountPDA[0],
+            ValidatorConfig
+          )
+        )?.vote_account
+      ),
       isSigner: false,
       isWritable: true,
     };

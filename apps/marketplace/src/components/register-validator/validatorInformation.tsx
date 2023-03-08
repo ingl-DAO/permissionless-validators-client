@@ -33,7 +33,6 @@ export default function ValidatorInformation({
   };
 
   const validationSchema = Yup.object().shape({
-    validator_id: Yup.string().required('required'),
     validator_name: Yup.string().required('required'),
     vote_account_id: Yup.string().required('required'),
     price: Yup.number().required('required'),
@@ -71,10 +70,10 @@ export default function ValidatorInformation({
           .getAccountInfo(new PublicKey(voteAccountKey))
           .then((voteAccountInfo) => {
             if (!voteAccountInfo)
-              return formik.setFieldError(
+              return console.log(`formik.setFieldError(
                 'vote_account_id',
                 'Invalid vote account ID.'
-              );
+              )`);
             const voteAccount = VoteAccount.fromAccountData(
               voteAccountInfo.data
             );
@@ -88,13 +87,15 @@ export default function ValidatorInformation({
               });
           })
           .catch((error) =>
-            formik.setFieldError(
+            console.log(`formik.setFieldError(
               'vote_account_id',
               error?.message || 'Network error !!!'
-            )
+            )`)
           );
       } catch (error) {
-        formik.setFieldError('vote_account_id', 'Invalid pubkey');
+        console.log(
+          `formik.setFieldError('vote_account_id', 'Invalid pubkey')`
+        );
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

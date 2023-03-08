@@ -1,3 +1,4 @@
+import { AddOutlined } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -73,7 +74,7 @@ export default function SecondaryItems({
           </Button>
           <Button
             variant="contained"
-            disabled={disabled}
+            disabled={disabled || secondaryItems.length === 0}
             color="primary"
             onClick={() => {
               handleSubmit(secondaryItems);
@@ -88,8 +89,24 @@ export default function SecondaryItems({
         which can be sold alongside with the vote account for the continous
         proper functioning of the entity.
       </Typography>
-      <Scrollbars autoHide>
-        <Box sx={{ display: 'grid', rowGap: theme.spacing(1) }}>
+      <Box
+        sx={{
+          display: 'grid',
+          rowGap: theme.spacing(1),
+          gridAutoRows: 'auto 1fr',
+        }}
+      >
+        <BareCustomInput
+          onChange={(val: Date) => {
+            setMediatableDate(val);
+          }}
+          value={mediatableDate}
+          label={'Mediatable date'}
+          subLabel={
+            'The date from which mediation can be requested to ingl, should in case settlement is not archieved amongst the parties.'
+          }
+        />
+        <Scrollbars autoHide>
           <Table sx={{ minWidth: 650 }}>
             <TableHead>
               <TableRow>
@@ -105,7 +122,27 @@ export default function SecondaryItems({
                     <Label label={label} subLabel={subLabel} />
                   </TableCell>
                 ))}
-                <TableCell />
+                <TableCell>
+                  <Button
+                    startIcon={<AddOutlined />}
+                    variant="text"
+                    color="inherit"
+                    onClick={() =>
+                      setSecondaryItems((items) => [
+                        {
+                          description: '',
+                          name: '',
+                          price: 0,
+                          id: crypto.randomUUID(),
+                        },
+                        ...items,
+                      ])
+                    }
+                    sx={{
+                      backgroundColor: 'white',
+                    }}
+                  />
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -132,45 +169,10 @@ export default function SecondaryItems({
                   />
                 );
               })}
-              <SecondaryItemLane
-                newLane
-                handleChange={(val: DevValidatorSecondaryItem) =>
-                  alert(JSON.stringify(val))
-                }
-                item={{
-                  description: '',
-                  name: '',
-                  price: 0,
-                  id: crypto.randomUUID(),
-                }}
-                deleteItem={() => {
-                  const val = secondaryItems.find(({ name: _ }) => _ === '');
-                  if (!val)
-                    setSecondaryItems([
-                      ...secondaryItems,
-                      {
-                        description: '',
-                        name: '',
-                        price: 0,
-                        id: crypto.randomUUID(),
-                      },
-                    ]);
-                }}
-              />
             </TableBody>
           </Table>
-          <BareCustomInput
-            onChange={(val: Date) => {
-              setMediatableDate(val);
-            }}
-            value={mediatableDate}
-            label={'Mediatable date'}
-            subLabel={
-              'The date from which mediation can be requested to ingl, should in case settlement is not archieved amongst the parties.'
-            }
-          />
-        </Box>
-      </Scrollbars>
+        </Scrollbars>
+      </Box>
     </Box>
   );
 }

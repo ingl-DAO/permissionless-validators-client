@@ -11,7 +11,10 @@ import ProposalCreation from '../pages/[validator_program_id]/dao/create';
 import ProposalVote from '../pages/[validator_program_id]/dao/[numeration]';
 
 export const routes = [
-  { path: '/', element: <Navigate to="/programs" /> },
+  {
+    path: '/',
+    element: <Navigate to="/programs" />,
+  },
   {
     path: '',
     element: <Layout />,

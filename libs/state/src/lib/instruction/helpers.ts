@@ -19,7 +19,7 @@ import {
   VersionedTransaction,
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
-import { GeneralData, ValidatorConfig } from '../state';
+import { GeneralData, STAKE_PROGRAM_ID, ValidatorConfig } from '../state';
 
 export const forwardLegacyTransaction = async (
   walletConnection: {
@@ -59,7 +59,6 @@ export const forwardLegacyTransaction = async (
     throw new Error(
       'Transaction must always be signed. Please use your browser wallet and/or your keypair to sign.'
     );
-  console.log(signedTransaction?.serialize().length);
   const signature = await connection.sendRawTransaction(
     (signedTransaction as Transaction).serialize()
   );
@@ -462,3 +461,61 @@ const compactHeader = (n: number) =>
  */
 const compactArraySize = (n: number, size: number) =>
   compactHeader(n) + n * size;
+
+export const getDeserializedAccountData = async (
+  connection: Connection,
+  publicKey: PublicKey,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  schema: any
+): Promise<any> => {
+  const accountInfo = await connection.getAccountInfo(publicKey);
+  if (!accountInfo) {
+    throw new Error('Account not found');
+  }
+  console.log(
+    deserialize(accountInfo.data as Buffer, schema, { unchecked: true })
+  );
+  return deserialize(accountInfo.data as Buffer, schema, { unchecked: true });
+};
+
+export const getDelegatedStakeAccountOnVoteAccount = async (
+  connection: Connection,
+  vote_pubkey: PublicKey
+) => {
+  const accounts = await connection.getParsedProgramAccounts(STAKE_PROGRAM_ID, {
+    filters: [
+      {
+        dataSize: 200,
+      },
+      {
+        memcmp: {
+          offset: 124,
+          bytes: vote_pubkey.toString(),
+        },
+      },
+    ],
+  });
+  return accounts;
+};
+
+export const getUniqueStakersOnVoteAccount = async (
+  connection: Connection,
+  vote_pubkey: PublicKey
+) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const accounts: any[] = await getDelegatedStakeAccountOnVoteAccount(
+    connection,
+    vote_pubkey
+  );
+  const UniqueStakers = new Set();
+  for (let i = 0; i < accounts.length; i++) {
+    const staker =
+      accounts[i]['account']['data']['parsed']['info']['meta']['authorized'][
+        'withdrawer'
+      ];
+    if (!UniqueStakers.has(staker)) {
+      UniqueStakers.add(staker);
+    }
+  }
+  return UniqueStakers;
+};
