@@ -24,8 +24,6 @@ export default function Register() {
   const navigate = useNavigate();
   const [step, setStep] = useState<number>(1);
   const [validatorImageUrl, setValidatorImageUrl] = useState<string>();
-  const [isValidatorImageUrlSet, setIsValidatorImageUrlErrorSet] =
-    useState<boolean>();
   const [validatorInfo, setValidatorInfo] = useState<ValidatorInfo>();
   const [moreValidatorInfo, setMoreValidatorInfo] =
     useState<MoreValidatorInfo>();
@@ -132,13 +130,12 @@ export default function Register() {
         {step === 1 ? (
           <ValidatorInformation
             onNext={(val: ValidatorInfo) => {
-              if (validatorImageUrl) {
-                setValidatorInfo(val);
-                setStep(2);
-              } else setIsValidatorImageUrlErrorSet(false);
+              setValidatorInfo(val);
+              setStep(2);
             }}
             isCreating={false}
             onPrev={(val: ValidatorInfo) => setValidatorInfo(val)}
+            validatorImageUrl={validatorImageUrl}
             validatorInfo={validatorInfo}
           />
         ) : step === 2 ? (
@@ -146,13 +143,13 @@ export default function Register() {
             handleSubmit={(val: MoreValidatorInfo) => {
               if (validatorImageUrl && validatorInfo)
                 listValidator({
-                  mediatable_date: mediatableDate.getTime(),
+                  secondary_items: [],
                   price: validatorInfo.price,
                   description: val.description,
                   validator_logo_url: validatorImageUrl,
                   validator_name: validatorInfo.validator_name,
                   vote_account_id: validatorInfo.vote_account_id,
-                  secondary_items: [],
+                  mediatable_date: mediatableDate.getTime() / 1000,
                 });
             }}
             onNext={(val: MoreValidatorInfo) => {
@@ -238,7 +235,6 @@ export default function Register() {
                 placeholder="https://arewave.net/image_ref"
                 onChange={(event) => setValidatorImageUrl(event.target.value)}
                 value={validatorImageUrl}
-                error={isValidatorImageUrlSet === false}
                 sx={{
                   '& input, & div': {
                     backgroundColor: theme.common.inputBackground,
