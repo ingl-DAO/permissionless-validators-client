@@ -83,10 +83,8 @@ export class ValidatorService {
         ...item,
       })),
     });
-    // const { program_id } = await this.getProgramId(ProgramUsage.Marketplace);
-    const programId = new PublicKey(
-      'DsYEU2LTTNUS4UgvWzddjxjWrvh88gvYeWP5JWW8vkZe'
-    );
+    const { program_id } = await this.getProgramId(ProgramUsage.Marketplace);
+    const programId = new PublicKey(program_id);
     const accounts = await this.getListingAccounts(
       programId,
       new PublicKey(vote_account_id)
