@@ -1,8 +1,6 @@
 import {
-  field,
-  serialize as serializeData,
-  variant,
-  vec,
+  field, variant,
+  vec
 } from '@dao-xyz/borsh';
 import * as BN from 'bn.js';
 
@@ -11,11 +9,7 @@ export class Instruction {
   log_level!: number;
 
   constructor(log_level: number) {
-    this.log_level == log_level;
-  }
-
-  serialize() {
-    return serializeData(this);
+    this.log_level = log_level;
   }
 }
 
@@ -63,8 +57,11 @@ export class List extends Instruction {
   validator_name!: string;
 
   @field({ type: 'string' })
+  description!: string;
+
+  @field({ type: 'string' })
   validator_logo_url!: string;
-  
+
   constructor({ log_level, ...properties }: Omit<List, 'serialize'>) {
     super(log_level);
     Object.assign(this, properties);
