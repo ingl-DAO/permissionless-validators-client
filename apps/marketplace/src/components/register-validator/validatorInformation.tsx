@@ -1,6 +1,6 @@
 import { Box, Button, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey, VoteAccount } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { useFormik } from 'formik';
 import Scrollbars from 'rc-scrollbars';
 import { useEffect, useState } from 'react';
@@ -20,10 +20,12 @@ export default function ValidatorInformation({
   onNext,
   validatorInfo,
   isCreating,
+  validatorImageUrl,
 }: {
   onPrev: (val: ValidatorInfo) => void;
   onNext: (val: ValidatorInfo) => void;
   validatorInfo?: ValidatorInfo;
+  validatorImageUrl?: string;
   isCreating: boolean;
 }) {
   const initialValues: ValidatorInfo = validatorInfo ?? {
@@ -43,16 +45,18 @@ export default function ValidatorInformation({
     validationSchema,
     enableReinitialize: true,
     onSubmit: (values, { resetForm }) => {
-      console.log(values);
       onNext(values);
       resetForm();
     },
   });
 
-  const [programData, setProgramData] = useState<{
-    validator_id: string;
-    authorized_withdrawer_id: string;
-  }>();
+  const [programData, setProgramData] = useState<
+    | {
+        validator_id: string;
+        authorized_withdrawer_id: string;
+      }
+    | undefined
+  >();
   const wallet = useWallet();
   const { connection } = useConnection();
 
@@ -69,33 +73,36 @@ export default function ValidatorInformation({
         connection
           .getAccountInfo(new PublicKey(voteAccountKey))
           .then((voteAccountInfo) => {
-            if (!voteAccountInfo)
-              return console.log(`formik.setFieldError(
+            if (!voteAccountInfo) {
+              return formik.setFieldError(
                 'vote_account_id',
                 'Invalid vote account ID.'
-              )`);
-            const voteAccount = VoteAccount.fromAccountData(
-              voteAccountInfo.data
-            );
-            if (
-              wallet.publicKey?.toBase58() ===
-              voteAccount.authorizedWithdrawer.toBase58()
-            )
+              );
+            }
+            //The first four bytes are used to represent the vote account version
+            const vallidatorId = new PublicKey(
+              voteAccountInfo.data.slice(4, 36)
+            ).toBase58();
+
+            const authorizedWithdrawer = new PublicKey(
+              voteAccountInfo.data.slice(36, 68)
+            ).toBase58();
+            if (wallet.publicKey?.toBase58() === authorizedWithdrawer)
               setProgramData({
+                validator_id: vallidatorId,
                 authorized_withdrawer_id: wallet.publicKey.toBase58(),
-                validator_id: voteAccount.nodePubkey.toBase58(),
               });
+            else {
+              setProgramData(undefined);
+              formik.setFieldError(
+                'vote_account_id',
+                "Vote account authorized withdrawer doesn't match with wallet pubkey"
+              );
+            }
           })
-          .catch((error) =>
-            console.log(`formik.setFieldError(
-              'vote_account_id',
-              error?.message || 'Network error !!!'
-            )`)
-          );
+          .catch((error) => formik.setFieldError('vote_account_id', error));
       } catch (error) {
-        console.log(
-          `formik.setFieldError('vote_account_id', 'Invalid pubkey')`
-        );
+        formik.setFieldError('vote_account_id', `Invalid pubkey, ${error}`);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -147,7 +154,7 @@ export default function ValidatorInformation({
             color="inherit"
             type="submit"
             sx={{ color: 'black' }}
-            disabled={isCreating}
+            disabled={isCreating || !programData || !validatorImageUrl}
           >
             Next
           </Button>
