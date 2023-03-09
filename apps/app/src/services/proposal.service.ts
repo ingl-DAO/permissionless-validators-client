@@ -129,7 +129,6 @@ export class ProposalService {
         this.programId
       );
       const currentAuthority = new PublicKey(bufferAccount.data.slice(5, 37));
-      console.log(currentAuthority.toBase58(), expectedAuthority.toBase58());
       if (expectedAuthority.toBase58() !== currentAuthority.toBase58())
         throw new Error(
           'The buffer excepted authority does not match the provided one'
