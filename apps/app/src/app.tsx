@@ -2,7 +2,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import {
   ConnectionProvider,
-  WalletProvider
+  WalletProvider,
 } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
@@ -27,7 +27,7 @@ import SignIn from './pages/sign-in';
 export function App() {
   const [statusOfCodeValidation, setStatusOfCodeValidation] = useState<
     'loading' | 'success' | 'failed'
-  >('loading');
+  >('success');
   const { activeLanguage } = useLanguage();
   const activeMessage = activeLanguage === 'en' ? frMessages : enMessages;
   const routing = useRoutes(routes);
@@ -49,12 +49,15 @@ export function App() {
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 
   useEffect(() => {
-    verifyCodeFromLocalStorage();
+    // verifyCodeFromLocalStorage();
   }, []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets}>
+      <WalletProvider
+        wallets={wallets}
+        autoConnect={statusOfCodeValidation === 'success'}
+      >
         <WalletModalProvider>
           <IntlProvider
             messages={activeMessage}

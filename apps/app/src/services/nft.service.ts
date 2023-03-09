@@ -15,6 +15,7 @@ import {
   INGL_CONFIG_SEED,
   INGL_MINT_AUTHORITY_KEY,
   INGL_NFT_COLLECTION_KEY,
+  INGL_PROPOSAL_KEY,
   isMaximumPrimaryStakeReached,
   METAPLEX_PROGRAM_ID,
   MintNft,
@@ -23,6 +24,7 @@ import {
   NFT_ACCOUNT_CONST,
   PD_POOL_ACCOUNT_KEY,
   Redeem,
+  toBytesInt32,
   UnDelegateNFT,
   URIS_ACCOUNT_SEED,
   ValidatorConfig,
@@ -694,6 +696,28 @@ export class NftService {
       isWritable: true,
     };
 
+    const generalData = await getDeserializedAccountData(
+      this.connection,
+      generalAccount.pubkey,
+      GeneralData
+    );
+    const unfinalizedProposalAccounts: AccountMeta[] = [];
+    if (generalData.unfinalized_proposals.length > 0) {
+      for (let i = 0; i < generalData.unfinalized_proposals.length; i++) {
+        unfinalizedProposalAccounts.push({
+          pubkey: PublicKey.findProgramAddressSync(
+            [
+              Buffer.from(INGL_PROPOSAL_KEY),
+              toBytesInt32(generalData.unfinalized_proposals[i]),
+            ],
+            this.programId
+          )[0],
+          isSigner: false,
+          isWritable: true,
+        });
+      }
+    }
+
     const undelegateSolInstruction = new TransactionInstruction({
       programId: this.programId,
       data: Buffer.from(serialize(new UnDelegateNFT(0))),
@@ -707,6 +731,7 @@ export class NftService {
         generalAccount,
         systemProgramAccount,
         authorizedWithdrawerAccount,
+        ...unfinalizedProposalAccounts,
       ],
     });
     try {
