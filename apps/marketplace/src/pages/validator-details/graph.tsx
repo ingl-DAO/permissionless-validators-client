@@ -52,6 +52,9 @@ export default function Graph({
     new Chart(
       document.getElementById('dataChart') as ChartItem,
       config({
+        options: {
+          responsive: true,
+        },
         datasets: [
           {
             label: 'Stake Growth Over Time',
