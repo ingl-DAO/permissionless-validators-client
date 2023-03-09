@@ -118,11 +118,22 @@ export class ProposalService {
         bufferAccountKey
       );
       if (!bufferAccount) throw new Error("Buffer account info doesn't exist");
-      const isBufferProgramVerified = await this.verifyVersion(
-        bufferAccountKey
+      if (
+        bufferAccount.owner.toBase58() !== BPF_LOADER_UPGRADEABLE_ID.toBase58()
+      )
+        throw new Error(
+          'Buffer account must be owned by the bpf ugradeable program address'
+        );
+      const [expectedAuthority] = PublicKey.findProgramAddressSync(
+        [Buffer.from(INGL_PROGRAM_AUTHORITY_KEY)],
+        this.programId
       );
-      if (!isBufferProgramVerified)
-        throw new Error(`Your buffer program version is invalid`);
+      const currentAuthority = new PublicKey(bufferAccount.data.slice(5, 37));
+      console.log(currentAuthority.toBase58(), expectedAuthority.toBase58());
+      if (expectedAuthority.toBase58() !== currentAuthority.toBase58())
+        throw new Error(
+          'The buffer excepted authority does not match the provided one'
+        );
       governanceType = new ProgramUpgrade({
         buffer_account: bufferAccountKey.toBuffer(),
         code_link,
@@ -452,10 +463,9 @@ export class ProposalService {
     );
     let number_of_no_votes = 0;
     let number_of_yes_votes = 0;
-    votes
-      .forEach(({ vote }) =>
-        vote ? number_of_yes_votes++ : number_of_no_votes++
-      );
+    votes.forEach(({ vote }) =>
+      vote ? number_of_yes_votes++ : number_of_no_votes++
+    );
     return {
       ...proposal,
       governance_type,
