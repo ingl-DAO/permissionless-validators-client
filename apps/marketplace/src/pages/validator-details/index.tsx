@@ -26,6 +26,7 @@ import ConfirmDialog from '../../components/confirmDialog';
 import { ValidatorDetails } from '../../interfaces';
 import theme from '../../theme/theme';
 import ValidatorCardContent from '../home/validatorCardContent';
+import Graph from './graph';
 
 function SectionDelimiter({ title }: { title: string }) {
   return (
@@ -93,7 +94,24 @@ export default function ValidatorDetailsPage() {
             },
           ],
           seller_public_key: 'this is it',
-          stake_per_epochs: [],
+          stake_per_epochs: [
+            {
+              epoch: 1,
+              stake: 250,
+            },
+            {
+              epoch: 2,
+              stake: 200,
+            },
+            {
+              epoch: 3,
+              stake: 0,
+            },
+            {
+              epoch: 4,
+              stake: 50,
+            },
+          ],
           total_stake: 2000,
           total_validator_rewards: 2000,
           validator_id: 'validator_id_is_all_we_need_to_exist',
@@ -580,25 +598,14 @@ export default function ValidatorDetailsPage() {
                     >
                       Stake growth over time
                     </Typography>
-                    <Box
-                      sx={{
-                        display: 'grid',
-                        gridAutoFlow: 'column',
-                        columnGap: 2,
-                        alignItems: 'end',
-                        borderBottom: '2px solid grey',
-                        borderLeft: '2px solid grey',
-                        paddingLeft: 2,
-                      }}
-                    >
-                      {[...new Array(30)].map(() => (
-                        <Skeleton
-                          animation="wave"
-                          height={`${random() * 20}px`}
-                          sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
-                        />
-                      ))}
-                    </Box>
+                    <Graph
+                      data={
+                        validatorDetails
+                          ? validatorDetails.stake_per_epochs
+                          : []
+                      }
+                      isDataLoading={isDisabled}
+                    />
                   </Box>
                   {validatorDetails &&
                     validatorDetails.secondary_items.length > 0 && (
