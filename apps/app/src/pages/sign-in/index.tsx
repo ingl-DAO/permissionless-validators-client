@@ -69,7 +69,7 @@ export default function SignIn() {
             margin: theme.spacing(2, 0, 3, 0),
           }}
         >
-          Democratizing the Creation Of Validators on Solana
+          Fractionalizing Solana Validators
         </Typography>
         <Box
           component="form"

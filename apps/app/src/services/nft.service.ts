@@ -57,6 +57,7 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
+  SYSVAR_SLOT_HASHES_PUBKEY,
   Transaction,
   TransactionInstruction,
   type Connection,
@@ -1119,7 +1120,11 @@ export class NftService {
       isWritable: false,
     };
 
-    const feedAccountInfos = this.getFeedAccountInfos(network);
+    const slotHashesAccount: AccountMeta = {
+      pubkey: SYSVAR_SLOT_HASHES_PUBKEY,
+      isSigner: false,
+      isWritable: false,
+    };
 
     const instructionAccounts = [
       payerAccount,
@@ -1132,8 +1137,7 @@ export class NftService {
       configAccount,
       urisAccount,
       tokenProgramAccount,
-      //switchbord history buffer account infos
-      ...feedAccountInfos,
+      slotHashesAccount,
 
       metaplexProgramAccount,
     ];
@@ -1150,24 +1154,12 @@ export class NftService {
     });
 
     try {
-      //   const closeLookupTableInstructions = getCloseLookupTableInstructions(
-      //     this.walletContext.publicKey as PublicKey,
-      //     lookupTableAddresses
-      //   );
-      return await new Promise<string>((resolve, reject) => {
-        setTimeout(async () => {
-          try {
-            const transactionId = await forwardV0Transaction(
-              { connection: this.connection, wallet: this.walletContext },
-              [imprintRarityInstruction],
-              { lookupTableAddresses, additionalUnits: 600_000 }
-            );
-            resolve(transactionId);
-          } catch (error) {
-            reject(error);
-          }
-        }, 5000);
-      });
+      const transactionId = await forwardV0Transaction(
+        { connection: this.connection, wallet: this.walletContext },
+        [imprintRarityInstruction],
+        { lookupTableAddresses, additionalUnits: 600_000 }
+      );
+      return transactionId;
     } catch (error) {
       throw new Error('Failed to imprint rarity with error ' + error);
     }

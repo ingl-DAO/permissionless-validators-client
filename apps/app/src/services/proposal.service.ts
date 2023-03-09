@@ -479,7 +479,6 @@ export class ProposalService {
     const payerPubkey = this.walletContext.publicKey;
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
-
     const [proposalAccountKey] = PublicKey.findProgramAddressSync(
       [Buffer.from(INGL_PROPOSAL_KEY), toBytesInt32(proposal_numeration)],
       this.programId

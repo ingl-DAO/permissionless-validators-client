@@ -286,7 +286,6 @@ export async function computeVoteAccountRewardAPY(
     return finalVoteReward;
   })();
 
-  console.log(latestVoteRewards);
   const rewardPerPrimaryLamportPerEpoch =
     latestVoteRewards.length === 0
       ? 0
