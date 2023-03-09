@@ -17,3 +17,12 @@ services:
       - NX_MONITOR_BASE_URL=https://beta.ingl.io
     ports:
       - "89:3000"
+  marketplace:
+    build:
+      dockerfile: ./Dockerfile.marketplace
+      context: .
+    restart: always
+    environment:
+      - NX_MONITOR_BASE_URL=https://beta.ingl.io
+    ports:
+      - "92:3000"

@@ -11,6 +11,12 @@ import Scrollbars from 'rc-scrollbars';
 import { useEffect, useMemo, useState } from 'react';
 import { useIntl } from 'react-intl';
 import { useLocation, useNavigate, useParams } from 'react-router';
+import CopyTransactionId from '../../../../common/components/copyTransactionId';
+import ErrorMessage from '../../../../common/components/ErrorMessage';
+import useNotification from '../../../../common/utils/notification';
+import ConfirmDialog from '../../../../components/confirmDialog';
+import GovernancePower from '../../../../components/dao/governancePower';
+import PropoposalVoteLine from '../../../../components/dao/proposalVoteLine';
 import {
   ConfigAccountEnum,
   GovernanceInterface,
@@ -18,11 +24,6 @@ import {
   InglValidator,
   VoteAccountEnum,
 } from '../../../../interfaces';
-import ErrorMessage from '../../../../common/components/ErrorMessage';
-import useNotification from '../../../../common/utils/notification';
-import ConfirmDialog from '../../../../components/confirmDialog';
-import GovernancePower from '../../../../components/dao/governancePower';
-import PropoposalVoteLine from '../../../../components/dao/proposalVoteLine';
 import { NftService } from '../../../../services/nft.service';
 import {
   ProgramVersion,
@@ -175,10 +176,12 @@ export default function ProposalVote() {
     proposalService
       ?.loadProposalDetail(numeration)
       .then((proposalDetail) => {
-        if (proposalDetail.programUpgrade)
+        if (proposalDetail.programUpgrade) {
+          loadProgramVersion();
           loadProgramVersion(
             new PublicKey(proposalDetail.programUpgrade.buffer_account)
           );
+        }
         setProposalDetails(proposalDetail);
         setIsProposalDetailLoading(false);
         notif.dismiss();
@@ -287,10 +290,16 @@ export default function ProposalVote() {
     });
     proposalService
       ?.voteGovernance(Number(numeration), voteChoice, nfts)
-      .then(() => {
+      .then((signature) => {
         setIsVoting(false);
+        setVoteChoice(voteChoice);
         notif.update({
-          render: 'proposal voted successfully',
+          render: (
+            <CopyTransactionId
+              transaction_id={signature}
+              message="proposal voted successfully"
+            />
+          ),
         });
 
         setVoteNotif(undefined);
@@ -1025,7 +1034,13 @@ export default function ProposalVote() {
               }}
             >
               <Button
-                variant={'contained'}
+                variant={
+                  proposalDetails?.programUpgrade &&
+                  (!programVersion ||
+                    programVersion.status === VersionStatus.Unsafe)
+                    ? 'text'
+                    : 'contained'
+                }
                 color={'primary'}
                 disabled={
                   isVoting ||
@@ -1040,8 +1055,9 @@ export default function ProposalVote() {
                 onClick={() => {
                   setVoteChoice(true);
                   if (
-                    !bufferVersion ||
-                    bufferVersion.status === VersionStatus.Unsafe
+                    proposalDetails?.programUpgrade &&
+                    (!programVersion ||
+                      programVersion.status === VersionStatus.Unsafe)
                   )
                     setIsConfirmUnsafeProposalVoteDialogOpen(true);
                   else setIsConfirmVoteProposalDialogOpen(true);

@@ -7,10 +7,10 @@ export default function ProposalCard({
   numeration,
   title,
   status,
-  yesPercentage,
+  yesPercentage: yp,
   yesVotes,
   noVotes,
-  noPercentage,
+  noPercentage: np,
   subtitle,
 }: {
   numeration: number;
@@ -24,6 +24,8 @@ export default function ProposalCard({
   proposal_id: string;
 }) {
   const totalVotes = noVotes + yesVotes;
+  const yesPercentage = yp.toFixed(2);
+  const noPercentage = np.toFixed(2);
   const navigate = useNavigate();
   return (
     <Box
@@ -106,7 +108,7 @@ export default function ProposalCard({
               variant="caption"
               sx={{ color: 'rgba(255, 255, 255, 0.5)' }}
             >
-              {`${yesPercentage < 10 ? `0${yesPercentage}` : yesPercentage}%`}
+              {`${yp < 10 ? `0${yesPercentage}` : yesPercentage}%`}
             </Typography>
           </Box>
         </Box>
@@ -129,7 +131,7 @@ export default function ProposalCard({
               variant="caption"
               sx={{ color: 'rgba(255, 255, 255, 0.5)' }}
             >
-              {`${noPercentage < 10 ? `0${noPercentage}` : noPercentage}%`}
+              {`${np < 10 ? `0${noPercentage}` : noPercentage}%`}
             </Typography>
           </Box>
         </Box>
