@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
-import { ProposalService } from '../../../../services/proposal.service';
+import CopyTransactionId from '../../../../common/components/copyTransactionId';
 import { useFormik } from 'formik';
 import Scrollbars from 'rc-scrollbars';
 import { useEffect, useMemo, useState } from 'react';
@@ -38,6 +38,7 @@ import {
   VoteAccountEnum,
 } from '../../../../interfaces';
 import { NftService } from '../../../../services/nft.service';
+import { ProposalService } from '../../../../services/proposal.service';
 import { ValidatorService } from '../../../../services/validator.service';
 import theme from '../../../../theme/theme';
 
@@ -217,7 +218,12 @@ export default function ProposalCreation() {
 
   const pu_schema = Yup.object().shape({
     buffer_account: Yup.string().required('required'),
-    code_link: Yup.string().required('required'),
+    code_link: Yup.string()
+      .required('required')
+      .matches(
+        /https:\/\/github\.com/ && /.git$/,
+        'code link must be a github repository.'
+      ),
   });
 
   const pu_formik = useFormik({
@@ -243,10 +249,14 @@ export default function ProposalCreation() {
     });
     proposalService
       ?.initGovernanace(proposal)
-      .then(() => {
-        setIsCreating(false);
+      .then((signature) => {
         notif.update({
-          render: 'Created proposal successfully',
+          render: (
+            <CopyTransactionId
+              transaction_id={signature}
+              message="Created proposal successfully"
+            />
+          ),
         });
         setProposalNotif(undefined);
       })
@@ -266,7 +276,8 @@ export default function ProposalCreation() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      });
+      })
+      .finally(() => setIsCreating(false));
   };
 
   const submitForms = () => {

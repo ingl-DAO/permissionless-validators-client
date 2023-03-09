@@ -42,10 +42,10 @@ export class RegistryService {
       payer_id: payerPubkey.toBase58(),
       validator_id: validatorId,
     });
-    const { data: uploadUritransactions } = await http.post<Buffer[]>(
-      `programs/${programId}/upload-uris`,
-      { payer_id: payerPubkey.toBase58(), rarities: registrationData.rarities }
-    );
+    // const { data: uploadUritransactions } = await http.post<Buffer[]>(
+    //   `programs/${programId}/upload-uris`,
+    //   { payer_id: payerPubkey.toBase58(), rarities: registrationData.rarities }
+    // );
     try {
       const [initProgramSignature] = await forwardExistingTransactions(
         {

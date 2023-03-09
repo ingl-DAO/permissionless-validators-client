@@ -2,7 +2,7 @@ import {
   ArrowBackIosNewOutlined,
   AutorenewOutlined,
   DoNotDisturbAltOutlined,
-  ReportRounded,
+  ReportRounded
 } from '@mui/icons-material';
 import { Box, Button, Chip, Skeleton, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
@@ -11,23 +11,24 @@ import Scrollbars from 'rc-scrollbars';
 import { useEffect, useMemo, useState } from 'react';
 import { useIntl } from 'react-intl';
 import { useLocation, useNavigate, useParams } from 'react-router';
-import {
-  ConfigAccountEnum,
-  GovernanceInterface,
-  InglNft,
-  InglValidator,
-  VoteAccountEnum,
-} from '../../../../interfaces';
+import CopyTransactionId from '../../../../common/components/copyTransactionId';
 import ErrorMessage from '../../../../common/components/ErrorMessage';
 import useNotification from '../../../../common/utils/notification';
 import ConfirmDialog from '../../../../components/confirmDialog';
 import GovernancePower from '../../../../components/dao/governancePower';
 import PropoposalVoteLine from '../../../../components/dao/proposalVoteLine';
+import {
+  ConfigAccountEnum,
+  GovernanceInterface,
+  InglNft,
+  InglValidator,
+  VoteAccountEnum
+} from '../../../../interfaces';
 import { NftService } from '../../../../services/nft.service';
 import {
   ProgramVersion,
   ProposalService,
-  VersionStatus,
+  VersionStatus
 } from '../../../../services/proposal.service';
 import { ValidatorService } from '../../../../services/validator.service';
 import theme from '../../../../theme/theme';
@@ -175,10 +176,12 @@ export default function ProposalVote() {
     proposalService
       ?.loadProposalDetail(numeration)
       .then((proposalDetail) => {
-        if (proposalDetail.programUpgrade)
+        if (proposalDetail.programUpgrade) {
+          loadProgramVersion();
           loadProgramVersion(
             new PublicKey(proposalDetail.programUpgrade.buffer_account)
           );
+        }
         setProposalDetails(proposalDetail);
         setIsProposalDetailLoading(false);
         notif.dismiss();
@@ -252,7 +255,6 @@ export default function ProposalVote() {
   }, [nftService]);
   useEffect(() => {
     if (validator_program_id && numeration) {
-      loadProgramVersion();
       loadProposalDetail(Number(numeration));
       loadValidatorDetails(validator_program_id);
     }
@@ -286,10 +288,16 @@ export default function ProposalVote() {
     });
     proposalService
       ?.voteGovernance(Number(numeration), voteChoice, nfts)
-      .then(() => {
+      .then((signature) => {
         setIsVoting(false);
+        setVoteChoice(voteChoice);
         notif.update({
-          render: 'proposal voted successfully',
+          render: (
+            <CopyTransactionId
+              transaction_id={signature}
+              message="proposal voted successfully"
+            />
+          ),
         });
         setVoteNotif(undefined);
       })
@@ -1035,8 +1043,9 @@ export default function ProposalVote() {
             >
               <Button
                 variant={
-                  !programVersion ||
-                  programVersion.status === VersionStatus.Unsafe
+                  proposalDetails?.programUpgrade &&
+                  (!programVersion ||
+                    programVersion.status === VersionStatus.Unsafe)
                     ? 'text'
                     : 'contained'
                 }
@@ -1050,8 +1059,9 @@ export default function ProposalVote() {
                 onClick={() => {
                   setVoteChoice(true);
                   if (
-                    !programVersion ||
-                    programVersion.status === VersionStatus.Unsafe
+                    proposalDetails?.programUpgrade &&
+                    (!programVersion ||
+                      programVersion.status === VersionStatus.Unsafe)
                   )
                     setIsConfirmUnsafeProposalVoteDialogOpen(true);
                   else setIsConfirmVoteProposalDialogOpen(true);
