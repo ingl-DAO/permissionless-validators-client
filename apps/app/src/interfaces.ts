@@ -58,6 +58,8 @@ export interface ValidatorRegistration extends ValidatorRarity {
   default_uri: string;
   twitter_handle: string;
   discord_invite: string;
+  validator_id?: string;
+  vote_account_id?: string;
 }
 export interface InglValidator
   extends Omit<ValidatorRegistration, keyof ValidatorRarity> {
