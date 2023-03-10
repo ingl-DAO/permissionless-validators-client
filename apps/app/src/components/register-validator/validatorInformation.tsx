@@ -1,12 +1,14 @@
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Box, Button, Checkbox, TextField, Typography } from '@mui/material';
 import { useFormik } from 'formik';
 import Scrollbars from 'rc-scrollbars';
+import { useState } from 'react';
 import * as Yup from 'yup';
 import theme from '../../theme/theme';
 
 export interface ValidatorInfo {
   validator_name: string;
-  validator_id: string;
+  validator_id?: string;
+  vote_account_id?: string;
   website: string;
   discord_invite: string;
   twitter_handle: string;
@@ -74,8 +76,11 @@ export default function ValidatorInformation({
   handleSubmit: (val: ValidatorInfo) => void;
   validatorInfo: ValidatorInfo;
 }) {
+  const [isExistingValidator, setIsExistingValidator] =
+    useState<boolean>(false);
+
   const initialValues: ValidatorInfo = validatorInfo ?? {
-    validator_id: '',
+    [isExistingValidator ? 'vote_account_id' : 'validator_id']: '',
     discord_invite: '',
     twitter_handle: '',
     validator_name: '',
@@ -83,7 +88,8 @@ export default function ValidatorInformation({
   };
 
   const validationSchema = Yup.object().shape({
-    validator_id: Yup.string().required('required'),
+    [isExistingValidator ? 'vote_account_id' : 'validator_id']:
+      Yup.string().required('required'),
     validator_name: Yup.string().required('required').max(32),
     discord_invite: Yup.string().required('required').max(32),
     twitter_handle: Yup.string()
@@ -140,16 +146,47 @@ export default function ValidatorInformation({
       </Box>
       <Scrollbars autoHide>
         <Box sx={{ display: 'grid', rowGap: theme.spacing(1) }}>
+          <CustomInput
+            formik={formik}
+            label="Validator name"
+            formikKey="validator_name"
+            subLabel="Make it sound outstanding and unique!"
+          />
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'auto 1fr',
+              columnGap: theme.spacing(1),
+              alignItems: 'center',
+            }}
+          >
+            <Checkbox
+              sx={{
+                '& .MuiSvgIcon-root': {
+                  fontSize: '40px',
+                },
+              }}
+              checked={isExistingValidator}
+              onChange={(e) => setIsExistingValidator(!isExistingValidator)}
+            />
+            <Box>
+              <Typography variant="h6">{'I own a vote account'}</Typography>
+              <Typography variant="caption" sx={{ color: 'wheat' }}>
+                {'Fractionalizing an existing validator'}
+              </Typography>
+            </Box>
+          </Box>
           {[
             {
-              label: 'Validator name',
-              description: 'Make it sound outstanding and unique!',
-              formikKey: 'validator_name',
-            },
-            {
-              label: 'Validator ID',
-              description: 'Solana public key of the validator account',
-              formikKey: 'validator_id',
+              label: isExistingValidator
+                ? 'Existing vote account ID'
+                : 'Validator ID',
+              description: `Solana public key of the validator ${
+                isExistingValidator ? 'vote account' : 'account'
+              }`,
+              formikKey: isExistingValidator
+                ? 'vote_account_id'
+                : 'validator_id',
             },
             {
               label: 'Website',

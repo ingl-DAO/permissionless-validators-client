@@ -1,7 +1,6 @@
 import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import CopyTransactionId from '../../common/components/copyTransactionId';
@@ -62,7 +61,9 @@ export default function Register() {
             solBacking >= 1.05 &&
             creatorRoyalties <= 2
           ) {
+            const { twitter_handle, ...validatorData } = validatorInfo;
             const validator: ValidatorRegistration = {
+              ...validatorData,
               nft_holders_share: voteAccountInfo.nft_holders_share,
               proposal_quorum: val.proposal_quorum,
               unit_backing: solBacking,
@@ -71,13 +72,10 @@ export default function Register() {
                 rarity,
                 uris: jsonFileData.uris[index],
               })),
-              discord_invite: validatorInfo.discord_invite,
-              website: validatorInfo.website,
               twitter_handle: validatorInfo.twitter_handle.split('@')[1],
               rarity_names: jsonFileData.rarity_names,
               is_validator_id_switchable:
                 voteAccountInfo.is_validator_id_switchable,
-              validator_name: validatorInfo.validator_name,
               initial_redemption_fee: voteAccountInfo.initial_redemption_fee,
               max_primary_stake: voteAccountInfo.max_primary_stake,
               redemption_fee_duration: voteAccountInfo.redemption_fee_duration,
@@ -86,7 +84,7 @@ export default function Register() {
               governance_expiration_time: val.governance_expiration_time,
               creator_royalties: creatorRoyalties,
             };
-            createValidator(validatorInfo.validator_id, validator);
+            createValidator(validator);
           } else
             alert(
               'Unit backing must be greater than 1.05 and creator royalties less than 2%'
@@ -134,10 +132,7 @@ export default function Register() {
 
   const [validatorNotif, setValidatorNotif] = useState<useNotification>();
 
-  function createValidator(
-    validatorId: string,
-    validator: ValidatorRegistration
-  ) {
+  function createValidator(validator: ValidatorRegistration) {
     setIsCreating(true);
     const notif = new useNotification();
     if (validatorNotif) validatorNotif.dismiss();
@@ -146,7 +141,7 @@ export default function Register() {
       render: 'Creating Validator...',
     });
     registryService
-      .registerProgram(new PublicKey(validatorId), validator)
+      .registerProgram(validator)
       .then((signatures) => {
         notif.update({
           render: (
@@ -175,7 +170,7 @@ export default function Register() {
           type: 'ERROR',
           render: (
             <ErrorMessage
-              retryFunction={() => createValidator(validatorId, validator)}
+              retryFunction={() => createValidator(validator)}
               notification={notif}
               message={
                 error?.message ||
