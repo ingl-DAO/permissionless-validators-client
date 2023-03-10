@@ -74,10 +74,6 @@ export class ValidatorService {
           return voteAccount.votePubkey === voteAccountKey.toString();
         }) ?? null;
     } catch (e) {
-      console.log(
-        "message: 'Failed to config account info and general account info"
-      );
-      console.log('error: ', e);
       throw new Error('Failed to config account info and general account info');
     }
     if (
@@ -85,9 +81,6 @@ export class ValidatorService {
       !generalAccountInfo ||
       !collectionMetadata
     ) {
-      console.log(
-        'message: Either config account info or general account info is null'
-      );
       throw new Error('Could not load validator stats');
     }
 
@@ -247,7 +240,6 @@ export class ValidatorService {
           GeneralData,
           { unchecked: true }
         );
-        console.log(generalData);
         const { uri, json, jsonLoaded } = collectionNfts[index];
         let jsonData = json;
         if (!jsonLoaded) {

@@ -69,7 +69,6 @@ export default function Rewards() {
         setRewardNotif(undefined);
       })
       .catch((error) => {
-        console.log('Error here', error);
         notif.update({
           type: 'ERROR',
           render: (

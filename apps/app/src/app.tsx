@@ -22,12 +22,12 @@ import { verifyToken } from '@ingl-permissionless/axios';
 import { CircularProgress } from '@mui/material';
 import { Box } from '@mui/system';
 import '@solana/wallet-adapter-react-ui/styles.css';
-import SignIn from './pages/sign-in';
+import { SignIn } from '@ingl-permissionless/shared-components';
 
 export function App() {
   const [statusOfCodeValidation, setStatusOfCodeValidation] = useState<
     'loading' | 'success' | 'failed'
-  >('success');
+  >('loading');
   const { activeLanguage } = useLanguage();
   const activeMessage = activeLanguage === 'en' ? frMessages : enMessages;
   const routing = useRoutes(routes);
@@ -49,7 +49,7 @@ export function App() {
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 
   useEffect(() => {
-    // verifyCodeFromLocalStorage();
+    verifyCodeFromLocalStorage();
   }, []);
 
   return (

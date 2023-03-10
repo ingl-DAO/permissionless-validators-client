@@ -16,7 +16,10 @@
     "baseUrl": ".",
     "paths": {
       "@ingl-permissionless/axios": ["libs/axios/src/index.ts"],
-      "@ingl-permissionless/state": ["libs/state/src/index.ts"]
+      "@ingl-permissionless/state": ["libs/state/src/index.ts"],
+      "@ingl-permissionless/shared-components": [
+        "libs/shared-components/src/index.ts"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]

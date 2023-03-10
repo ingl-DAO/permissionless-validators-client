@@ -125,7 +125,6 @@ export class NftService {
     const payerPubkey = this.walletContext.publicKey;
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
-    console.log('0');
     // Check if max primary stake already reached
     await isMaximumPrimaryStakeReached(
       'You can not mint anymore, the maximum delegable stake is currently attained',
@@ -133,7 +132,6 @@ export class NftService {
       this.generalAccountPDA[0],
       this.connection
     );
-    console.log('1');
     await willExceedMaximumPrimaryStake(
       "All the NFTs can't be minted, it will exceed the maximum delegable stake",
       numberOfNfts,
@@ -141,7 +139,6 @@ export class NftService {
       this.generalAccountPDA[0],
       this.connection
     );
-    console.log('2');
 
     const payerAccount: AccountMeta = {
       pubkey: this.walletContext.publicKey as PublicKey,
@@ -335,7 +332,6 @@ export class NftService {
         },
         instructions
       );
-      console.log('all transaction IDs: ', result);
       return {
         tokenMints: mintKeyPairs.map((keypair) => keypair.publicKey),
         signature: result[result.length - 1],
@@ -503,8 +499,6 @@ export class NftService {
       isSigner: false,
       isWritable: true,
     };
-    console.log('voteAccount: ', voteAccount);
-    console.log('creating redeem instruction...');
     const redeemInglGemInstruction = new TransactionInstruction({
       programId: this.programId,
       data: Buffer.from(serialize(new Redeem(0))),
@@ -885,8 +879,6 @@ export class NftService {
           [Buffer.from(NFT_ACCOUNT_CONST), tokenMint.toBuffer()],
           this.programId
         );
-        console.log(index, nftPubkey.toString());
-        console.log(getAssociatedTokenAddressSync(tokenMint, payerPubkey));
         return [
           ...accounts,
           {
