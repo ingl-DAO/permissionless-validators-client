@@ -78,9 +78,9 @@ export default function ValidatorInformation({
 }) {
   const [isExistingValidator, setIsExistingValidator] =
     useState<boolean>(false);
-
+  const fieldName = isExistingValidator ? 'vote_account_id' : 'validator_id';
   const initialValues: ValidatorInfo = validatorInfo ?? {
-    [isExistingValidator ? 'vote_account_id' : 'validator_id']: '',
+    [fieldName]: '',
     discord_invite: '',
     twitter_handle: '',
     validator_name: '',
@@ -88,8 +88,7 @@ export default function ValidatorInformation({
   };
 
   const validationSchema = Yup.object().shape({
-    [isExistingValidator ? 'vote_account_id' : 'validator_id']:
-      Yup.string().required('required'),
+    [fieldName]: Yup.string().required('required'),
     validator_name: Yup.string().required('required').max(32),
     discord_invite: Yup.string().required('required').max(32),
     twitter_handle: Yup.string()
@@ -167,7 +166,10 @@ export default function ValidatorInformation({
                 },
               }}
               checked={isExistingValidator}
-              onChange={(e) => setIsExistingValidator(!isExistingValidator)}
+              onChange={(e) => {
+                setIsExistingValidator(!isExistingValidator);
+                formik.setFieldValue(fieldName, '');
+              }}
             />
             <Box>
               <Typography variant="h6">{'I own a vote account'}</Typography>

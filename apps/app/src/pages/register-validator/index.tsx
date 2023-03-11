@@ -1,20 +1,22 @@
 import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import CopyTransactionId from '../../common/components/copyTransactionId';
 import ErrorMessage from '../../common/components/ErrorMessage';
 import useNotification from '../../common/utils/notification';
+import ConfirmDialog from '../../components/confirmDialog';
 import CollectionInformation from '../../components/register-validator/collectionInformation';
 import DaoInformation, {
-  DaoInfo
+  DaoInfo,
 } from '../../components/register-validator/daoInformation';
 import ValidatorInformation, {
-  ValidatorInfo
+  ValidatorInfo,
 } from '../../components/register-validator/validatorInformation';
 import VoteAccountInformation, {
-  VoteAccountInfo
+  VoteAccountInfo,
 } from '../../components/register-validator/voteAccountInformation';
 import { CollectionJson, ValidatorRegistration } from '../../interfaces';
 import { RegistryService } from '../../services/registry.service';
@@ -142,27 +144,13 @@ export default function Register() {
     });
     registryService
       .registerProgram(validator)
-      .then((signatures) => {
+      .then(({ signature, program_id }) => {
         notif.update({
-          render: (
-            <>
-              {signatures.map((signature) => (
-                <>
-                  <CopyTransactionId
-                    transaction_id={signature}
-                    message="Registered validator successfully !!"
-                  />
-                  <a
-                    style={{ color: 'white' }}
-                    href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
-                  >
-                    See what's next
-                  </a>
-                </>
-              ))}
-            </>
-          ),
+          render: 'Registered validator successfully !!',
         });
+        setProgramId(program_id);
+        setTransactionSignature(signature);
+        setIsConfirmRaritiesUploadDialogOpen(true);
         setValidatorNotif(undefined);
       })
       .catch((error) => {
@@ -185,6 +173,64 @@ export default function Register() {
       .finally(() => setIsCreating(false));
   }
 
+  const [transactionSignature, setTransactionSignature] = useState<string>('');
+  const [programId, setProgramId] = useState<PublicKey>();
+  const [
+    isConfirmRaritiesUploadDialogOpen,
+    setIsConfirmRaritiesUploadDialogOpen,
+  ] = useState<boolean>(false);
+
+  const uploadUris = () => {
+    setIsCreating(true);
+    const notif = new useNotification();
+    if (validatorNotif) validatorNotif.dismiss();
+    setValidatorNotif(notif);
+    notif.notify({
+      render: "Uploading validator's collection uris...",
+    });
+    if (programId && jsonFileData)
+      registryService
+        .uploadUris(
+          programId,
+          jsonFileData.rarities.map((rarity, index) => ({
+            rarity,
+            uris: jsonFileData.uris[index],
+          }))
+        )
+        .then((signatures) => {
+          notif.update({
+            render: (
+              <>
+                {signatures.map((signature) => (
+                  <CopyTransactionId
+                    transaction_id={signature}
+                    message="Upload rarity uris successfully !!"
+                  />
+                ))}
+              </>
+            ),
+          });
+        })
+        .catch((error) => {
+          notif.update({
+            type: 'ERROR',
+            render: (
+              <ErrorMessage
+                retryFunction={() => uploadUris()}
+                notification={notif}
+                message={
+                  error?.message ||
+                  'There was an error uploading uris. Please try again!!!'
+                }
+              />
+            ),
+            autoClose: false,
+            icon: () => <ReportRounded fontSize="medium" color="error" />,
+          });
+        })
+        .finally(() => setIsCreating(false));
+  };
+
   return (
     <Box
       sx={{
@@ -194,6 +240,33 @@ export default function Register() {
         gridTemplateRows: 'auto 1fr',
       }}
     >
+      <ConfirmDialog
+        closeDialog={() => setIsConfirmRaritiesUploadDialogOpen(false)}
+        isDialogOpen={isConfirmRaritiesUploadDialogOpen}
+        dialogTitle="Confirm proposal vote"
+        dialogMessage={
+          <Typography>
+            <CopyTransactionId
+              transaction_id={transactionSignature}
+              message="Registered validator successfully !!"
+            />
+            <a
+              style={{ color: 'white' }}
+              href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
+            >
+              See what's next
+            </a>
+            <Typography component="span" color={theme.palette.primary.main}>
+              Note:
+            </Typography>
+            <Typography component="span" marginLeft={'4px'}>
+              Do you want to carry on with your collection uris upload
+              transaction ?
+            </Typography>
+          </Typography>
+        }
+        confirm={() => uploadUris()}
+      />
       <Box sx={{ display: 'grid', rowGap: theme.spacing(1) }}>
         {step === 1 && (
           <Box

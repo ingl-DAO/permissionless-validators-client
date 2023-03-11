@@ -249,7 +249,7 @@ export async function createLookupTable(
       [
         lookupTableInst,
         AddressLookupTableProgram.extendLookupTable({
-          addresses: addresses.splice(0, 20),
+          addresses: addresses.splice(0, 27),
           payer: payerPubkey as PublicKey,
           authority: payerPubkey as PublicKey,
           lookupTable: lookupTableAddress,
