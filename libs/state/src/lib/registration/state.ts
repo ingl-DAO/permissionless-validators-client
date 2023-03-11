@@ -16,18 +16,6 @@ export const STORAGE_VALIDATION_PHASE = 332_049_381;
 export const MAX_PROGRAMS_PER_STORAGE_ACCOUNT = 625;
 export const SPAM_PREVENTION_SOL = new BN(1_000_000_000);
 
-export class Config {
-  @field({ type: 'u32' })
-  public validation_phrase!: number;
-
-  @field({ type: 'u32' })
-  public validation_number!: number;
-
-  constructor(properties: Config) {
-    Object.assign(this, properties);
-  }
-}
-
 export class ProgramStorage {
   @field({ type: 'u32' })
   public validation_phrase!: number;

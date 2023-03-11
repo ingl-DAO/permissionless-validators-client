@@ -1,17 +1,12 @@
 import { deserialize } from '@dao-xyz/borsh';
 import {
-  computeVoteAccountRewardAPY,
-  Config,
-  GeneralData,
+  computeVoteAccountRewardAPY, GeneralData,
   GENERAL_ACCOUNT_SEED,
   INGL_CONFIG_SEED,
   INGL_NFT_COLLECTION_KEY,
-  INGL_REGISTRY_PROGRAM_ID,
-  MAX_PROGRAMS_PER_STORAGE_ACCOUNT,
-  ProgramStorage,
-  toBytesInt32,
-  ValidatorConfig,
-  VOTE_ACCOUNT_KEY,
+  INGL_REGISTRY_PROGRAM_ID, ProgramStorage,
+  REGISTRY_PROGRAM_ID, ValidatorConfig,
+  VOTE_ACCOUNT_KEY
 } from '@ingl-permissionless/state';
 import { Metaplex, Nft, Sft, SftWithToken } from '@metaplex-foundation/js';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
@@ -20,7 +15,7 @@ import {
   clusterApiUrl,
   Connection,
   PublicKey,
-  VoteAccountInfo,
+  VoteAccountInfo
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import { InglValidator, Validator } from '../interfaces';
@@ -163,54 +158,43 @@ export class ValidatorService {
       throw Error(
         `Validator registry with id ${registryConfigKey.toBase58()} was not found.`
       );
-    const { validation_number } = deserialize(
-      registryAccountInfo.data,
-      Config,
+    const [permissionlessSorageAddress] = PublicKey.findProgramAddressSync(
+      [Buffer.from('storage')],
+      REGISTRY_PROGRAM_ID
+    );
+    const permissionlessStorageAccountInfo =
+      await this.connection.getAccountInfo(permissionlessSorageAddress);
+    if (!permissionlessStorageAccountInfo) return [];
+
+    const { programs } = deserialize(
+      permissionlessStorageAccountInfo.data,
+      ProgramStorage,
       { unchecked: true }
     );
-    const storageNumeration = Math.floor(
-      validation_number / MAX_PROGRAMS_PER_STORAGE_ACCOUNT
-    );
-    const programIds: PublicKey[] = [];
     const configAccountKeys: PublicKey[] = [];
     const collectionAccountKeys: PublicKey[] = [];
     const generalDataAccountKeys: PublicKey[] = [];
-    const configAccountInfoPromises: Promise<AccountInfo<Buffer> | null>[] = [];
-    let counter = 0;
-    while (counter <= storageNumeration) {
-      const [storageKey] = PublicKey.findProgramAddressSync(
-        [Buffer.from('storage'), toBytesInt32(storageNumeration)],
-        INGL_REGISTRY_PROGRAM_ID
-      );
-      const storageAccount = await this.connection.getAccountInfo(storageKey);
-      if (!storageAccount)
-        throw new Error(`Invalid program storage: ${storageKey}`);
-      const { programs } = deserialize(storageAccount.data, ProgramStorage, {
-        unchecked: true,
-      });
-      configAccountInfoPromises.push(
-        ...programs.map((programId) => {
-          const [configAccountKey] = PublicKey.findProgramAddressSync(
-            [Buffer.from(INGL_CONFIG_SEED)],
-            new PublicKey(programId)
-          );
-          const [collectionAccountKey] = PublicKey.findProgramAddressSync(
-            [Buffer.from(INGL_NFT_COLLECTION_KEY)],
-            new PublicKey(programId)
-          );
-          const [generalDataAccountKey] = PublicKey.findProgramAddressSync(
-            [Buffer.from(GENERAL_ACCOUNT_SEED)],
-            new PublicKey(programId)
-          );
-          programIds.push(new PublicKey(programId));
-          configAccountKeys.push(configAccountKey);
-          collectionAccountKeys.push(collectionAccountKey);
-          generalDataAccountKeys.push(generalDataAccountKey);
-          return this.connection.getAccountInfo(configAccountKey);
-        })
-      );
-      counter++;
-    }
+    const configAccountInfoPromises = await Promise.all(
+      programs.map((program) => {
+        const programId = new PublicKey(program);
+        const [configAccountKey] = PublicKey.findProgramAddressSync(
+          [Buffer.from(INGL_CONFIG_SEED)],
+          new PublicKey(programId)
+        );
+        const [collectionAccountKey] = PublicKey.findProgramAddressSync(
+          [Buffer.from(INGL_NFT_COLLECTION_KEY)],
+          new PublicKey(programId)
+        );
+        const [generalDataAccountKey] = PublicKey.findProgramAddressSync(
+          [Buffer.from(GENERAL_ACCOUNT_SEED)],
+          new PublicKey(programId)
+        );
+        configAccountKeys.push(configAccountKey);
+        collectionAccountKeys.push(collectionAccountKey);
+        generalDataAccountKeys.push(generalDataAccountKey);
+        return this.connection.getAccountInfo(configAccountKey);
+      })
+    );
     const collectionNfts = await Promise.all(
       collectionAccountKeys.map((collectionkey) =>
         this.metaplex.nfts().findByMint({ mintAddress: collectionkey })
@@ -247,15 +231,15 @@ export class ValidatorService {
         }
 
         return {
-          apy: await computeVoteAccountRewardAPY(this.connection, generalData),
           validator_name,
           validator_website: website,
           nft_share: nft_holders_share,
+          unit_backing: new BN(unit_backing),
           image_ref: jsonData?.image as string,
           total_requested_stake: max_primary_stake,
           vote_account_id: new PublicKey(vote_account).toString(),
-          validator_program_id: new PublicKey(programIds[index]).toBase58(),
-          unit_backing: new BN(unit_backing),
+          validator_program_id: new PublicKey(programs[index]).toBase58(),
+          apy: await computeVoteAccountRewardAPY(this.connection, generalData),
         };
       })
     );
