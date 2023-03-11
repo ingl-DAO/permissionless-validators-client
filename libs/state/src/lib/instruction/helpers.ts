@@ -2,7 +2,7 @@ import { Constructor, deserialize } from '@dao-xyz/borsh';
 import { http } from '@ingl-permissionless/axios';
 import {
   SignerWalletAdapterProps,
-  WalletAdapterNetwork,
+  WalletAdapterNetwork
 } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
@@ -18,7 +18,7 @@ import {
   Transaction,
   TransactionInstruction,
   TransactionMessage,
-  VersionedTransaction,
+  VersionedTransaction
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import { GeneralData, STAKE_PROGRAM_ID, ValidatorConfig } from '../state';
@@ -386,21 +386,19 @@ export async function forwardExistingTransactions(
 ) {
   const { connection, signAllTransactions } = walletConnection;
 
-  const blockhashObj = await connection.getLatestBlockhash();
-  transactions.map((transaction) => {
-    if (additionalUnits) {
+  if (additionalUnits) {
+    transactions = transactions.map((transaction) => {
       const additionalComputeBudgetInstruction =
         ComputeBudgetProgram.setComputeUnitLimit({
           units: additionalUnits,
         });
       return transaction.add(additionalComputeBudgetInstruction);
-    }
-    return transaction;
-  });
+    });
+  }
   const signedTransactions = signAllTransactions
     ? await signAllTransactions(transactions)
     : null;
-  if (!signedTransactions) throw new Error('No transactions could be sign');
+  if (!signedTransactions) throw new Error('No transactions could be signed');
   return Promise.all(
     signedTransactions.map(async (signedTransaction) => {
       const signature = await connection.sendRawTransaction(
@@ -408,7 +406,8 @@ export async function forwardExistingTransactions(
       );
       await connection.confirmTransaction({
         signature,
-        ...blockhashObj,
+        blockhash: signedTransaction.recentBlockhash as string,
+        lastValidBlockHeight: signedTransaction.lastValidBlockHeight as number,
       });
       return signature;
     })
