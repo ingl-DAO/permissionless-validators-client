@@ -36,7 +36,6 @@ export const forwardLegacyTransaction = async (
     isSignatureRequired?: boolean;
   }
 ) => {
-  console.log('forwarding legacy transaction...');
   const { connection, publicKey: payerKey, signTransaction } = walletConnection;
 
   let transaction = new Transaction();
@@ -93,7 +92,6 @@ export const forwardMultipleLegacyTransactions = async (
     signingKeypairs?: Keypair[];
   }[]
 ) => {
-  console.log('forwarding multiple legacy transactions...');
   const {
     connection,
     publicKey: payerKey,
@@ -286,7 +284,6 @@ export async function computeVoteAccountRewardAPY(
     return finalVoteReward;
   })();
 
-  console.log(latestVoteRewards);
   const rewardPerPrimaryLamportPerEpoch =
     latestVoteRewards.length === 0
       ? 0
@@ -483,9 +480,7 @@ export async function getDeserializedAccountData<T>(
   if (!accountInfo) {
     throw new Error('Account not found');
   }
-  console.log(
-    deserialize(accountInfo.data as Buffer, schema, { unchecked: true })
-  );
+
   return deserialize(accountInfo.data as Buffer, schema, { unchecked: true });
 }
 

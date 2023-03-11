@@ -15,6 +15,7 @@ import {
   INGL_CONFIG_SEED,
   INGL_MINT_AUTHORITY_KEY,
   INGL_NFT_COLLECTION_KEY,
+  INGL_PROPOSAL_KEY,
   isMaximumPrimaryStakeReached,
   METAPLEX_PROGRAM_ID,
   MintNft,
@@ -23,6 +24,7 @@ import {
   NFT_ACCOUNT_CONST,
   PD_POOL_ACCOUNT_KEY,
   Redeem,
+  toBytesInt32,
   UnDelegateNFT,
   URIS_ACCOUNT_SEED,
   ValidatorConfig,
@@ -55,6 +57,7 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
+  SYSVAR_SLOT_HASHES_PUBKEY,
   Transaction,
   TransactionInstruction,
   type Connection,
@@ -122,7 +125,6 @@ export class NftService {
     const payerPubkey = this.walletContext.publicKey;
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
-    console.log('0');
     // Check if max primary stake already reached
     await isMaximumPrimaryStakeReached(
       'You can not mint anymore, the maximum delegable stake is currently attained',
@@ -130,7 +132,6 @@ export class NftService {
       this.generalAccountPDA[0],
       this.connection
     );
-    console.log('1');
     await willExceedMaximumPrimaryStake(
       "All the NFTs can't be minted, it will exceed the maximum delegable stake",
       numberOfNfts,
@@ -138,7 +139,6 @@ export class NftService {
       this.generalAccountPDA[0],
       this.connection
     );
-    console.log('2');
 
     const payerAccount: AccountMeta = {
       pubkey: this.walletContext.publicKey as PublicKey,
@@ -332,7 +332,6 @@ export class NftService {
         },
         instructions
       );
-      console.log('all transaction IDs: ', result);
       return {
         tokenMints: mintKeyPairs.map((keypair) => keypair.publicKey),
         signature: result[result.length - 1],
@@ -500,8 +499,6 @@ export class NftService {
       isSigner: false,
       isWritable: true,
     };
-    console.log('voteAccount: ', voteAccount);
-    console.log('creating redeem instruction...');
     const redeemInglGemInstruction = new TransactionInstruction({
       programId: this.programId,
       data: Buffer.from(serialize(new Redeem(0))),
@@ -694,6 +691,28 @@ export class NftService {
       isWritable: true,
     };
 
+    const generalData = await getDeserializedAccountData(
+      this.connection,
+      generalAccount.pubkey,
+      GeneralData
+    );
+    const unfinalizedProposalAccounts: AccountMeta[] = [];
+    if (generalData.unfinalized_proposals.length > 0) {
+      for (let i = 0; i < generalData.unfinalized_proposals.length; i++) {
+        unfinalizedProposalAccounts.push({
+          pubkey: PublicKey.findProgramAddressSync(
+            [
+              Buffer.from(INGL_PROPOSAL_KEY),
+              toBytesInt32(generalData.unfinalized_proposals[i]),
+            ],
+            this.programId
+          )[0],
+          isSigner: false,
+          isWritable: true,
+        });
+      }
+    }
+
     const undelegateSolInstruction = new TransactionInstruction({
       programId: this.programId,
       data: Buffer.from(serialize(new UnDelegateNFT(0))),
@@ -707,6 +726,7 @@ export class NftService {
         generalAccount,
         systemProgramAccount,
         authorizedWithdrawerAccount,
+        ...unfinalizedProposalAccounts,
       ],
     });
     try {
@@ -859,8 +879,6 @@ export class NftService {
           [Buffer.from(NFT_ACCOUNT_CONST), tokenMint.toBuffer()],
           this.programId
         );
-        console.log(index, nftPubkey.toString());
-        console.log(getAssociatedTokenAddressSync(tokenMint, payerPubkey));
         return [
           ...accounts,
           {
@@ -1094,7 +1112,11 @@ export class NftService {
       isWritable: false,
     };
 
-    const feedAccountInfos = this.getFeedAccountInfos(network);
+    const slotHashesAccount: AccountMeta = {
+      pubkey: SYSVAR_SLOT_HASHES_PUBKEY,
+      isSigner: false,
+      isWritable: false,
+    };
 
     const instructionAccounts = [
       payerAccount,
@@ -1107,8 +1129,7 @@ export class NftService {
       configAccount,
       urisAccount,
       tokenProgramAccount,
-      //switchbord history buffer account infos
-      ...feedAccountInfos,
+      slotHashesAccount,
 
       metaplexProgramAccount,
     ];
@@ -1125,24 +1146,12 @@ export class NftService {
     });
 
     try {
-      //   const closeLookupTableInstructions = getCloseLookupTableInstructions(
-      //     this.walletContext.publicKey as PublicKey,
-      //     lookupTableAddresses
-      //   );
-      return await new Promise<string>((resolve, reject) => {
-        setTimeout(async () => {
-          try {
-            const transactionId = await forwardV0Transaction(
-              { connection: this.connection, wallet: this.walletContext },
-              [imprintRarityInstruction],
-              { lookupTableAddresses, additionalUnits: 600_000 }
-            );
-            resolve(transactionId);
-          } catch (error) {
-            reject(error);
-          }
-        }, 5000);
-      });
+      const transactionId = await forwardV0Transaction(
+        { connection: this.connection, wallet: this.walletContext },
+        [imprintRarityInstruction],
+        { lookupTableAddresses, additionalUnits: 600_000 }
+      );
+      return transactionId;
     } catch (error) {
       throw new Error('Failed to imprint rarity with error ' + error);
     }

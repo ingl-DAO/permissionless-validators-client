@@ -6,14 +6,13 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import Footer from '../../components/footer';
-import theme from '../../theme/theme';
+import Footer from '../footer';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { ProgramUsage, signIn } from '@ingl-permissionless/axios';
 import { toast } from 'react-toastify';
 
-export default function SignIn() {
+export function SignIn() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleSubmit = (code: string) => {
@@ -53,23 +52,23 @@ export default function SignIn() {
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          padding: theme.spacing(0, 2),
+          padding: '0px 20px 0px 20px',
         }}
       >
         <img
           src={'/assets/full_logo.png'}
           alt="ingl-logo"
-          style={{ width: '60%', maxWidth: '200px' }}
+          style={{ width: '60%', maxWidth: '250px' }}
         />
         <Typography
           sx={{
             fontSize: '24px',
             fontWeight: '300',
             textAlign: 'center',
-            margin: theme.spacing(2, 0, 3, 0),
+            margin: '20px 0px 30px 0px',
           }}
         >
-          Democratizing the Creation Of Validators on Solana
+          Commoditizing Solana Validators
         </Typography>
         <Box
           component="form"
@@ -78,8 +77,8 @@ export default function SignIn() {
             background: '#28293D',
             boxShadow: '0px -10px 40px rgba(0, 0, 0, 0.1)',
             borderRadius: '8px',
-            padding: theme.spacing(5, 4, 7, 4),
-            margin: theme.spacing(5, 0),
+            padding: '50px 40px 70px 40px',
+            margin: '50px 0px 50px 0px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'flex-start',
@@ -109,7 +108,7 @@ export default function SignIn() {
               sx={{
                 borderRadius: '8px',
                 height: '60px',
-                margin: theme.spacing(1.5, 0),
+                margin: '15px 0px 15px 0px',
                 '& input': {
                   borderRadius: '8px',
                   backgroundColor: '#1C1C28',
@@ -127,8 +126,8 @@ export default function SignIn() {
             type="submit"
             sx={{
               width: '100%',
-              padding: theme.spacing(1.5, 0, 1.5, 0),
-              margin: theme.spacing(3, 0, 3, 0),
+              padding: '15px 0px 15px 0px',
+              margin: '30px 0px 30px 0px',
               borderRadius: '15px',
               fontFamily: 'Poppins',
             }}

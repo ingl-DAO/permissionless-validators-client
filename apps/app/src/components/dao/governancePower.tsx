@@ -69,6 +69,7 @@ export default function GovernancePower({
               gridAutoFlow: 'column',
               justifyContent: 'start',
               columnGap: theme.spacing(1.2),
+              padding: '2px',
             }}
           >
             {areNftsLoading ? (
@@ -89,18 +90,50 @@ export default function GovernancePower({
               <Typography variant="caption">You own no Nft's</Typography>
             ) : (
               nfts.map(({ image_ref, numeration }, index) => (
-                <img
-                  alt={`${numeration}`}
-                  src={image_ref}
+                <Box
                   key={index}
-                  width="88px"
-                  height="88px"
-                  style={{
-                    objectFit: 'cover',
-                    borderRadius: theme.spacing(2),
-                    border: `2px solid ${theme.palette.primary.main}`,
+                  sx={{
+                    height: '88px',
+                    width: '88px',
+                    position: 'relative',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
                   }}
-                />
+                >
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      backgroundColor: '#1C1C28',
+                      padding: '5px 7px',
+                      borderRadius: '30px',
+                      margin: 'auto',
+                      zIndex: '2',
+                    }}
+                  >
+                    <Typography
+                      variant="h1"
+                      sx={{
+                        fontSize: { laptop: 'initial', mobile: '0.80rem' },
+                        textAlign: 'center',
+                        color: theme.palette.primary.main,
+                      }}
+                    >
+                      {`#${numeration}`}
+                    </Typography>
+                  </Box>
+                  <img
+                    alt={`${numeration}`}
+                    src={image_ref}
+                    width="100%"
+                    height="100%"
+                    style={{
+                      objectFit: 'cover',
+                      borderRadius: theme.spacing(2),
+                      border: `2px solid ${theme.palette.primary.main}`,
+                    }}
+                  />
+                </Box>
               ))
             )}
           </Box>

@@ -103,8 +103,8 @@ export class NftData {
   @field({ type: option('u8') })
   public rarity?: number;
 
-  @field({ type: option('u32') })
-  public rarity_seed_time?: number;
+  @field({ type: option('u64') })
+  public rarity_seed_slot?: number;
 
   @field({ type: FundsLocation })
   public funds_location!: FundsLocation;

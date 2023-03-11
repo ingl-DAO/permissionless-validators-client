@@ -19,7 +19,7 @@ export default function Header() {
       <img
         alt="ingl marketplace logo"
         src={'/assets/full_logo.png'}
-        style={{ cursor: 'pointer' }}
+        style={{ cursor: 'pointer', height: '45px' }}
         onClick={() => navigate('/')}
       />
       <Box

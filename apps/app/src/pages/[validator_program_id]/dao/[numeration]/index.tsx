@@ -2,7 +2,7 @@ import {
   ArrowBackIosNewOutlined,
   AutorenewOutlined,
   DoNotDisturbAltOutlined,
-  ReportRounded
+  ReportRounded,
 } from '@mui/icons-material';
 import { Box, Button, Chip, Skeleton, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
@@ -22,13 +22,13 @@ import {
   GovernanceInterface,
   InglNft,
   InglValidator,
-  VoteAccountEnum
+  VoteAccountEnum,
 } from '../../../../interfaces';
 import { NftService } from '../../../../services/nft.service';
 import {
   ProgramVersion,
   ProposalService,
-  VersionStatus
+  VersionStatus,
 } from '../../../../services/proposal.service';
 import { ValidatorService } from '../../../../services/validator.service';
 import theme from '../../../../theme/theme';
@@ -215,11 +215,13 @@ export default function ProposalVote() {
       proposalNotif.dismiss();
     }
     setProposalNotif(notif);
-    proposalService
-      ?.verifyVersion(programId)
-      .then((programVersion) => {
-        if (programId) setBufferVersion(programVersion);
-        setProgramVersion(programVersion);
+    Promise.all([
+      proposalService?.verifyVersion(),
+      proposalService?.verifyVersion(programId),
+    ])
+      .then(([programVersionResult, bufferVersionResult]) => {
+        setBufferVersion(bufferVersionResult);
+        setProgramVersion(programVersionResult);
         notif.dismiss();
       })
       .catch((error) => {
@@ -299,6 +301,7 @@ export default function ProposalVote() {
             />
           ),
         });
+
         setVoteNotif(undefined);
       })
       .catch((error) => {
@@ -405,7 +408,6 @@ export default function ProposalVote() {
   return (
     <>
       <ConfirmDialog
-        isCancelContained
         dialogMessage={
           <Typography>
             <Typography component="span" color={theme.palette.primary.main}>
@@ -413,8 +415,8 @@ export default function ProposalVote() {
             </Typography>
             <Typography component="span" marginLeft={'4px'}>
               This is a suspicious proposal and could potentially lead to loss
-              of all DAO members. We recommend voting against the proposal for
-              the safety of all DAO members.
+              of funds of all DAO members. We recommend voting against the
+              proposal for the safety of all DAO members.
             </Typography>
           </Typography>
         }
@@ -422,18 +424,15 @@ export default function ProposalVote() {
         dialogTitle={'Confirm vote cast'}
         closeDialog={() => {
           setIsConfirmUnsafeProposalVoteDialogOpen(false);
-          setVoteChoice(undefined);
+          setVoteChoice(true);
         }}
         confirm={() => {
-          setIsConfirmUnsafeProposalVoteDialogOpen(false);
           setIsConfirmVoteProposalDialogOpen(true);
         }}
       />
-
       <ConfirmDialog
         closeDialog={() => {
           setIsConfirmVoteProposalDialogOpen(false);
-          setVoteChoice(undefined);
         }}
         isDialogOpen={isConfirmVoteProposalDialogOpen}
         dialogTitle="Confirm proposal vote"
@@ -517,8 +516,9 @@ export default function ProposalVote() {
               position: 'relative',
             }}
           >
-            {!programVersion ||
-              (programVersion.status === VersionStatus.Unsafe && (
+            {proposalDetails?.programUpgrade &&
+              (!bufferVersion ||
+                bufferVersion.status === VersionStatus.Unsafe) && (
                 <Chip
                   icon={<DoNotDisturbAltOutlined sx={{ color: 'white' }} />}
                   label="We recommend voting against the proposal"
@@ -530,7 +530,7 @@ export default function ProposalVote() {
                     transform: 'translate(-50%, -50%)',
                   }}
                 />
-              ))}
+              )}
             <Box display="grid" rowGap={1}>
               <Box
                 sx={{
@@ -740,29 +740,21 @@ export default function ProposalVote() {
                               color="#D5F2E3"
                               title="Buffer address of new program"
                               unsafe={
-                                !programVersion ||
-                                programVersion.status === VersionStatus.Unsafe
+                                !bufferVersion ||
+                                bufferVersion.status === VersionStatus.Unsafe
                               }
                               value={
-                                proposalDetails.programUpgrade.buffer_account
-                              }
-                            />
-                            <PropoposalVoteLine
-                              title="Address before program upgrade"
-                              strikethrough
-                              value={
-                                validatorDetails &&
-                                !areValidatorDetailsLoading ? (
-                                  validatorDetails.validator_id
-                                ) : (
+                                bufferVersion === undefined ? (
                                   <Skeleton
                                     animation="wave"
-                                    width={100}
+                                    height="80%"
                                     component="span"
                                     sx={{
                                       backgroundColor: 'rgb(137 127 127 / 43%)',
                                     }}
                                   />
+                                ) : (
+                                  proposalDetails.programUpgrade.buffer_account
                                 )
                               }
                             />
@@ -779,6 +771,36 @@ export default function ProposalVote() {
                             >
                               <PropoposalVoteLine
                                 title="Current program version"
+                                value={
+                                  programVersion === undefined ? (
+                                    <Skeleton
+                                      animation="wave"
+                                      height="80%"
+                                      component="span"
+                                      sx={{
+                                        backgroundColor:
+                                          'rgb(137 127 127 / 43%)',
+                                      }}
+                                    />
+                                  ) : programVersion === null ||
+                                    programVersion.status ===
+                                      VersionStatus.Unsafe ? (
+                                    'UNSAFE - Not a version of ingl program'
+                                  ) : (
+                                    `Version ${programVersion.version}`
+                                  )
+                                }
+                                color="#E5B800"
+                                titleColor="rgba(255, 204, 0, 0.5)"
+                              />
+                              <PropoposalVoteLine
+                                title="New program version"
+                                titleColor={
+                                  !bufferVersion ||
+                                  bufferVersion.status === VersionStatus.Unsafe
+                                    ? 'rgba(239, 35, 60, 0.5)'
+                                    : 'rgba(2, 195, 154, 1)'
+                                }
                                 value={
                                   bufferVersion === undefined ? (
                                     <Skeleton
@@ -798,39 +820,9 @@ export default function ProposalVote() {
                                     `Version ${bufferVersion.version}`
                                   )
                                 }
-                                color="#E5B800"
-                                titleColor="rgba(255, 204, 0, 0.5)"
-                              />
-                              <PropoposalVoteLine
-                                title="New program version"
-                                titleColor={
-                                  !programVersion ||
-                                  programVersion.status === VersionStatus.Unsafe
-                                    ? 'rgba(239, 35, 60, 0.5)'
-                                    : 'rgba(2, 195, 154, 1)'
-                                }
-                                value={
-                                  programVersion === undefined ? (
-                                    <Skeleton
-                                      animation="wave"
-                                      height="80%"
-                                      component="span"
-                                      sx={{
-                                        backgroundColor:
-                                          'rgb(137 127 127 / 43%)',
-                                      }}
-                                    />
-                                  ) : !programVersion ||
-                                    programVersion.status ===
-                                      VersionStatus.Unsafe ? (
-                                    'UNSAFE - Not a version of ingl program'
-                                  ) : (
-                                    `Version ${programVersion.version}`
-                                  )
-                                }
                                 unsafe={
-                                  !programVersion ||
-                                  programVersion.status === VersionStatus.Unsafe
+                                  !bufferVersion ||
+                                  bufferVersion.status === VersionStatus.Unsafe
                                 }
                                 color="#02C39A"
                               />
@@ -1054,6 +1046,10 @@ export default function ProposalVote() {
                   isVoting ||
                   areValidatorDetailsLoading ||
                   isProposalDetailLoading ||
+                  (proposalDetails?.programUpgrade &&
+                    bufferVersion === undefined) ||
+                  (proposalDetails?.programUpgrade &&
+                    programVersion === undefined) ||
                   voteChoice
                 }
                 onClick={() => {
