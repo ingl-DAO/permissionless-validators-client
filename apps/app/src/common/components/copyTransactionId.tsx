@@ -4,9 +4,11 @@ import { Box, Typography } from '@mui/material';
 export default function CopyTransactionId({
   transaction_id,
   message,
+  fullLength,
 }: {
   transaction_id: string;
   message?: string;
+  fullLength?: boolean;
 }) {
   return (
     <Box
@@ -22,7 +24,9 @@ export default function CopyTransactionId({
         <Typography variant="body2">{message}</Typography>
         <Typography variant="caption">
           {`Transaction Id: ${
-            transaction_id.slice(0, 5) + '...' + transaction_id.slice(-4)
+            fullLength
+              ? transaction_id.slice(0, 32) + '...' + transaction_id.slice(-32)
+              : transaction_id.slice(0, 10) + '...' + transaction_id.slice(-10)
           }`}
         </Typography>
       </Box>
