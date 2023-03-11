@@ -5,34 +5,39 @@ import {
   BPF_LOADER_UPGRADEABLE_ID,
   COLLECTION_HOLDER_KEY,
   createLookupTable,
-  forwardExistingTransactions, GENERAL_ACCOUNT_SEED,
+  GENERAL_ACCOUNT_SEED,
   INGL_CONFIG_SEED,
   INGL_MINT_AUTHORITY_KEY,
   INGL_NFT_COLLECTION_KEY,
   INGL_REGISTRY_PROGRAM_ID,
-  INGL_TEAM_ID, METAPLEX_PROGRAM_ID,
-  URIS_ACCOUNT_SEED
+  INGL_TEAM_ID,
+  METAPLEX_PROGRAM_ID,
+  URIS_ACCOUNT_SEED,
 } from '@ingl-permissionless/state';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID
+  TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import {
   SignerWalletAdapterProps,
-  WalletNotConnectedError
+  WalletNotConnectedError,
 } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
-  AccountMeta, Connection, PublicKey,
+  AccountMeta,
+  Connection,
+  PublicKey,
   SIGNATURE_LENGTH_IN_BYTES,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  Transaction, VersionedMessage,
+  Transaction,
+  VersionedMessage,
   VersionedTransaction,
-  VoteProgram
+  VoteProgram,
 } from '@solana/web3.js';
-import { Rarity, ValidatorRegistration } from '../interfaces';
+import { toast } from 'react-toastify';
+import { CollectionJson, ValidatorRegistration } from '../interfaces';
 export class RegistryService {
   constructor(
     private readonly connection: Connection,
@@ -198,30 +203,54 @@ export class RegistryService {
     return transactionV0;
   }
 
-  async uploadUris(programPubkey: PublicKey, rarities: Rarity[]) {
+  async uploadUris(
+    programPubkey: PublicKey,
+    { uris, rarities, rarity_names }: CollectionJson
+  ) {
     const payerPubkey = this.walletContext.publicKey;
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
 
-    const { data: uploadUritransactions } = await http.post<Buffer[]>(
-      `programs/${programPubkey.toBase58()}/upload-uris`,
-      {
-        payer_id: payerPubkey.toBase58(),
-        rarities,
+    const { data: uploadUriTransactions } = await http.post<
+      { transaction: Buffer; rarity: number }[]
+    >(`programs/${programPubkey.toBase58()}/upload-uris`, {
+      payer_id: payerPubkey.toBase58(),
+      rarities: rarities.map((rarity, index) => ({
+        rarity,
+        uris: uris[index],
+      })),
+    });
+    const transactions = uploadUriTransactions.map(
+      ({ transaction: wireTransaction, rarity }) => {
+        const transaction = Transaction.from(Buffer.from(wireTransaction));
+        return { rarity, transaction };
       }
     );
-    return await forwardExistingTransactions(
-      {
-        connection: this.connection,
-        payerKey: payerPubkey,
-        signAllTransactions: this.walletContext
-          .signAllTransactions as SignerWalletAdapterProps['signAllTransactions'],
-      },
-      uploadUritransactions.map((wireTransaction) =>
-        Transaction.from(Buffer.from(wireTransaction))
-      ),
-      240_000
-    );
+    const signAllTransactions = this.walletContext
+      .signAllTransactions as SignerWalletAdapterProps['signAllTransactions'];
+    const signedTransactions = signAllTransactions
+      ? await signAllTransactions(transactions.map((_) => _.transaction))
+      : null;
+    if (!signedTransactions) throw new Error('No transactions could be signed');
+
+    let count = 0;
+    const signatures: { rarity_name: string; signature: string }[] = [];
+    while (count < signedTransactions.length) {
+      const blockhashObj = await this.connection.getLatestBlockhash();
+      const signedTransaction = signedTransactions[count];
+      const signature = await this.connection.sendRawTransaction(
+        (signedTransaction as Transaction).serialize()
+      );
+      await this.connection.confirmTransaction({
+        signature,
+        ...blockhashObj,
+      });
+      const rarity_name = rarity_names[transactions[count].rarity];
+      toast.info(`Transaction ${count}: ${rarity_name} uris upload`);
+      signatures.push({ signature, rarity_name });
+      count++;
+    }
+    return signatures;
   }
 
   private async createInitMetaAccounts(
