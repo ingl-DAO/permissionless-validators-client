@@ -1,4 +1,8 @@
-import { ArrowBackIosNewOutlined, ReportRounded } from '@mui/icons-material';
+import {
+  ArrowBackIosNewOutlined,
+  ContentCopyRounded,
+  ReportRounded,
+} from '@mui/icons-material';
 import { Box, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
@@ -99,7 +103,7 @@ export default function Register() {
     3: (
       <CollectionInformation
         onPrev={(val) => {
-          setJsonFileData(val.jsonFileData);
+          setJsonFileData(val.jsonFileData as CollectionJson);
           setSolBacking(val.solBacking);
           setCreatorRoyalties(val.creatorRoyalties);
           setStep(2);
@@ -188,47 +192,48 @@ export default function Register() {
     notif.notify({
       render: "Uploading validator's collection uris...",
     });
-    if (programId && jsonFileData)
-      registryService
-        .uploadUris(
-          programId,
-          jsonFileData.rarities.map((rarity, index) => ({
-            rarity,
-            uris: jsonFileData.uris[index],
-          }))
-        )
-        .then((signatures) => {
-          notif.update({
-            render: (
-              <>
-                {signatures.map((signature) => (
-                  <CopyTransactionId
-                    transaction_id={signature}
-                    message="Upload rarity uris successfully !!"
-                  />
-                ))}
-              </>
-            ),
-          });
-        })
-        .catch((error) => {
-          notif.update({
-            type: 'ERROR',
-            render: (
-              <ErrorMessage
-                retryFunction={() => uploadUris()}
-                notification={notif}
-                message={
-                  error?.message ||
-                  'There was an error uploading uris. Please try again!!!'
-                }
+    registryService
+      .uploadUris(programId as PublicKey, jsonFileData as CollectionJson)
+      .then((signatures) => {
+        notif.update({
+          render: (
+            <Typography
+              onClick={() =>
+                navigator.clipboard.writeText(JSON.stringify(signatures))
+              }
+            >
+              Registered validator successfully. Copy all signatures
+              <ContentCopyRounded
+                fontSize="small"
+                sx={{
+                  color: 'white',
+                  '&:hover': { color: `#EF233C` },
+                  justifySelf: 'start',
+                  cursor: 'pointer',
+                }}
               />
-            ),
-            autoClose: false,
-            icon: () => <ReportRounded fontSize="medium" color="error" />,
-          });
-        })
-        .finally(() => setIsCreating(false));
+            </Typography>
+          ),
+        });
+      })
+      .catch((error) => {
+        notif.update({
+          type: 'ERROR',
+          render: (
+            <ErrorMessage
+              retryFunction={() => uploadUris()}
+              notification={notif}
+              message={
+                error?.message ||
+                'There was an error uploading uris. Please try again!!!'
+              }
+            />
+          ),
+          autoClose: false,
+          icon: () => <ReportRounded fontSize="medium" color="error" />,
+        });
+      })
+      .finally(() => setIsCreating(false));
   };
 
   return (
@@ -243,25 +248,35 @@ export default function Register() {
       <ConfirmDialog
         closeDialog={() => setIsConfirmRaritiesUploadDialogOpen(false)}
         isDialogOpen={isConfirmRaritiesUploadDialogOpen}
-        dialogTitle="Confirm proposal vote"
+        dialogTitle="Confirm collection uris upload"
         dialogMessage={
           <Typography>
             <CopyTransactionId
+              fullLength
               transaction_id={transactionSignature}
               message="Registered validator successfully !!"
             />
-            <a
-              style={{ color: 'white' }}
-              href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
-            >
-              See what's next
-            </a>
-            <Typography component="span" color={theme.palette.primary.main}>
-              Note:
+            <Typography>
+              <Typography component="span" color={theme.palette.primary.main}>
+                Note:
+              </Typography>
+              <Typography
+                sx={{ marginLeft: theme.spacing(1) }}
+                component="span"
+              >
+                Do you want to carry on with your collection uris upload
+                transaction ?
+              </Typography>
             </Typography>
-            <Typography component="span" marginLeft={'4px'}>
-              Do you want to carry on with your collection uris upload
-              transaction ?
+            <Typography textAlign="right">
+              <a
+                style={{ color: 'white' }}
+                target="_blank"
+                href="https://whitepaper.ingl.io/components/onboarding-a-validator/after-registration."
+                rel="noreferrer"
+              >
+                See what's next
+              </a>
             </Typography>
           </Typography>
         }

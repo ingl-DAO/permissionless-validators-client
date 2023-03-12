@@ -263,14 +263,22 @@ export default function ValidatorStats() {
               upper={
                 areDetailsLoading || !details
                   ? 0
-                  : new BN(details.total_delegated_stake).toNumber() /
-                    LAMPORTS_PER_SOL
+                  : Number(
+                      (
+                        new BN(details.total_delegated_stake).toNumber() /
+                        LAMPORTS_PER_SOL
+                      ).toFixed(3)
+                    )
               }
               bottom={
                 areDetailsLoading || !details
                   ? 0
-                  : new BN(details.max_primary_stake).toNumber() /
-                    LAMPORTS_PER_SOL
+                  : Number(
+                      (
+                        new BN(details.max_primary_stake).toNumber() /
+                        LAMPORTS_PER_SOL
+                      ).toFixed(3)
+                    )
               }
               title_2="Total stake requested(SOL)"
               skeleton={areDetailsLoading || !details}
@@ -280,8 +288,12 @@ export default function ValidatorStats() {
               upper={
                 areDetailsLoading || !details
                   ? 0
-                  : new BN(details.total_secondary_stake).toNumber() /
-                    LAMPORTS_PER_SOL
+                  : Number(
+                      (
+                        new BN(details.total_secondary_stake).toNumber() /
+                        LAMPORTS_PER_SOL
+                      ).toFixed(3)
+                    )
               }
               skeleton={areDetailsLoading || !details}
             />

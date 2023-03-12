@@ -143,7 +143,6 @@ export default function ValidatorInformation({
           </Button>
         </Box>
       </Box>
-      data.parsed.info.meta.authorized.withdrawer
       <Scrollbars autoHide>
         <Box sx={{ display: 'grid', rowGap: theme.spacing(1) }}>
           <CustomInput
