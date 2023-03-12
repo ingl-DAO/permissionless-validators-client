@@ -35,13 +35,13 @@ abstract class Instruction {}
 @variant(0)
 export class List extends Instruction {
   @field({ type: 'u8' })
-  log_level!: number;
+  public log_level!: number;
 
   @field({ type: 'u64' })
   public authorized_withdrawer_cost!: BN;
 
   @field({ type: 'u32' })
-  public mediatable_date!: number;
+  public mediation_interval!: number;
 
   @field({ type: vec(SecondaryItem) })
   public secondary_items!: SecondaryItem[];
@@ -64,7 +64,7 @@ export class List extends Instruction {
 @variant(1)
 export class DeList extends Instruction {
   @field({ type: 'u8' })
-  log_level!: number;
+  public log_level!: number;
 
   constructor(log_level: number) {
     super();
@@ -75,7 +75,7 @@ export class DeList extends Instruction {
 @variant(2)
 export class Buy extends Instruction {
   @field({ type: 'u8' })
-  log_level!: number;
+  public log_level!: number;
 
   constructor(log_level: number) {
     super();
@@ -86,7 +86,7 @@ export class Buy extends Instruction {
 @variant(3)
 export class WithdrawRewards extends Instruction {
   @field({ type: 'u8' })
-  log_level!: number;
+  public log_level!: number;
 
   constructor(log_level: number) {
     super();
@@ -97,7 +97,7 @@ export class WithdrawRewards extends Instruction {
 @variant(4)
 export class RequestMediation extends Instruction {
   @field({ type: 'u8' })
-  log_level!: number;
+  public log_level!: number;
 
   constructor(log_level: number) {
     super();
@@ -108,7 +108,7 @@ export class RequestMediation extends Instruction {
 @variant(5)
 export class Mediate extends Instruction {
   @field({ type: 'u8' })
-  log_level!: number;
+  public log_level!: number;
 
   @field({ type: MediationShares })
   public mediate_shares!: MediationShares;
@@ -122,7 +122,7 @@ export class Mediate extends Instruction {
 @variant(6)
 export class ValidateSecondaryItemsTransfers extends Instruction {
   @field({ type: 'u8' })
-  log_level!: number;
+  public log_level!: number;
 
   @field({ type: 'u32' })
   public item_index!: number;
