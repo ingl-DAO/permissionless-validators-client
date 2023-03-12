@@ -14,12 +14,13 @@ import {
   ProgramStorage,
   PROGRAM_STORAGE_SEED,
   REGISTRY_PROGRAM_ID,
+  SecondaryItem,
   Storage,
   TEAM_ADDRESS,
   ValidateSecondaryItemsTransfers,
   WithdrawRewards,
 } from '@ingl-permissionless/state';
-import { Account, PublicKey } from '@metaplex-foundation/js';
+import { PublicKey } from '@metaplex-foundation/js';
 import {
   WalletAdapterNetwork,
   WalletNotConnectedError,
@@ -66,6 +67,7 @@ export class ValidatorService {
   async listValidator({
     vote_account_id,
     price,
+    mediation_interval,
     secondary_items,
     ...newValidator
   }: ValidatorListing) {
@@ -79,15 +81,6 @@ export class ValidatorService {
     );
     if (!voteAccountInfo) throw new Error('Invalid vote account id');
 
-    const listInstruction = new List({
-      log_level: 0,
-      ...newValidator,
-      authorized_withdrawer_cost: new BN(price * LAMPORTS_PER_SOL),
-      secondary_items: secondary_items.map(({ price, ...item }) => ({
-        cost: new BN(price * LAMPORTS_PER_SOL),
-        ...item,
-      })),
-    });
     const { program_id } = await this.getProgramId(ProgramUsage.Marketplace);
     const programId = new PublicKey(program_id);
     const accounts = await this.getListingAccounts(
@@ -128,22 +121,36 @@ export class ValidatorService {
       isSigner: false,
       isWritable: false,
     };
-    const listTransactionInstruction = new TransactionInstruction({
-      programId,
-      data: Buffer.from(serialize(listInstruction)),
-      keys: [
-        ...accounts,
-        teamAccountMeta,
-        registryStorageAccountMeta,
-        systemProgramAccountMeta,
-
-        bpfloaderAccountMeta,
-        voteProgramAccountMeta,
-        registryProgramAccountMeta,
-      ],
+    const listInstruction = new List({
+      log_level: 0,
+      ...newValidator,
+      mediation_interval: mediation_interval * 86400,
+      authorized_withdrawer_cost: new BN(price * LAMPORTS_PER_SOL),
+      secondary_items: secondary_items.map(
+        ({ price, name, description }) =>
+          new SecondaryItem({
+            name,
+            description,
+            cost: new BN(price * LAMPORTS_PER_SOL),
+          })
+      ),
     });
 
     try {
+      const listTransactionInstruction = new TransactionInstruction({
+        programId,
+        data: Buffer.from(serialize(listInstruction)),
+        keys: [
+          ...accounts,
+          teamAccountMeta,
+          registryStorageAccountMeta,
+          systemProgramAccountMeta,
+
+          bpfloaderAccountMeta,
+          voteProgramAccountMeta,
+          registryProgramAccountMeta,
+        ],
+      });
       const signature = await forwardLegacyTransaction(
         {
           publicKey: payerPubkey,
@@ -194,7 +201,7 @@ export class ValidatorService {
     };
     const delistTransactionInstruction = new TransactionInstruction({
       programId,
-      data: Buffer.from(serialize(new DeList(1))), // TODO: @KDMark reverse uintarray
+      data: Buffer.from(serialize(new DeList(0))),
       keys: [...accounts, bpfloaderAccountMeta, voteProgramAccountMeta],
     });
 
@@ -408,7 +415,7 @@ export class ValidatorService {
       validator_logo_url,
       vote_account,
       description,
-      mediatable_date,
+      mediation_interval,
       request_mediation_date,
       purchase,
       secondary_items,
@@ -449,7 +456,7 @@ export class ValidatorService {
       description,
       validator_id,
       validator_name,
-      mediatable_date,
+      mediation_interval,
       validator_logo_url,
       seller_public_key: new PublicKey(authorized_withdrawer).toBase58(),
       date_validated: purchase?.date_finalized,
@@ -1295,7 +1302,7 @@ export class ValidatorService {
         voteProgramAccountMeta,
       ],
       programId,
-      data: Buffer.from(serialize(new Buy(2))), //TODO: @KDMark reverse uintarray
+      data: Buffer.from(serialize(new Buy(0))),
     });
 
     try {
@@ -1371,7 +1378,7 @@ export class ValidatorService {
 
         voteProgramAccountMeta,
       ],
-      data: Buffer.from(serialize(new WithdrawRewards(3))), //TODO: @KDMark reverse uintarray
+      data: Buffer.from(serialize(new WithdrawRewards(0))),
     });
 
     try {
@@ -1457,10 +1464,10 @@ export class ValidatorService {
         data: Buffer.from(
           serialize(
             new ValidateSecondaryItemsTransfers({
-              log_level: 6,
+              log_level: 0,
               item_index: secondary_item_index,
             })
-          ) //TODO: @KDMark reverse uintarray
+          )
         ),
       }
     );

@@ -55,6 +55,7 @@ export default function Register() {
     validatorService
       .listValidator(val)
       .then((signature) => {
+        navigate('/')
         notif.update({
           render: (
             <CopyTransactionId

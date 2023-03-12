@@ -10,6 +10,10 @@ export class SecondaryItem {
 
   @field({ type: 'string' })
   public description!: string;
+
+  constructor(properties: SecondaryItem) {
+    Object.assign(this, properties);
+  }
 }
 
 export class MediationShares {
