@@ -1,7 +1,9 @@
 import {
   ArrowBackIosNewOutlined,
   CheckOutlined,
+  ContentCopyRounded,
   ErrorOutlineOutlined,
+  HistoryToggleOffOutlined,
   ReportRounded,
   ThumbUpOutlined,
 } from '@mui/icons-material';
@@ -14,9 +16,10 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import Scrollbars from 'rc-scrollbars';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useIntl } from 'react-intl';
 import { useNavigate, useParams } from 'react-router';
 import ErrorMessage from '../../common/components/ErrorMessage';
@@ -24,6 +27,7 @@ import useNotification from '../../common/utils/notification';
 import random from '../../common/utils/random';
 import ConfirmDialog from '../../components/confirmDialog';
 import { ValidatorDetails } from '../../interfaces';
+import { ValidatorService } from '../../services/validator.service';
 import theme from '../../theme/theme';
 import ValidatorCardContent from '../home/validatorCardContent';
 import Graph from './graph';
@@ -64,6 +68,32 @@ export default function ValidatorDetailsPage() {
   const [validatorNotif, setValidatorNotif] = useState<useNotification>();
   const [areDetailsLoading, setAreDetailsLoading] = useState<boolean>(false);
 
+  const walletContext = useWallet();
+  const { connection } = useConnection();
+  const validatorService = useMemo(
+    () => new ValidatorService(connection, walletContext),
+    [connection, walletContext]
+  );
+
+  const handleOnClick = (type: 'open' | 'copy', content: string) => {
+    if (type === 'open') {
+      navigate(`/${program_id}`);
+    } else {
+      if (validatorNotif) validatorNotif.dismiss();
+      const notif = new useNotification();
+      notif.notify({
+        render: 'Copying to clipboard...',
+      });
+      notif.update({
+        render: 'Copied to clipboard',
+        type: 'SUCCESS',
+        autoClose: 2000,
+      });
+      setValidatorNotif(notif);
+      navigator.clipboard.writeText(content);
+    }
+  };
+
   function loadValidatorDetails(program_id: string) {
     setAreDetailsLoading(true);
     const notif = new useNotification();
@@ -71,60 +101,15 @@ export default function ValidatorDetailsPage() {
       validatorNotif.dismiss();
     }
     setValidatorNotif(notif);
-    setTimeout(() => {
-      //TODO: CALL API HERE TO LOAD submissionsAnswers
-      // eslint-disable-next-line no-constant-condition
-      if (5 > 4) {
-        const newDetails: ValidatorDetails = {
-          description: 'Testing things massa',
-          mediatable_date: new Date().getTime(),
-          number_of_unique_stakers: 20,
-          price: 2000,
-          program_id: 'make things happen',
-          secondary_items: [
-            {
-              description: 'Server ownership',
-              name: 'Discord',
-              price: 250,
-            },
-            {
-              description: 'Account ownership',
-              name: 'Twitter',
-              price: 250,
-            },
-          ],
-          seller_public_key: 'this is it',
-          stake_per_epochs: [
-            {
-              epoch: 1,
-              stake: 250,
-            },
-            {
-              epoch: 2,
-              stake: 200,
-            },
-            {
-              epoch: 3,
-              stake: 0,
-            },
-            {
-              epoch: 4,
-              stake: 50,
-            },
-          ],
-          total_stake: 2000,
-          total_validator_rewards: 2000,
-          validator_id: 'validator_id_is_all_we_need_to_exist',
-          validator_initial_epoch: 2,
-          validator_logo_url: '/assets/full_logo.png',
-          validator_name: 'Laine.SOL',
-          vote_account_id: 'vote_account_id_is_it',
-        };
-        setValidatorDetails(newDetails);
+    validatorService
+      .loadValidatorDetails(new PublicKey(program_id))
+      .then((validator) => {
+        setValidatorDetails(validator);
         setAreDetailsLoading(false);
         notif.dismiss();
         setValidatorNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
         notif.notify({
           render: 'Loading validator details...',
         });
@@ -134,15 +119,16 @@ export default function ValidatorDetailsPage() {
             <ErrorMessage
               retryFunction={() => loadValidatorDetails(program_id)}
               notification={notif}
-              //TODO: message should come from backend
-              message="Something went wrong while loading validator details. Please try again!!!"
+              message={
+                error?.message ||
+                'Something went wrong while loading validator details. Please try again!!!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   }
 
   useEffect(() => {
@@ -174,10 +160,9 @@ export default function ValidatorDetailsPage() {
     notif.notify({
       render: `Completing buy validator transaction...`,
     });
-    setTimeout(() => {
-      //TODO: CALL API HERE TO buy validator
-      // eslint-disable-next-line no-constant-condition
-      if (5 > 4) {
+    validatorService
+      .buyValidator(new PublicKey(program_id))
+      .then((transactionID) => {
         setIsSubmitting(false);
         //TODO: update validator details' secondary item to suit new change as show below
         if (validatorDetails)
@@ -186,22 +171,25 @@ export default function ValidatorDetailsPage() {
           render: 'Successfully acquired validator',
         });
         setSubmissionNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
+        setIsSubmitting(false);
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
               retryFunction={() => buyValidator(program_id, buyer_public_key)}
               notification={notif}
-              //TODO: message should come from backend
-              message="Something went wrong while buying validator. Please try again!!!"
+              message={
+                error.message ||
+                'Something went wrong while buying validator. Please try again!!!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   };
 
   const delistValidator = (program_id: string) => {
@@ -214,32 +202,34 @@ export default function ValidatorDetailsPage() {
     notif.notify({
       render: `Delisting validator from Ingl Markets...`,
     });
-    setTimeout(() => {
-      //TODO: CALL API HERE TO delist validator
-      // eslint-disable-next-line no-constant-condition
-      if (5 > 4) {
+    validatorService
+      .delistValidator(new PublicKey(program_id))
+      .then((transactionId) => {
         setIsSubmitting(false);
         navigate('/');
         notif.update({
           render: 'Successfully delisted validator from Ingl Markets!',
         });
         setSubmissionNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
+        setIsSubmitting(false);
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
               retryFunction={() => delistValidator(program_id)}
               notification={notif}
-              //TODO: message should come from backend
-              message="Something went wrong while delisting your validator. Please try again!!!"
+              message={
+                error?.message ||
+                'Something went wrong while delisting your validator. Please try again!!!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   };
 
   const claimRewards = (program_id: string) => {
@@ -252,10 +242,10 @@ export default function ValidatorDetailsPage() {
     notif.notify({
       render: `Claiming your rewards...`,
     });
-    setTimeout(() => {
-      //TODO: CALL API HERE TO claim rewards
-      // eslint-disable-next-line no-constant-condition
-      if (5 > 4) {
+    //TODO: CALL API HERE TO claim rewards
+    validatorService
+      .withdrawRewards(new PublicKey(program_id))
+      .then((transactionId) => {
         setIsSubmitting(false);
         if (validatorDetails)
           setValidatorDetails({
@@ -266,22 +256,25 @@ export default function ValidatorDetailsPage() {
           render: 'Claimed rewards successfully!',
         });
         setSubmissionNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
+        setIsSubmitting(false);
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
               retryFunction={() => claimRewards(program_id)}
               notification={notif}
-              //TODO: message should come from backend
-              message="Something went wrong while claiming your rewards. Please try again!!!"
+              message={
+                error?.message ||
+                'Something went wrong while claiming your rewards. Please try again!!!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   };
 
   const consolidateItem = (itemIndex: number) => {
@@ -294,10 +287,13 @@ export default function ValidatorDetailsPage() {
     notif.notify({
       render: `Consolidating reception of secondary item`,
     });
-    setTimeout(() => {
-      //TODO: CALL API HERE TO consolidate secondary items
-      // eslint-disable-next-line no-constant-condition
-      if (5 > 4) {
+
+    validatorService
+      .validateSecondaryItemTransfer(
+        itemIndex,
+        new PublicKey(program_id as string)
+      )
+      .then((transactionId) => {
         setIsSubmitting(false);
         if (validatorDetails) {
           const secondary_items = validatorDetails.secondary_items.map(
@@ -313,22 +309,25 @@ export default function ValidatorDetailsPage() {
           render: 'Secondary item consolidated successfully',
         });
         setSubmissionNotif(undefined);
-      } else {
+      })
+      .catch((error) => {
+        setIsSubmitting(false);
         notif.update({
           type: 'ERROR',
           render: (
             <ErrorMessage
               retryFunction={() => consolidateItem(itemIndex)}
               notification={notif}
-              //TODO: message should come from backend
-              message="Something went wrong while consolidating select item. Please try again!!!"
+              message={
+                error?.message ||
+                'Something went wrong while consolidating select item. Please try again!!!'
+              }
             />
           ),
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      }
-    }, 3000);
+      });
   };
 
   const isDisabled = !validatorDetails || areDetailsLoading;
@@ -350,7 +349,7 @@ export default function ValidatorDetailsPage() {
         dialogMessage={`Confirming this dialog means you validate reception of secondary item "${
           validatorDetails
             ? validatorDetails.secondary_items[activeSecondaryItemIndex ?? 0]
-                .name
+                ?.name
             : 'no item selected'
         }". Note that this action is irreversible. Are you sure you want to continue?`}
         confirmButton="Consolidate"
@@ -469,13 +468,35 @@ export default function ValidatorDetailsPage() {
                   />
                 )}
                 <Box sx={{ display: 'grid', rowGap: 2 }}>
-                  <ValidatorCardContent
-                    skeleton={isDisabled}
-                    title={'Validator ID'}
-                    value={
-                      validatorDetails ? validatorDetails.validator_id : ''
-                    }
-                  />
+                  <Box style={{ display: 'flex', alignItems: 'flex-end' }}>
+                    <ValidatorCardContent
+                      skeleton={isDisabled}
+                      title={'Validator ID'}
+                      value={
+                        validatorDetails ? validatorDetails.validator_id : ''
+                      }
+                    />{' '}
+                    &nbsp; &nbsp;
+                    <label
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOnClick(
+                          'copy',
+                          validatorDetails?.validator_id as string
+                        );
+                      }}
+                    >
+                      <ContentCopyRounded
+                        fontSize="small"
+                        sx={{
+                          color: 'white',
+                          '&:hover': { color: `#EF233C` },
+                          justifySelf: 'start',
+                          cursor: 'pointer',
+                        }}
+                      />
+                    </label>
+                  </Box>
                   <ValidatorCardContent
                     skeleton={isDisabled}
                     title={
@@ -535,23 +556,68 @@ export default function ValidatorDetailsPage() {
                         </>
                       )}
                     </Box>
-                    <ValidatorCardContent
-                      title="Vote Account ID"
-                      value={
-                        validatorDetails ? validatorDetails.vote_account_id : ''
-                      }
-                      skeleton={isDisabled}
-                    />
-                    <ValidatorCardContent
-                      title="Authorized withdrawer ID"
-                      //TODO: GET THE AUTHORIZED WITHDRAWER ID HERE AND REPLACE VALUE BELOW
-                      value={
-                        validatorDetails
-                          ? validatorDetails.seller_public_key
-                          : ''
-                      }
-                      skeleton={isDisabled}
-                    />
+                    <Box style={{ display: 'flex', alignItems: 'flex-end' }}>
+                      <ValidatorCardContent
+                        title="Vote Account ID"
+                        value={
+                          validatorDetails
+                            ? validatorDetails.vote_account_id
+                            : ''
+                        }
+                        skeleton={isDisabled}
+                      />
+                      &nbsp; &nbsp;
+                      <label
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOnClick(
+                            'copy',
+                            validatorDetails?.vote_account_id as string
+                          );
+                        }}
+                      >
+                        <ContentCopyRounded
+                          fontSize="small"
+                          sx={{
+                            color: 'white',
+                            '&:hover': { color: `#EF233C` },
+                            justifySelf: 'start',
+                            cursor: 'pointer',
+                          }}
+                        />
+                      </label>
+                    </Box>
+                    <Box style={{ display: 'flex', alignItems: 'flex-end' }}>
+                      <ValidatorCardContent
+                        title="Authorized withdrawer ID (Seller)"
+                        value={
+                          validatorDetails
+                            ? validatorDetails.seller_public_key
+                            : ''
+                        }
+                        skeleton={isDisabled}
+                      />
+                      &nbsp; &nbsp;
+                      <label
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOnClick(
+                            'copy',
+                            validatorDetails?.seller_public_key as string
+                          );
+                        }}
+                      >
+                        <ContentCopyRounded
+                          fontSize="small"
+                          sx={{
+                            color: 'white',
+                            '&:hover': { color: `#EF233C` },
+                            justifySelf: 'start',
+                            cursor: 'pointer',
+                          }}
+                        />
+                      </label>
+                    </Box>
                     <ValidatorCardContent
                       title="Cost of validator"
                       value={
@@ -773,7 +839,12 @@ export default function ValidatorDetailsPage() {
                   )}
                 </Box>
                 {validatorDetails &&
-                  validatorDetails.total_validator_rewards > 0 && (
+                  validatorDetails.total_validator_rewards > 0 &&
+                  (validatorDetails.buyer_public_key ===
+                    publicKey?.toBase58() ||
+                    (!validatorDetails.buyer_public_key &&
+                      validatorDetails.seller_public_key ===
+                        publicKey?.toBase58())) && (
                     <Box
                       sx={{
                         display: 'grid',
@@ -808,7 +879,8 @@ export default function ValidatorDetailsPage() {
                   )}
 
                 {validatorDetails &&
-                  validatorDetails.secondary_items.length > 0 && (
+                  validatorDetails.secondary_items.length > 0 &&
+                  validatorDetails.buyer_public_key && (
                     <Box sx={{ display: 'grid', rowGap: 1 }}>
                       <Box
                         sx={{
@@ -921,7 +993,8 @@ export default function ValidatorDetailsPage() {
                               </Typography>
                               {dv ? (
                                 <CheckOutlined sx={{ color: 'black' }} />
-                              ) : (
+                              ) : validatorDetails.buyer_public_key ===
+                                publicKey?.toString() ? (
                                 <Tooltip arrow title="Validate consolidation">
                                   <IconButton
                                     size="small"
@@ -941,6 +1014,17 @@ export default function ValidatorDetailsPage() {
                                   >
                                     <ThumbUpOutlined fontSize="small" />
                                   </IconButton>
+                                </Tooltip>
+                              ) : (
+                                <Tooltip
+                                  arrow
+                                  title="Wait for the buyer to validate the transfer of this secondary item"
+                                >
+                                  <HistoryToggleOffOutlined
+                                    fontSize="small"
+                                    color="inherit"
+                                    sx={{ color: '#D5F2E3' }}
+                                  />
                                 </Tooltip>
                               )}
                             </Box>

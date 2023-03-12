@@ -18,10 +18,10 @@ import frMessages from './languages/fr';
 import { routes } from './routes/routes';
 import theme from './theme/theme';
 // Default styles that can be overridden by your app
+import '@solana/wallet-adapter-react-ui/styles.css';
 import { verifyToken } from '@ingl-permissionless/axios';
 import { CircularProgress } from '@mui/material';
 import { Box } from '@mui/system';
-import '@solana/wallet-adapter-react-ui/styles.css';
 import { SignIn } from '@ingl-permissionless/shared-components';
 
 export function App() {

@@ -27,12 +27,12 @@ export default function Header() {
       >
         <Button
           startIcon={<LocalMallOutlined />}
-          variant="outlined"
-          color="primary"
-          sx={{ textTransform: 'none' }}
+          variant="text"
+          color="inherit"
+          sx={{ textTransform: 'none', color: '#D5F2E3' }}
           onClick={() => navigate('/my-bag')}
         >
-          My shopping bag
+          My Validators
         </Button>
         <WalletMultiButton
           style={{

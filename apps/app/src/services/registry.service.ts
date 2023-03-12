@@ -5,32 +5,37 @@ import {
   BPF_LOADER_UPGRADEABLE_ID,
   COLLECTION_HOLDER_KEY,
   createLookupTable,
-  forwardExistingTransactions, GENERAL_ACCOUNT_SEED,
+  forwardExistingTransactions,
+  GENERAL_ACCOUNT_SEED,
   INGL_CONFIG_SEED,
   INGL_MINT_AUTHORITY_KEY,
   INGL_NFT_COLLECTION_KEY,
   INGL_REGISTRY_PROGRAM_ID,
-  INGL_TEAM_ID, METAPLEX_PROGRAM_ID,
-  URIS_ACCOUNT_SEED
+  INGL_TEAM_ID,
+  METAPLEX_PROGRAM_ID,
+  URIS_ACCOUNT_SEED,
 } from '@ingl-permissionless/state';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID
+  TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import {
   SignerWalletAdapterProps,
-  WalletNotConnectedError
+  WalletNotConnectedError,
 } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
-  AccountMeta, Connection, PublicKey,
+  AccountMeta,
+  Connection,
+  PublicKey,
   SIGNATURE_LENGTH_IN_BYTES,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  Transaction, VersionedMessage,
+  Transaction,
+  VersionedMessage,
   VersionedTransaction,
-  VoteProgram
+  VoteProgram,
 } from '@solana/web3.js';
 import { Rarity, ValidatorRegistration } from '../interfaces';
 export class RegistryService {
@@ -109,7 +114,6 @@ export class RegistryService {
 
         lookupTableAddresses,
       });
-      console.log(serializedTransaction);
       const transactionV0 = this.deserializeVersionTransaction(
         Uint8Array.from(Object.values(serializedTransaction).map((v) => v))
       );
@@ -179,7 +183,6 @@ export class RegistryService {
   }
 
   deserializeVersionTransaction(serializedTransaction: Uint8Array) {
-    console.log(serializedTransaction);
     const byteArray = [...serializedTransaction];
     const signatures = [];
     const signaturesLength = this.decodeLength(byteArray);
@@ -190,8 +193,6 @@ export class RegistryService {
       );
     }
 
-    console.log(byteArray);
-    console.log(new Uint8Array(byteArray));
     const message = VersionedMessage.deserialize(new Uint8Array(byteArray));
     const transactionV0 = new VersionedTransaction(message);
     transactionV0.signatures = signatures;

@@ -61,8 +61,10 @@ export default function ValidatorCard({
           padding: `${theme.spacing(2)} ${theme.spacing(2.5)}`,
           display: 'grid',
           rowGap: theme.spacing(2),
-          width: '100%',
+          width: '300px',
+          height: '500px',
           position: 'relative',
+          margin: theme.spacing(3),
         }}
       >
         {chip && (
@@ -86,7 +88,7 @@ export default function ValidatorCard({
           alt={name}
           style={{
             height: '267px',
-            objectFit: 'contain',
+            objectFit: 'cover',
             borderRadius: theme.spacing(1),
             cursor: 'pointer',
           }}

@@ -29,7 +29,7 @@ import { SignIn } from '@ingl-permissionless/shared-components';
 export function App() {
   const [statusOfCodeValidation, setStatusOfCodeValidation] = useState<
     'loading' | 'success' | 'failed'
-  >('loading');
+  >('success');
   const { activeLanguage } = useLanguage();
   const activeMessage = activeLanguage === 'en' ? frMessages : enMessages;
   const routing = useRoutes(routes);
@@ -57,7 +57,10 @@ export function App() {
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider
+        wallets={wallets}
+        autoConnect={statusOfCodeValidation === 'success'}
+      >
         <WalletModalProvider>
           <IntlProvider
             messages={activeMessage}

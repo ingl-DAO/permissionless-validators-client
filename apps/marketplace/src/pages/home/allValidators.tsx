@@ -35,7 +35,9 @@ export default function AllValidators({
     validatorService
       .loadValidators()
       .then((validators) => {
-        setValidators(validators);
+        setValidators(
+          validators.filter((validator) => !validator.buyer_public_key) // filter already bought validators
+        );
         setAreValidatorsLoading(false);
         notif.dismiss();
         setValidatorsNotif(undefined);

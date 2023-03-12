@@ -22,14 +22,14 @@ export class SecondaryItem {
 }
 
 export class MediationShares {
-  @field({ type: 'u64' })
-  public buyer!: BN;
+  @field({ type: 'u8' })
+  public buyer!: number;
 
-  @field({ type: 'u64' })
-  public seller!: BN;
+  @field({ type: 'u8' })
+  public seller!: number;
 
-  @field({ type: 'u64' })
-  public team!: BN;
+  @field({ type: 'u8' })
+  public team!: number;
 
   constructor(properties: MediationShares) {
     Object.assign(properties);
@@ -52,7 +52,7 @@ export class List extends Instruction {
 
   @field({ type: 'string' })
   description!: string;
- 
+
   @field({ type: 'string' })
   validator_name!: string;
 
@@ -93,7 +93,7 @@ export class ValidateSecondaryItemsTransfers extends Instruction {
   @field({ type: 'u32' })
   public item_index!: number;
 
-  constructor({ log_level, ...properties }: Mediate) {
+  constructor({ log_level, ...properties }: ValidateSecondaryItemsTransfers) {
     super(log_level);
     Object.assign(this, properties);
   }
