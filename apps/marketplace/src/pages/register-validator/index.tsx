@@ -30,7 +30,7 @@ export default function Register() {
   const [secondaryItems, setSecondaryItems] = useState<
     DevValidatorSecondaryItem[]
   >([]);
-  const [mediatableDate, setMediatableDate] = useState(new Date());
+  const [mediationInterval, setMediationInterval] = useState(30);
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submissionNotif, setSubmissionNotif] = useState<useNotification>();
@@ -149,7 +149,7 @@ export default function Register() {
                   validator_logo_url: validatorImageUrl,
                   validator_name: validatorInfo.validator_name,
                   vote_account_id: validatorInfo.vote_account_id,
-                  mediatable_date: mediatableDate.getTime() / 1000,
+                  mediation_interval: mediationInterval,
                 });
             }}
             onNext={(val: MoreValidatorInfo) => {
@@ -165,10 +165,10 @@ export default function Register() {
           />
         ) : (
           <SecondaryItems
-            mediatableDate={mediatableDate}
+            mediationInterval={mediationInterval}
             disabled={isSubmitting}
             secondaryItems={secondaryItems}
-            setMediatableDate={setMediatableDate}
+            setMediationInterval={setMediationInterval}
             handleSubmit={(val: DevValidatorSecondaryItem[]) => {
               const data: ValidatorSecondaryItem[] = val.map((item) => {
                 const { description, name, price } = item;
@@ -180,7 +180,7 @@ export default function Register() {
               });
               if (validatorImageUrl && validatorInfo && moreValidatorInfo)
                 listValidator({
-                  mediatable_date: mediatableDate.getTime(),
+                  mediation_interval: mediationInterval,
                   price: validatorInfo.price,
                   description: moreValidatorInfo.description,
                   validator_logo_url: validatorImageUrl,

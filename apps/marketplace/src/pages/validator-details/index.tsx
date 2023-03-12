@@ -680,7 +680,7 @@ export default function ValidatorDetailsPage() {
                         <ValidatorCardContent
                           title="Mediation Date"
                           value={formatDate(
-                            new Date(validatorDetails.mediatable_date),
+                            new Date(validatorDetails.mediation_interval),
                             {
                               year: 'numeric',
                               month: 'short',
