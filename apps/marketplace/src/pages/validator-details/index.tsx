@@ -22,6 +22,7 @@ import Scrollbars from 'rc-scrollbars';
 import { useEffect, useMemo, useState } from 'react';
 import { useIntl } from 'react-intl';
 import { useNavigate, useParams } from 'react-router';
+import CopyTransactionId from '../../common/components/copyTransactionId';
 import ErrorMessage from '../../common/components/ErrorMessage';
 import useNotification from '../../common/utils/notification';
 import random from '../../common/utils/random';
@@ -132,7 +133,7 @@ export default function ValidatorDetailsPage() {
   }
 
   useEffect(() => {
-    loadValidatorDetails(program_id as string);
+    if (program_id) loadValidatorDetails(program_id as string);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -163,17 +164,19 @@ export default function ValidatorDetailsPage() {
     validatorService
       .buyValidator(new PublicKey(program_id))
       .then((transactionID) => {
-        setIsSubmitting(false);
-        //TODO: update validator details' secondary item to suit new change as show below
         if (validatorDetails)
           setValidatorDetails({ ...validatorDetails, buyer_public_key });
         notif.update({
-          render: 'Successfully acquired validator',
+          render: (
+            <CopyTransactionId
+              transaction_id={transactionID}
+              message="Successfully acquired validator"
+            />
+          ),
         });
         setSubmissionNotif(undefined);
       })
       .catch((error) => {
-        setIsSubmitting(false);
         notif.update({
           type: 'ERROR',
           render: (
@@ -189,7 +192,8 @@ export default function ValidatorDetailsPage() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      });
+      })
+      .finally(() => setIsSubmitting(false));
   };
 
   const delistValidator = (program_id: string) => {
@@ -205,15 +209,18 @@ export default function ValidatorDetailsPage() {
     validatorService
       .delistValidator(new PublicKey(program_id))
       .then((transactionId) => {
-        setIsSubmitting(false);
-        navigate('/');
         notif.update({
-          render: 'Successfully delisted validator from Ingl Markets!',
+          render: (
+            <CopyTransactionId
+              transaction_id={transactionId}
+              message="Successfully delisted validator from Ingl Markets!"
+            />
+          ),
         });
         setSubmissionNotif(undefined);
+        navigate('/');
       })
       .catch((error) => {
-        setIsSubmitting(false);
         notif.update({
           type: 'ERROR',
           render: (
@@ -229,7 +236,8 @@ export default function ValidatorDetailsPage() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      });
+      })
+      .finally(() => setIsSubmitting(false));
   };
 
   const claimRewards = (program_id: string) => {
@@ -242,23 +250,25 @@ export default function ValidatorDetailsPage() {
     notif.notify({
       render: `Claiming your rewards...`,
     });
-    //TODO: CALL API HERE TO claim rewards
     validatorService
       .withdrawRewards(new PublicKey(program_id))
       .then((transactionId) => {
-        setIsSubmitting(false);
+        notif.update({
+          render: (
+            <CopyTransactionId
+              transaction_id={transactionId}
+              message="Claimed rewards successfully!"
+            />
+          ),
+        });
         if (validatorDetails)
           setValidatorDetails({
             ...validatorDetails,
             total_validator_rewards: 0,
           });
-        notif.update({
-          render: 'Claimed rewards successfully!',
-        });
         setSubmissionNotif(undefined);
       })
       .catch((error) => {
-        setIsSubmitting(false);
         notif.update({
           type: 'ERROR',
           render: (
@@ -274,7 +284,8 @@ export default function ValidatorDetailsPage() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      });
+      })
+      .finally(() => setIsSubmitting(false));
   };
 
   const consolidateItem = (itemIndex: number) => {
@@ -294,7 +305,6 @@ export default function ValidatorDetailsPage() {
         new PublicKey(program_id as string)
       )
       .then((transactionId) => {
-        setIsSubmitting(false);
         if (validatorDetails) {
           const secondary_items = validatorDetails.secondary_items.map(
             (item, index) => {
@@ -306,12 +316,16 @@ export default function ValidatorDetailsPage() {
           setValidatorDetails({ ...validatorDetails, secondary_items });
         }
         notif.update({
-          render: 'Secondary item consolidated successfully',
+          render: (
+            <CopyTransactionId
+              transaction_id={transactionId}
+              message="Secondary item consolidated successfully"
+            />
+          ),
         });
         setSubmissionNotif(undefined);
       })
       .catch((error) => {
-        setIsSubmitting(false);
         notif.update({
           type: 'ERROR',
           render: (
@@ -327,7 +341,8 @@ export default function ValidatorDetailsPage() {
           autoClose: false,
           icon: () => <ReportRounded fontSize="medium" color="error" />,
         });
-      });
+      })
+      .finally(() => setIsSubmitting(false));
   };
 
   const isDisabled = !validatorDetails || areDetailsLoading;
@@ -383,11 +398,23 @@ export default function ValidatorDetailsPage() {
                 'User public key and program_id must be know for this transaction'
               )
         }
-        dialogMessage={`Buying this validator will cost you "${formatNumber(
+        dialogMessage={`${
+          validatorDetails && validatorDetails?.secondary_items.length > 0
+            ? `For the purpose of incentivizing secondary items transfers by sellers and these very items receptance validation by buyer, 
+            you will be charge twice the price of every secondary item while the payer only receive 80% of his validator price excluding secondary items "${formatNumber(
+              validatorDetails.price,
+              {
+                style: 'currency',
+                currency: 'SOL',
+              }
+            )}".
+            The remaining will be waiting for both party settlement on secondary items to transfer the funds to the various accounts. This said, `
+            : ''
+        } Buying this validator will cost you "${formatNumber(
           validatorDetails
             ? validatorDetails.price +
                 validatorDetails.secondary_items.reduce(
-                  (total, { price }) => total + price,
+                  (total, { price }) => total + price * 2,
                   0
                 )
             : 0,
@@ -448,19 +475,21 @@ export default function ValidatorDetailsPage() {
             <Box>
               <Box sx={{ display: 'grid', rowGap: 3 }}>
                 {validatorDetails ? (
-                  <img
-                    src={validatorDetails.validator_logo_url}
-                    alt="validator logo"
-                    width={300}
-                    height={300}
-                    style={{ objectFit: 'contain' }}
-                  />
+                  <Box>
+                    <img
+                      src={validatorDetails.validator_logo_url}
+                      alt="validator logo"
+                      height={400}
+                      width={400}
+                      // style={{ objectFit: 'contain' }}
+                    />
+                  </Box>
                 ) : (
                   <Skeleton
                     variant="rectangular"
                     animation="wave"
-                    height={300}
-                    width={300}
+                    height={400}
+                    width={400}
                     sx={{
                       backgroundColor: 'rgb(137 127 127 / 43%)',
                       borderRadius: '10px',
@@ -523,7 +552,7 @@ export default function ValidatorDetailsPage() {
               </Box>
             </Box>
             <Scrollbars autoHide>
-              <Box>
+              <Box paddingBottom={theme.spacing(2)}>
                 <Box sx={{ display: 'grid', rowGap: 3 }}>
                   <Box sx={{ display: 'grid', rowGap: 3 }}>
                     <ValidatorCardContent
@@ -535,6 +564,7 @@ export default function ValidatorDetailsPage() {
                     />
                     <Box>
                       <ValidatorCardContent
+                        wrap
                         title="Description"
                         value={
                           validatorDetails ? validatorDetails.description : ''
@@ -783,7 +813,7 @@ export default function ValidatorDetailsPage() {
               </Box>
             </Scrollbars>
             <Box>
-              <Box sx={{ display: 'grid', rowGap: 3 }}>
+              <Box sx={{ display: 'grid', rowGap: 3, maxWidth: '500px' }}>
                 <Box sx={{ display: 'grid', rowGap: 2 }}>
                   <ValidatorCardContent
                     skeleton={isDisabled}
