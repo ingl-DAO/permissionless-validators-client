@@ -1,16 +1,16 @@
 import { GitHub, ReportRounded, Twitter } from '@mui/icons-material';
 import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
-import { BN } from 'bn.js';
+import { PublicKey } from '@solana/web3.js';
 import { useEffect, useMemo, useState } from 'react';
 import { useIntl } from 'react-intl';
 import { useParams } from 'react-router';
 import ErrorMessage from '../../../common/components/ErrorMessage';
 import useNotification from '../../../common/utils/notification';
+import random from '../../../common/utils/random';
 import StatCard from '../../../components/stats/statCard';
 import ValidatorCardContent from '../../../components/validators/validatorCardContent';
-import { InglValidator } from '../../../interfaces';
+import { InglValidator, VersionStatus } from '../../../interfaces';
 import { ValidatorService } from '../../../services/validator.service';
 import theme from '../../../theme/theme';
 
@@ -399,13 +399,38 @@ export default function ValidatorStats() {
                 value={
                   areDetailsLoading || !details
                     ? ''
-                    : `${
-                        new BN(details.unit_backing).toNumber() /
-                        LAMPORTS_PER_SOL
-                      } SOL`
+                    : `${details.unit_backing} SOL`
                 }
                 skeleton={areDetailsLoading || !details}
               />
+              <Typography
+                variant="body2"
+                sx={{ color: 'rgba(255, 255, 255, 0.5)', fontWeight: '300' }}
+              >
+                Program version
+              </Typography>
+              {!details ? (
+                <Skeleton
+                  animation="wave"
+                  width={`${random() * 10}%`}
+                  sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
+                />
+              ) : details.programVersion === null ||
+                details.programVersion.status === VersionStatus.Unsafe ? (
+                <Typography color="error">
+                  UNSAFE - Not a version of ingl program
+                </Typography>
+              ) : (
+                <Typography
+                  color={
+                    details.programVersion.status === VersionStatus.Deprecated
+                      ? 'yellow'
+                      : 'greenF'
+                  }
+                >
+                  `Version ${details.programVersion.version}`
+                </Typography>
+              )}
             </Box>
           </Box>
         </Box>

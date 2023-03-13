@@ -7,6 +7,7 @@ import {
 import { Box, Button, Chip, Skeleton, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
+import { verifyVersion } from '../../../../services/versionning.service';
 import Scrollbars from 'rc-scrollbars';
 import { useEffect, useMemo, useState } from 'react';
 import { useIntl } from 'react-intl';
@@ -22,14 +23,12 @@ import {
   GovernanceInterface,
   InglNft,
   InglValidator,
+  ProgramVersion,
+  VersionStatus,
   VoteAccountEnum,
 } from '../../../../interfaces';
 import { NftService } from '../../../../services/nft.service';
-import {
-  ProgramVersion,
-  ProposalService,
-  VersionStatus,
-} from '../../../../services/proposal.service';
+import { ProposalService } from '../../../../services/proposal.service';
 import { ValidatorService } from '../../../../services/validator.service';
 import theme from '../../../../theme/theme';
 
@@ -215,8 +214,8 @@ export default function ProposalVote() {
     }
     setProposalNotif(notif);
     Promise.all([
-      proposalService?.verifyVersion(),
-      proposalService?.verifyVersion(programId),
+      verifyVersion(validator_program_id as string),
+      ...(programId ? [verifyVersion(programId?.toBase58())] : []),
     ])
       .then(([programVersionResult, bufferVersionResult]) => {
         setBufferVersion(bufferVersionResult);
@@ -421,7 +420,6 @@ export default function ProposalVote() {
       })
       .finally(() => setIsFinalizingProposal(false));
   };
-  console.log(proposalDetails?.date_finalized);
   return (
     <>
       <ConfirmDialog

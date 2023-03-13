@@ -23,6 +23,7 @@ import {
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import { InglValidator, Validator } from '../interfaces';
+import { verifyVersion } from './versionning.service';
 
 export class ValidatorService {
   constructor(
@@ -104,7 +105,9 @@ export class ValidatorService {
     if (!jsonLoaded) {
       jsonData = await (await fetch(uri)).json();
     }
+    const programVersion = await verifyVersion(programId.toBase58());
     const result: InglValidator = {
+      programVersion,
       collection_id: collectionkey.toString(),
       // eslint-disable-next-line no-constant-condition
       collection_uri: jsonData?.image as string,

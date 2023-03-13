@@ -1,5 +1,4 @@
 import { deserialize, serialize } from '@dao-xyz/borsh';
-import { http } from '@ingl-permissionless/axios';
 import {
   AUTHORIZED_WITHDRAWER_KEY,
   BPF_LOADER_UPGRADEABLE_ID,
@@ -31,7 +30,7 @@ import {
   ValidatorName,
   VoteAccountGovernance,
   VoteGovernance,
-  VOTE_ACCOUNT_KEY,
+  VOTE_ACCOUNT_KEY
 } from '@ingl-permissionless/state';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import { SignerWalletAdapterProps, WalletNotConnectedError } from '@solana/wallet-adapter-base';
@@ -44,29 +43,15 @@ import {
   SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
-  TransactionInstruction,
+  TransactionInstruction
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import {
   ConfigAccountEnum,
   CreateProposal,
   GovernanceInterface,
-  InglNft,
-  VoteAccountEnum,
+  InglNft, VoteAccountEnum
 } from '../interfaces';
-
-export enum VersionStatus {
-  Deprecated = 'Deprecated',
-  Unsafe = 'Unsafe',
-  Safe = 'Safe',
-}
-
-export interface ProgramVersion {
-  program_data_hash: string;
-  version: number;
-  status: VersionStatus;
-  released_on: Date;
-}
 
 export class ProposalService {
   constructor(
@@ -74,15 +59,6 @@ export class ProposalService {
     private readonly connection: Connection,
     private readonly walletContext: WalletContextState
   ) {}
-
-  async verifyVersion(programId?: PublicKey) {
-    const { data: programVersion } = await http.get<ProgramVersion | null>(
-      `/program-versions/verify?program_id=${(
-        programId ?? this.programId
-      ).toBase58()}`
-    );
-    return programVersion;
-  }
 
   async validateGovernanceInput({
     voteAccount,
