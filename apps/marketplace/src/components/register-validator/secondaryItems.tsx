@@ -38,6 +38,32 @@ export default function SecondaryItems({
   const [secondaryItems, setSecondaryItems] =
     useState<DevValidatorSecondaryItem[]>(si);
 
+  const [newSecondaryItem, setNewSecondaryItem] =
+    useState<DevValidatorSecondaryItem>({
+      description: '',
+      name: '',
+      price: 0,
+      id: crypto.randomUUID(),
+    });
+
+  const sanitizeSecondaryItems = (
+    secondaryItemList: DevValidatorSecondaryItem[]
+  ) => secondaryItemList.filter((secondaryItem) => secondaryItem.name);
+
+  const addSecondaryItem = (val: DevValidatorSecondaryItem) => {
+    if (!val.name) {
+      alert('Name is required');
+      return;
+    }
+    setSecondaryItems([val, ...secondaryItems]);
+    setNewSecondaryItem({
+      description: '',
+      name: '',
+      price: 0,
+      id: crypto.randomUUID(),
+    });
+  };
+
   return (
     <Box
       sx={{
@@ -66,7 +92,7 @@ export default function SecondaryItems({
           <Button
             variant="contained"
             color="inherit"
-            onClick={() => onPrev([])}
+            onClick={() => onPrev(sanitizeSecondaryItems(secondaryItems))}
             sx={{ color: 'black' }}
             disabled={disabled}
           >
@@ -77,7 +103,7 @@ export default function SecondaryItems({
             disabled={disabled || secondaryItems.length === 0}
             color="primary"
             onClick={() => {
-              handleSubmit(secondaryItems);
+              handleSubmit(sanitizeSecondaryItems(secondaryItems));
             }}
           >
             List Now
@@ -122,30 +148,17 @@ export default function SecondaryItems({
                     <Label label={label} subLabel={subLabel} />
                   </TableCell>
                 ))}
-                <TableCell>
-                  <Button
-                    startIcon={<AddOutlined />}
-                    variant="text"
-                    color="inherit"
-                    onClick={() =>
-                      setSecondaryItems((items) => [
-                        {
-                          description: '',
-                          name: '',
-                          price: 0,
-                          id: crypto.randomUUID(),
-                        },
-                        ...items,
-                      ])
-                    }
-                    sx={{
-                      backgroundColor: 'white',
-                    }}
-                  />
-                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
+              <SecondaryItemLane
+                item={newSecondaryItem}
+                newLane={true}
+                handleChange={(val: DevValidatorSecondaryItem) => {
+                  setNewSecondaryItem(val);
+                }}
+                addItem={() => addSecondaryItem(newSecondaryItem)}
+              />
               {secondaryItems.map((item) => {
                 const { id } = item;
                 return (

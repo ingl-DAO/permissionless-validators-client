@@ -5,12 +5,14 @@ import { DevValidatorSecondaryItem } from './secondaryItems';
 
 export default function SecondaryItemLane({
   deleteItem,
+  addItem,
   newLane = false,
   item: { description, name, price, id },
   item,
   handleChange,
 }: {
-  deleteItem: () => void;
+  deleteItem?: () => void;
+  addItem?: () => void;
   newLane?: boolean;
   item: DevValidatorSecondaryItem;
   handleChange: (val: DevValidatorSecondaryItem) => void;
@@ -87,11 +89,11 @@ export default function SecondaryItemLane({
           startIcon={newLane ? <AddOutlined /> : <CloseOutlined />}
           variant="text"
           color={newLane ? 'inherit' : 'primary'}
-          onClick={deleteItem}
+          onClick={newLane ? addItem : deleteItem}
           sx={{
             padding: theme.spacing(1.5),
-            color: newLane ? 'white' : theme.palette.primary.main,
-            backgroundColor: theme.common.inputBackground,
+            color: newLane ? 'black' : theme.palette.primary.main,
+            backgroundColor: newLane ? '#D5F2E3' : theme.common.inputBackground,
             '& .MuiButton-startIcon': {
               margin: 0,
             },
