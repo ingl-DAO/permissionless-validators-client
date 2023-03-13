@@ -327,7 +327,7 @@ export class NftService {
         {
           publicKey: payerPubkey,
           connection: this.connection,
-          signAllTransaction: this.walletContext
+          signAllTransactions: this.walletContext
             .signAllTransactions as SignerWalletAdapterProps['signAllTransactions'],
         },
         instructions
@@ -753,16 +753,20 @@ export class NftService {
 
     try {
       const ownerNfts = await metaplexNft.findAllByOwner({
-        owner: this.walletContext.publicKey as PublicKey,
+        owner: payerPubkey,
       });
-      const validatorNfts: InglNft[] = [];
 
-      for (let i = 0; i < ownerNfts.length; i++) {
-        const ownerNft = ownerNfts[i] as Metadata;
-        const nftData = await this.loadNftData(ownerNft.mintAddress, ownerNft);
-        if (nftData) validatorNfts.push(nftData);
-      }
-      return validatorNfts.sort((a, b) => b.numeration - a.numeration);
+      const programNfts: InglNft[] = [];
+      await Promise.all(
+        ownerNfts.map(async (ownerNft) => {
+          const nftData = await this.loadNftData(
+            (ownerNft as Metadata).mintAddress,
+            ownerNft
+          );
+          if (nftData) programNfts.push(nftData);
+        })
+      );
+      return programNfts.sort((a, b) => b.numeration - a.numeration);
     } catch (error) {
       throw new Error('Failed to load metadata with error ' + error);
     }
@@ -999,7 +1003,7 @@ export class NftService {
         {
           publicKey: payerPubkey,
           connection: this.connection,
-          signAllTransaction: this.walletContext
+          signAllTransactions: this.walletContext
             .signAllTransactions as SignerWalletAdapterProps['signAllTransactions'],
         },
         claimRewardInstructions
