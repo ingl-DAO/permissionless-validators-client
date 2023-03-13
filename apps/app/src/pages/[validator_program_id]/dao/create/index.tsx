@@ -17,7 +17,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import CopyTransactionId from '../../../../common/components/copyTransactionId';
 import { useFormik } from 'formik';
 import Scrollbars from 'rc-scrollbars';
@@ -259,6 +259,7 @@ export default function ProposalCreation() {
           ),
         });
         setProposalNotif(undefined);
+        navigate(`/programs/${validator_program_id}/dao`);
       })
       .catch((error) => {
         notif.update({
@@ -655,7 +656,7 @@ export default function ProposalCreation() {
                             ? proposalType.includes('stake')
                               ? `${Number(
                                   validatorDetails.max_primary_stake /
-                                    10_000_000_000
+                                    LAMPORTS_PER_SOL
                                 )}SOL`
                               : proposalType.includes('share')
                               ? `${validatorDetails.nft_holders_share}%`

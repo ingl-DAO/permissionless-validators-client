@@ -41,7 +41,7 @@ export class InitialRedemptionFee extends ConfigAccountType {
 
 @variant(3)
 export class RedemptionFeeDuration extends ConfigAccountType {
-  @field({ type: 'u8' })
+  @field({ type: 'u32' })
   public value!: number;
 
   constructor(value: number) {
