@@ -26,7 +26,7 @@ export interface ValidatorListing
     | 'seller_public_key'
   > {
   description: string;
-  mediatable_date: number;
+  mediation_interval: number;
 }
 
 export interface StakePerEpoch {

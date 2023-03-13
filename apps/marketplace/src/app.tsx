@@ -36,7 +36,6 @@ export function App() {
 
   const verifyCodeFromLocalStorage = () => {
     const accessToken = localStorage.getItem('accessToken');
-    console.log('accessToken', accessToken);
     if (accessToken)
       verifyToken(accessToken)
         .then(() => {

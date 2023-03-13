@@ -2,6 +2,7 @@ import { AddOutlined } from '@mui/icons-material';
 import {
   Box,
   Button,
+  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -23,15 +24,15 @@ export interface DevValidatorSecondaryItem extends ValidatorSecondaryItem {
 export default function SecondaryItems({
   handleSubmit,
   onPrev,
-  mediatableDate,
-  setMediatableDate,
+  mediationInterval,
+  setMediationInterval,
   secondaryItems: si,
   disabled,
 }: {
   handleSubmit: (val: DevValidatorSecondaryItem[]) => void;
   onPrev: (val: DevValidatorSecondaryItem[]) => void;
-  mediatableDate: Date;
-  setMediatableDate: (val: Date) => void;
+  mediationInterval: number;
+  setMediationInterval: (val: number) => void;
   secondaryItems: DevValidatorSecondaryItem[];
   disabled: boolean;
 }) {
@@ -97,14 +98,14 @@ export default function SecondaryItems({
         }}
       >
         <BareCustomInput
-          onChange={(val: Date) => {
-            setMediatableDate(val);
+          onChange={(val) => {
+            if (val <= 30) setMediationInterval(val as number);
           }}
-          value={mediatableDate}
-          label={'Mediatable date'}
-          subLabel={
-            'The date from which mediation can be requested to ingl, should in case settlement is not archieved amongst the parties.'
-          }
+          type="number"
+          value={mediationInterval}
+          label={'Mediation interval (days)'}
+          subLabel={`The duration after which mediation can be requested to ingl once purchase is done, 
+          should in case settlement is not archieved amongst the parties. Not more than 30 days`}
         />
         <Scrollbars autoHide>
           <Table sx={{ minWidth: 650 }}>
@@ -123,10 +124,11 @@ export default function SecondaryItems({
                   </TableCell>
                 ))}
                 <TableCell>
-                  <Button
-                    startIcon={<AddOutlined />}
-                    variant="text"
-                    color="inherit"
+                  <IconButton
+                    color="info"
+                    sx={{
+                      backgroundColor: 'white',
+                    }}
                     onClick={() =>
                       setSecondaryItems((items) => [
                         {
@@ -138,10 +140,9 @@ export default function SecondaryItems({
                         ...items,
                       ])
                     }
-                    sx={{
-                      backgroundColor: 'white',
-                    }}
-                  />
+                  >
+                    <AddOutlined />
+                  </IconButton>
                 </TableCell>
               </TableRow>
             </TableHead>

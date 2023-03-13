@@ -24,7 +24,7 @@ export default function ValidatorCardContent({
   return (
     <Box
       sx={{
-        maxWidth: '300px',
+        maxWidth: title === 'Description' ? '45vw' : '300px',
         display: 'flex',
         flexFlow: revert ? 'column-reverse' : 'column',
       }}
