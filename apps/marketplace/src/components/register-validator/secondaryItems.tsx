@@ -1,8 +1,6 @@
-import { AddOutlined } from '@mui/icons-material';
 import {
   Box,
   Button,
-  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -39,6 +37,32 @@ export default function SecondaryItems({
   const [secondaryItems, setSecondaryItems] =
     useState<DevValidatorSecondaryItem[]>(si);
 
+  const [newSecondaryItem, setNewSecondaryItem] =
+    useState<DevValidatorSecondaryItem>({
+      description: '',
+      name: '',
+      price: 0,
+      id: crypto.randomUUID(),
+    });
+
+  const sanitizeSecondaryItems = (
+    secondaryItemList: DevValidatorSecondaryItem[]
+  ) => secondaryItemList.filter((secondaryItem) => secondaryItem.name);
+
+  const addSecondaryItem = (val: DevValidatorSecondaryItem) => {
+    if (!val.name) {
+      alert('Name is required');
+      return;
+    }
+    setSecondaryItems([val, ...secondaryItems]);
+    setNewSecondaryItem({
+      description: '',
+      name: '',
+      price: 0,
+      id: crypto.randomUUID(),
+    });
+  };
+
   return (
     <Box
       sx={{
@@ -67,7 +91,7 @@ export default function SecondaryItems({
           <Button
             variant="contained"
             color="inherit"
-            onClick={() => onPrev([])}
+            onClick={() => onPrev(sanitizeSecondaryItems(secondaryItems))}
             sx={{ color: 'black' }}
             disabled={disabled}
           >
@@ -78,7 +102,7 @@ export default function SecondaryItems({
             disabled={disabled || secondaryItems.length === 0}
             color="primary"
             onClick={() => {
-              handleSubmit(secondaryItems);
+              handleSubmit(sanitizeSecondaryItems(secondaryItems));
             }}
           >
             List Now
@@ -99,7 +123,7 @@ export default function SecondaryItems({
       >
         <BareCustomInput
           onChange={(val) => {
-            if (val <= 30) setMediationInterval(val as number);
+            if (val >= 0 && val <= 30) setMediationInterval(val as number);
           }}
           type="number"
           value={mediationInterval}
@@ -123,30 +147,17 @@ export default function SecondaryItems({
                     <Label label={label} subLabel={subLabel} />
                   </TableCell>
                 ))}
-                <TableCell>
-                  <IconButton
-                    color="info"
-                    sx={{
-                      backgroundColor: 'white',
-                    }}
-                    onClick={() =>
-                      setSecondaryItems((items) => [
-                        {
-                          description: '',
-                          name: '',
-                          price: 0,
-                          id: crypto.randomUUID(),
-                        },
-                        ...items,
-                      ])
-                    }
-                  >
-                    <AddOutlined />
-                  </IconButton>
-                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
+              <SecondaryItemLane
+                item={newSecondaryItem}
+                newLane={true}
+                handleChange={(val: DevValidatorSecondaryItem) => {
+                  setNewSecondaryItem(val);
+                }}
+                addItem={() => addSecondaryItem(newSecondaryItem)}
+              />
               {secondaryItems.map((item) => {
                 const { id } = item;
                 return (

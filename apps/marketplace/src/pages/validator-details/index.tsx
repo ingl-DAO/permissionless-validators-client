@@ -4,6 +4,7 @@ import {
   ContentCopyRounded,
   ErrorOutlineOutlined,
   HistoryToggleOffOutlined,
+  InfoOutlined,
   ReportRounded,
   ThumbUpOutlined,
 } from '@mui/icons-material';
@@ -398,31 +399,60 @@ export default function ValidatorDetailsPage() {
                 'User public key and program_id must be know for this transaction'
               )
         }
-        dialogMessage={`${
-          validatorDetails && validatorDetails?.secondary_items.length > 0
-            ? `For the purpose of incentivizing secondary items transfers by sellers and these very items receptance validation by buyer, 
-            you will be charge twice the price of every secondary item while the payer only receive 80% of his validator price excluding secondary items "${formatNumber(
-              validatorDetails.price,
-              {
-                style: 'currency',
-                currency: 'SOL',
-              }
-            )}".
-            The remaining will be waiting for both party settlement on secondary items to transfer the funds to the various accounts. This said, `
-            : ''
-        } Buying this validator will cost you "${formatNumber(
-          validatorDetails
-            ? validatorDetails.price +
-                validatorDetails.secondary_items.reduce(
-                  (total, { price }) => total + price * 2,
-                  0
-                )
-            : 0,
-          {
-            style: 'currency',
-            currency: 'SOL',
-          }
-        )}". Are you sure you want to proceed with the transaction?`}
+        dialogMessage={
+          <Typography>
+            <Typography component="span" color={theme.palette.primary.main}>
+              Caution:
+            </Typography>
+            <Typography component="span" marginLeft={'4px'}>
+              Validator purchase costs{' '}
+              {formatNumber(
+                validatorDetails
+                  ? validatorDetails.price +
+                      validatorDetails.secondary_items.reduce(
+                        (total, { price }) => total + price * 2,
+                        0
+                      )
+                  : 0,
+                {
+                  style: 'currency',
+                  currency: 'SOL',
+                }
+              )}
+              . Secondary items will be charged double and only 80% of the
+              validator price will be sent. Remaining funds held until secondary
+              item transfer is settled.{' '}
+              <Tooltip
+                arrow
+                title={`Please note that the purchase of this validator will cost ${formatNumber(
+                  validatorDetails
+                    ? validatorDetails.price +
+                        validatorDetails.secondary_items.reduce(
+                          (total, { price }) => total + price * 2,
+                          0
+                        )
+                    : 0,
+                  {
+                    style: 'currency',
+                    currency: 'SOL',
+                  }
+                )}. However, buyers should be aware that secondary items will be charged twice their price, and sellers will only receive 80% of the validator price, excluding secondary items priced at ${formatNumber(
+                  validatorDetails?.price ?? 0,
+                  {
+                    style: 'currency',
+                    currency: 'SOL',
+                  }
+                )}. The remaining funds will be held until both parties validate the transfer of secondary items. Once all secondary items are validated, the remaining 20% of the validator price and the cost of secondary items will be transferred to the seller, and any excess secondary item costs will be refunded back to the buyer. Please consider these terms before proceeding with the transaction.`}
+              >
+                <ErrorOutlineOutlined
+                  fontSize="medium"
+                  sx={{ color: '#D5F2E3' }}
+                />
+              </Tooltip>
+              <br /> Are you sure you want to proceed with the transaction?
+            </Typography>
+          </Typography>
+        }
         confirmButton="Buy Now"
         dialogTitle="Confirm Buy Validator !"
       />
@@ -479,6 +509,9 @@ export default function ValidatorDetailsPage() {
                     <img
                       src={validatorDetails.validator_logo_url}
                       alt="validator logo"
+                      style={{
+                        objectFit: 'cover',
+                      }}
                       height={400}
                       width={400}
                       // style={{ objectFit: 'contain' }}
@@ -857,10 +890,10 @@ export default function ValidatorDetailsPage() {
                       }}
                     >
                       {validatorDetails.buyer_public_key
-                        ? validatorDetails.seller_public_key ===
+                        ? validatorDetails.buyer_public_key ===
                           publicKey.toBase58()
-                          ? 'Sold!'
-                          : 'Bought!'
+                          ? 'Bought!'
+                          : 'Sold!'
                         : validatorDetails.seller_public_key ===
                           publicKey.toBase58()
                         ? 'Delist'
@@ -909,8 +942,12 @@ export default function ValidatorDetailsPage() {
                   )}
 
                 {validatorDetails &&
-                  validatorDetails.secondary_items.length > 0 &&
-                  validatorDetails.buyer_public_key && (
+                  validatorDetails?.secondary_items.length > 0 &&
+                  validatorDetails?.buyer_public_key &&
+                  (validatorDetails?.buyer_public_key ===
+                    publicKey?.toBase58() ||
+                    validatorDetails?.seller_public_key ===
+                      publicKey?.toBase58()) && (
                     <Box sx={{ display: 'grid', rowGap: 1 }}>
                       <Box
                         sx={{

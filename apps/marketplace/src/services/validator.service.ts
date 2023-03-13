@@ -165,6 +165,7 @@ export class ValidatorService {
       this.useProgramId(programId.toBase58());
       return signature;
     } catch (error) {
+      console.log(error);
       throw new Error(
         'Validator listing failed with the following error:' + error
       );

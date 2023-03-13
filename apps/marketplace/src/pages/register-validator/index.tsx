@@ -207,12 +207,13 @@ export default function Register() {
         >
           <Avatar
             sx={{
-              bgcolor: theme.palette.primary.light,
+              bgcolor: '#28293D',
               height: '250px',
               width: '250px',
               justifySelf: 'center',
               alignSelf: 'center',
-              border: '1.5px solid white',
+              border: '1.5px solid #D5F2E3',
+              color: '#D5F2E3',
             }}
             alt="Validator Avatar"
             src={validatorImageUrl}
