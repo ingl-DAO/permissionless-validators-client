@@ -70,8 +70,8 @@ export interface InglValidator
   collection_id: string;
   total_delegated_count: number;
   total_minted_count: number;
-  total_delegated_stake: BN;
-  total_secondary_stake: BN; // in lamports (big number)
+  total_delegated_stake: number;
+  total_secondary_stake: number; 
 }
 // the JSON file format is as followed:
 export interface CollectionJson {

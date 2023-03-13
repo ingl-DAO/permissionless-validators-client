@@ -83,7 +83,7 @@ export class ProposalService {
     return programVersion;
   }
 
-  async validate({
+  async validateGovernanceInput({
     voteAccount,
     configAccount,
     programUpgrade,
@@ -201,7 +201,7 @@ export class ProposalService {
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
 
-    const governanceType = await this.validate(newProposal);
+    const governanceType = await this.validateGovernanceInput(newProposal);
     const payerAccount: AccountMeta = {
       pubkey: payerPubkey,
       isSigner: true,
@@ -411,7 +411,7 @@ export class ProposalService {
         governance_type instanceof MaxPrimaryStake
           ? {
               config_type: ConfigAccountEnum.MaxPrimaryStake,
-              value: governance_type.value.toNumber() / LAMPORTS_PER_SOL,
+              value: new BN(governance_type.value).toNumber() / LAMPORTS_PER_SOL,
             }
           : governance_type instanceof NftHolderShare
           ? {
@@ -460,6 +460,7 @@ export class ProposalService {
       GovernanceData,
       { unchecked: true }
     );
+    console.log(votes)
     let number_of_no_votes = 0;
     let number_of_yes_votes = 0;
     votes.forEach(({ vote }) =>

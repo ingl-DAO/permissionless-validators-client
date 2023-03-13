@@ -1,12 +1,15 @@
 import { deserialize } from '@dao-xyz/borsh';
 import {
-  computeVoteAccountRewardAPY, GeneralData,
+  computeVoteAccountRewardAPY,
+  GeneralData,
   GENERAL_ACCOUNT_SEED,
   INGL_CONFIG_SEED,
   INGL_NFT_COLLECTION_KEY,
-  INGL_REGISTRY_PROGRAM_ID, ProgramStorage,
-  REGISTRY_PROGRAM_ID, ValidatorConfig,
-  VOTE_ACCOUNT_KEY
+  INGL_REGISTRY_PROGRAM_ID,
+  ProgramStorage,
+  REGISTRY_PROGRAM_ID,
+  ValidatorConfig,
+  VOTE_ACCOUNT_KEY,
 } from '@ingl-permissionless/state';
 import { Metaplex, Nft, Sft, SftWithToken } from '@metaplex-foundation/js';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
@@ -14,8 +17,9 @@ import {
   AccountInfo,
   clusterApiUrl,
   Connection,
+  LAMPORTS_PER_SOL,
   PublicKey,
-  VoteAccountInfo
+  VoteAccountInfo,
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import { InglValidator, Validator } from '../interfaces';
@@ -121,11 +125,15 @@ export class ValidatorService {
       total_delegated_count:
         new BN(generalAccountData.total_delegated).toNumber() /
         new BN(validatorConfigAccountData.unit_backing).toNumber(),
-      max_primary_stake: new BN(
-        validatorConfigAccountData.max_primary_stake
-      ).toNumber(),
-      total_secondary_stake: new BN(voteAccountInfo?.activatedStake ?? 0),
-      unit_backing: new BN(validatorConfigAccountData.unit_backing).toNumber(),
+      max_primary_stake:
+        new BN(validatorConfigAccountData.max_primary_stake).toNumber() /
+        LAMPORTS_PER_SOL,
+      total_secondary_stake:
+        new BN(voteAccountInfo?.activatedStake ?? 0).toNumber() /
+        LAMPORTS_PER_SOL,
+      unit_backing:
+        new BN(validatorConfigAccountData.unit_backing).toNumber() /
+        LAMPORTS_PER_SOL,
       validator_apy: await computeVoteAccountRewardAPY(
         this.connection,
         generalAccountData
@@ -141,7 +149,9 @@ export class ValidatorService {
       discord_invite: validatorConfigAccountData.discord_invite,
       twitter_handle: validatorConfigAccountData.twitter_handle,
       total_minted_count: generalAccountData.mint_numeration,
-      total_delegated_stake: generalAccountData.total_delegated,
+      total_delegated_stake:
+        new BN(generalAccountData.total_delegated).toNumber() /
+        LAMPORTS_PER_SOL,
     };
     return result;
   }
