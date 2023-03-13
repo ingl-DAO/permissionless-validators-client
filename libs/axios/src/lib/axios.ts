@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 
 export enum ProgramUsage {
   Marketplace = 'Marketplace',
-  Permissionless = 'Permissionless',
+  PermissionlessValidator = 'PermissionlessValidator',
 }
 //This is only use for beta environnement
 export async function signIn(usage: ProgramUsage, accessCode: string) {

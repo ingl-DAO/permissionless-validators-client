@@ -71,7 +71,7 @@ export class RegistryService {
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
 
-    const program = await this.getProgramId(ProgramUsage.Permissionless);
+    const program = await this.getProgramId(ProgramUsage.PermissionlessValidator);
     if (!program) throw new Error('No predeployed program available');
     const programPubkey = new PublicKey(program.program_id);
 
