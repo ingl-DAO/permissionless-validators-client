@@ -83,10 +83,6 @@ export default function ProposalVote() {
       validatorDetailNotif.dismiss();
     }
     setValidatorDetailNotif(notif);
-
-    notif.notify({
-      render: 'Loading validator details...',
-    });
     validatorService
       .loadValidatorStats(new PublicKey(validator_program_id))
       .then((validatorInfo) => {
@@ -96,6 +92,9 @@ export default function ProposalVote() {
         setValidatorDetailNotif(undefined);
       })
       .catch((error) => {
+        notif.notify({
+          render: 'Loading validator details...',
+        });
         notif.update({
           type: 'ERROR',
           render: (
@@ -290,13 +289,13 @@ export default function ProposalVote() {
     });
     proposalService
       ?.voteGovernance(Number(numeration), voteChoice, nfts)
-      .then((signature) => {
+      .then((signatures) => {
         setIsVoting(false);
         setVoteChoice(voteChoice);
         notif.update({
           render: (
             <CopyTransactionId
-              transaction_id={signature}
+              transaction_id={signatures[signatures.length - 1]}
               message="proposal voted successfully"
             />
           ),
@@ -340,6 +339,11 @@ export default function ProposalVote() {
     proposalService
       ?.executeGovernance(Number(numeration))
       .then(() => {
+        if (proposalDetails)
+          setProposalDetails({
+            ...proposalDetails,
+            is_proposal_executed: true,
+          });
         notif.update({
           render: 'Proposal was executed successfully',
         });
@@ -384,6 +388,18 @@ export default function ProposalVote() {
         notif.update({
           render: 'Proposal was finalized successfully',
         });
+        if (proposalDetails) {
+          const { number_of_no_votes, number_of_yes_votes } = proposalDetails;
+          setProposalDetails({
+            ...proposalDetails,
+            is_still_ongoing: false,
+            date_finalized: new Date().getTime() / 1000,
+            did_proposal_pass:
+              (number_of_no_votes * 100) /
+                (number_of_no_votes + number_of_yes_votes) >
+              20,
+          });
+        }
         setFinalizeNotif(undefined);
       })
       .catch((error) => {
@@ -405,6 +421,7 @@ export default function ProposalVote() {
       })
       .finally(() => setIsFinalizingProposal(false));
   };
+  console.log(proposalDetails?.date_finalized);
   return (
     <>
       <ConfirmDialog
@@ -842,7 +859,7 @@ export default function ProposalVote() {
                                 proposalDetails.voteAccount.vote_type ===
                                 VoteAccountEnum.Commission
                                   ? '%'
-                                  : null
+                                  : ''
                               }`}
                             />
                             <PropoposalVoteLine
@@ -1044,13 +1061,15 @@ export default function ProposalVote() {
                 color={'primary'}
                 disabled={
                   isVoting ||
+                  areNftsLoading ||
                   areValidatorDetailsLoading ||
                   isProposalDetailLoading ||
                   (proposalDetails?.programUpgrade &&
                     bufferVersion === undefined) ||
                   (proposalDetails?.programUpgrade &&
                     programVersion === undefined) ||
-                  voteChoice
+                  voteChoice ||
+                  !proposalDetails?.is_still_ongoing
                 }
                 onClick={() => {
                   setVoteChoice(true);
@@ -1075,9 +1094,11 @@ export default function ProposalVote() {
                 }}
                 disabled={
                   isVoting ||
+                  areNftsLoading ||
                   areValidatorDetailsLoading ||
                   isProposalDetailLoading ||
-                  voteChoice === false
+                  voteChoice === false ||
+                  !proposalDetails?.is_still_ongoing
                 }
                 fullWidth
               >
@@ -1089,10 +1110,10 @@ export default function ProposalVote() {
               validatorDetails &&
               voteChoice !== undefined && (
                 <Box>
-                  {proposalDetails.date_finalize ? (
+                  {proposalDetails.did_proposal_pass ? (
                     <>
                       <Typography>{`Finalize on ${formatDate(
-                        new Date(proposalDetails.date_finalize * 1000)
+                        new Date(proposalDetails.date_finalized ?? 0 * 1000)
                       )}`}</Typography>
                       {proposalDetails.is_proposal_executed ? (
                         <Typography>{`Proposal has been executed`}</Typography>
@@ -1113,11 +1134,13 @@ export default function ProposalVote() {
                       )}
                     </>
                   ) : (
+                    !proposalDetails.is_still_ongoing &&
                     (proposalDetails.number_of_no_votes +
                       proposalDetails.number_of_yes_votes) *
                       validatorDetails.unit_backing >=
-                      proposalDetails.proposal_quorum *
-                        validatorDetails.max_primary_stake && (
+                      (proposalDetails.proposal_quorum *
+                        validatorDetails.max_primary_stake) /
+                        100 && (
                       <Button
                         variant="contained"
                         color="primary"

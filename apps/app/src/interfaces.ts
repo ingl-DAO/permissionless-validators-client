@@ -138,7 +138,7 @@ export interface GovernanceInterface
   is_still_ongoing: boolean; //can vote
   did_proposal_pass?: boolean; //succeded a few second ago
   is_proposal_executed: boolean;
-  date_finalize?: number; //completed
+  date_finalized?: number; //completed
   expiration_time: number; //in seconds
   proposal_numeration: number;
   proposal_quorum: number;
