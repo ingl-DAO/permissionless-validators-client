@@ -92,7 +92,7 @@ export default function SecondaryItemLane({
           onClick={newLane ? addItem : deleteItem}
           sx={{
             padding: theme.spacing(1.5),
-            color: newLane ? 'black' : theme.palette.primary.main,
+            color: newLane ? '#28293D' : theme.palette.primary.main,
             backgroundColor: newLane ? '#D5F2E3' : theme.common.inputBackground,
             '& .MuiButton-startIcon': {
               margin: 0,

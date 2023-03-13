@@ -30,9 +30,9 @@ export default function BareCustomInput({
 }: {
   label: string;
   subLabel: string;
-  value: Date | string;
-  onChange?: (val: Date) => void;
-  type?: 'string' | 'date';
+  value: Date | string | number;
+  onChange?: (val: Date | number) => void;
+  type?: 'string' | 'date' | 'number';
   disabled?: boolean;
 }) {
   return (
@@ -45,7 +45,13 @@ export default function BareCustomInput({
         size="small"
         value={type === 'date' ? (value as Date).toLocaleDateString() : value}
         onChange={(event) =>
-          onChange ? onChange(new Date(event.target.value)) : null
+          onChange
+            ? onChange(
+                type === 'number'
+                  ? Number(event.target.value)
+                  : new Date(event.target.value)
+              )
+            : null
         }
         type={type}
         disabled={disabled}

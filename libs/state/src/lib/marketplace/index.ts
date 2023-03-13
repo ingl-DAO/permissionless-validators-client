@@ -79,7 +79,7 @@ export class Storage implements Space {
   public authorized_withdrawer_cost!: BN;
 
   @field({ type: 'u32' })
-  public mediatable_date!: number;
+  public mediation_interval!: number;
 
   @field({ type: option(Purchase) })
   public purchase?: Purchase;

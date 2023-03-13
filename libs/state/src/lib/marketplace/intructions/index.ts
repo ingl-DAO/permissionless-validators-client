@@ -1,15 +1,6 @@
 import { field, variant, vec } from '@dao-xyz/borsh';
 import * as BN from 'bn.js';
 
-export class Instruction {
-  @field({ type: 'u8' })
-  log_level!: number;
-
-  constructor(log_level: number) {
-    this.log_level = log_level;
-  }
-}
-
 export class SecondaryItem {
   @field({ type: 'u64' })
   public cost!: BN;
@@ -19,6 +10,10 @@ export class SecondaryItem {
 
   @field({ type: 'string' })
   public description!: string;
+
+  constructor(properties: SecondaryItem) {
+    Object.assign(this, properties);
+  }
 }
 
 export class MediationShares {
@@ -39,13 +34,18 @@ export class MediationShares {
   }
 }
 
+abstract class Instruction {}
+
 @variant(0)
 export class List extends Instruction {
+  @field({ type: 'u8' })
+  public log_level!: number;
+
   @field({ type: 'u64' })
   public authorized_withdrawer_cost!: BN;
 
   @field({ type: 'u32' })
-  public mediatable_date!: number;
+  public mediation_interval!: number;
 
   @field({ type: vec(SecondaryItem) })
   public secondary_items!: SecondaryItem[];
@@ -59,42 +59,80 @@ export class List extends Instruction {
   @field({ type: 'string' })
   validator_logo_url!: string;
 
-  constructor({ log_level, ...properties }: Omit<List, 'serialize'>) {
-    super(log_level);
+  constructor(properties: List) {
+    super();
     Object.assign(this, properties);
   }
 }
 
 @variant(1)
-export class DeList extends Instruction {}
+export class DeList extends Instruction {
+  @field({ type: 'u8' })
+  public log_level!: number;
+
+  constructor(log_level: number) {
+    super();
+    this.log_level = log_level;
+  }
+}
 
 @variant(2)
-export class Buy extends Instruction {}
+export class Buy extends Instruction {
+  @field({ type: 'u8' })
+  public log_level!: number;
+
+  constructor(log_level: number) {
+    super();
+    this.log_level = log_level;
+  }
+}
 
 @variant(3)
-export class WithdrawRewards extends Instruction {}
+export class WithdrawRewards extends Instruction {
+  @field({ type: 'u8' })
+  public log_level!: number;
+
+  constructor(log_level: number) {
+    super();
+    this.log_level = log_level;
+  }
+}
 
 @variant(4)
-export class RequestMediation extends Instruction {}
+export class RequestMediation extends Instruction {
+  @field({ type: 'u8' })
+  public log_level!: number;
+
+  constructor(log_level: number) {
+    super();
+    this.log_level = log_level;
+  }
+}
 
 @variant(5)
 export class Mediate extends Instruction {
+  @field({ type: 'u8' })
+  public log_level!: number;
+
   @field({ type: MediationShares })
   public mediate_shares!: MediationShares;
 
-  constructor({ log_level, ...properties }: Mediate) {
-    super(log_level);
+  constructor(properties: Mediate) {
+    super();
     Object.assign(this, properties);
   }
 }
 
 @variant(6)
 export class ValidateSecondaryItemsTransfers extends Instruction {
+  @field({ type: 'u8' })
+  public log_level!: number;
+
   @field({ type: 'u32' })
   public item_index!: number;
 
-  constructor({ log_level, ...properties }: ValidateSecondaryItemsTransfers) {
-    super(log_level);
+  constructor(properties: ValidateSecondaryItemsTransfers) {
+    super();
     Object.assign(this, properties);
   }
 }
