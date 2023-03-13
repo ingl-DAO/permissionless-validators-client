@@ -1,5 +1,18 @@
 import BN from 'bn.js';
 
+export enum VersionStatus {
+  Deprecated = 'Deprecated',
+  Unsafe = 'Unsafe',
+  Safe = 'Safe',
+}
+
+export interface ProgramVersion {
+  program_data_hash: string;
+  version: number;
+  status: VersionStatus;
+  released_on: Date;
+}
+
 export interface Validator {
   validator_program_id: string;
   validator_name: string;
@@ -71,7 +84,8 @@ export interface InglValidator
   total_delegated_count: number;
   total_minted_count: number;
   total_delegated_stake: number;
-  total_secondary_stake: number; 
+  total_secondary_stake: number;
+  programVersion: ProgramVersion | null;
 }
 // the JSON file format is as followed:
 export interface CollectionJson {
