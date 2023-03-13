@@ -51,7 +51,7 @@ export function App() {
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
 
   useEffect(() => {
-    // verifyCodeFromLocalStorage();
+    verifyCodeFromLocalStorage();
   }, []);
 
   return (
