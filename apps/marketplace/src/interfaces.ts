@@ -1,3 +1,5 @@
+import { ProgramVersion } from '@ingl-permissionless/axios';
+
 export interface Validator {
   program_id: string;
   validator_name: string;
@@ -41,5 +43,6 @@ export interface ValidatorDetails extends ValidatorListing, Validator {
   date_validated?: number; // in seconds
   request_mediation_date?: number; //in seconds
 
+  programVersion: ProgramVersion | null;
   stake_per_epochs: StakePerEpoch[];
 }

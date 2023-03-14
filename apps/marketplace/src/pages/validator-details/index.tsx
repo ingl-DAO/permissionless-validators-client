@@ -1,10 +1,10 @@
+import { VersionStatus } from '@ingl-permissionless/axios';
 import {
   ArrowBackIosNewOutlined,
   CheckOutlined,
   ContentCopyRounded,
   ErrorOutlineOutlined,
   HistoryToggleOffOutlined,
-  InfoOutlined,
   ReportRounded,
   ThumbUpOutlined,
 } from '@mui/icons-material';
@@ -509,12 +509,9 @@ export default function ValidatorDetailsPage() {
                     <img
                       src={validatorDetails.validator_logo_url}
                       alt="validator logo"
-                      style={{
-                        objectFit: 'cover',
-                      }}
                       height={400}
                       width={400}
-                      // style={{ objectFit: 'contain' }}
+                      style={{ objectFit: 'contain' }}
                     />
                   </Box>
                 ) : (
@@ -581,6 +578,42 @@ export default function ValidatorDetailsPage() {
                         : ''
                     }
                   />
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: 'rgba(255, 255, 255, 0.5)',
+                        fontWeight: '300',
+                      }}
+                    >
+                      Program version
+                    </Typography>
+                    {!validatorDetails ? (
+                      <Skeleton
+                        animation="wave"
+                        width={`${random() * 10}%`}
+                        sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
+                      />
+                    ) : !validatorDetails.programVersion ||
+                      validatorDetails.programVersion.status ===
+                        VersionStatus.Unsafe ? (
+                      <Typography variant="h6" color="error">
+                        UNSAFE
+                      </Typography>
+                    ) : (
+                      <Typography
+                        variant="h6"
+                        color={
+                          validatorDetails.programVersion.status ===
+                          VersionStatus.Deprecated
+                            ? theme.palette.warning.main
+                            : theme.palette.success.main
+                        }
+                      >
+                        {validatorDetails.programVersion.version}
+                      </Typography>
+                    )}
+                  </Box>
                 </Box>
               </Box>
             </Box>
