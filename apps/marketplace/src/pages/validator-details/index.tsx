@@ -562,7 +562,7 @@ export default function ValidatorDetailsPage() {
                       <Typography
                         variant="body2"
                         sx={{
-                          color: theme.palette.error.main,
+                          color: 'rgba(255, 255, 255, 0.5)',
                           fontWeight: '300',
                         }}
                       >
