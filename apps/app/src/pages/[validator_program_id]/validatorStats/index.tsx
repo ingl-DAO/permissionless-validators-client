@@ -404,34 +404,37 @@ export default function ValidatorStats() {
                 }
                 skeleton={areDetailsLoading || !details}
               />
-              <Typography
-                variant="body2"
-                sx={{ color: 'rgba(255, 255, 255, 0.5)', fontWeight: '300' }}
-              >
-                Program version
-              </Typography>
-              {!details ? (
-                <Skeleton
-                  animation="wave"
-                  width={`${random() * 10}%`}
-                  sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
-                />
-              ) : details.programVersion === null ||
-                details.programVersion.status === VersionStatus.Unsafe ? (
-                <Typography color="error">
-                  UNSAFE - Not a version of ingl program
-                </Typography>
-              ) : (
+              <Box>
                 <Typography
-                  color={
-                    details.programVersion.status === VersionStatus.Deprecated
-                      ? 'yellow'
-                      : 'greenF'
-                  }
+                  variant="body2"
+                  sx={{ color: 'rgba(255, 255, 255, 0.5)', fontWeight: '300' }}
                 >
-                  `Version ${details.programVersion.version}`
+                  Program version
                 </Typography>
-              )}
+                {!details ? (
+                  <Skeleton
+                    animation="wave"
+                    width={`${random() * 10}%`}
+                    sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
+                  />
+                ) : !details.programVersion ||
+                  details.programVersion.status === VersionStatus.Unsafe ? (
+                  <Typography variant="body2" color="error">
+                    UNSAFE
+                  </Typography>
+                ) : (
+                  <Typography
+                    variant="body2"
+                    color={
+                      details.programVersion.status === VersionStatus.Deprecated
+                        ? 'yellow'
+                        : 'green'
+                    }
+                  >
+                    {details.programVersion.version}
+                  </Typography>
+                )}
+              </Box>
             </Box>
           </Box>
         </Box>
