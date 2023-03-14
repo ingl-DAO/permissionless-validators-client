@@ -2,8 +2,34 @@ import axios, { AxiosInstance } from 'axios';
 
 export enum ProgramUsage {
   Marketplace = 'Marketplace',
-  Permissionless = 'Permissionless',
+  PermissionlessValidator = 'PermissionlessValidator',
 }
+
+export enum VersionStatus {
+  Deprecated = 'Deprecated',
+  Unsafe = 'Unsafe',
+  Safe = 'Safe',
+}
+
+export interface ProgramVersion {
+  program_data_hash: string;
+  version: number;
+  status: VersionStatus;
+  released_on: Date;
+}
+
+export async function verifyVersion(
+  usage: ProgramUsage,
+  program_id: string,
+  bpfType: 'Buffer' | 'Program'
+) {
+  const { data: programVersion } = await http.get<ProgramVersion | null>(
+    `/program-versions/verify`,
+    { params: { program_id, usage, bpfType } }
+  );
+  return programVersion;
+}
+
 //This is only use for beta environnement
 export async function signIn(usage: ProgramUsage, accessCode: string) {
   const {

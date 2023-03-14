@@ -1,3 +1,4 @@
+import { ProgramVersion } from '@ingl-permissionless/axios';
 import BN from 'bn.js';
 
 export interface Validator {
@@ -70,8 +71,9 @@ export interface InglValidator
   collection_id: string;
   total_delegated_count: number;
   total_minted_count: number;
-  total_delegated_stake: BN;
-  total_secondary_stake: BN; // in lamports (big number)
+  total_delegated_stake: number;
+  total_secondary_stake: number;
+  programVersion: ProgramVersion | null;
 }
 // the JSON file format is as followed:
 export interface CollectionJson {
@@ -138,7 +140,7 @@ export interface GovernanceInterface
   is_still_ongoing: boolean; //can vote
   did_proposal_pass?: boolean; //succeded a few second ago
   is_proposal_executed: boolean;
-  date_finalize?: number; //completed
+  date_finalized?: number; //completed
   expiration_time: number; //in seconds
   proposal_numeration: number;
   proposal_quorum: number;

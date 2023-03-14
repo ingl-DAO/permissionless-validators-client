@@ -2,7 +2,7 @@ import { Constructor, deserialize } from '@dao-xyz/borsh';
 import { http } from '@ingl-permissionless/axios';
 import {
   SignerWalletAdapterProps,
-  WalletAdapterNetwork
+  WalletAdapterNetwork,
 } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
@@ -18,7 +18,7 @@ import {
   Transaction,
   TransactionInstruction,
   TransactionMessage,
-  VersionedTransaction
+  VersionedTransaction,
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import { GeneralData, STAKE_PROGRAM_ID, ValidatorConfig } from '../state';
@@ -84,7 +84,7 @@ export const forwardMultipleLegacyTransactions = async (
   walletConnection: {
     publicKey: PublicKey;
     connection: Connection;
-    signAllTransaction: SignerWalletAdapterProps['signAllTransactions'];
+    signAllTransactions: SignerWalletAdapterProps['signAllTransactions'];
   },
   instructions: {
     instructions: TransactionInstruction[];
@@ -95,7 +95,7 @@ export const forwardMultipleLegacyTransactions = async (
   const {
     connection,
     publicKey: payerKey,
-    signAllTransaction,
+    signAllTransactions,
   } = walletConnection;
 
   const blockhashObj = await connection.getLatestBlockhash();
@@ -118,8 +118,8 @@ export const forwardMultipleLegacyTransactions = async (
     }
   );
 
-  const signedTransactions = signAllTransaction
-    ? await signAllTransaction(transactions)
+  const signedTransactions = signAllTransactions
+    ? await signAllTransactions(transactions)
     : null;
   if (!signedTransactions) throw new Error('No signed transactions found');
 

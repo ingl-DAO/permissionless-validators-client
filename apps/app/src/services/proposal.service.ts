@@ -1,5 +1,4 @@
 import { deserialize, serialize } from '@dao-xyz/borsh';
-import { http } from '@ingl-permissionless/axios';
 import {
   AUTHORIZED_WITHDRAWER_KEY,
   BPF_LOADER_UPGRADEABLE_ID,
@@ -8,6 +7,7 @@ import {
   ExecuteGovernance,
   FinalizeGovernance,
   forwardLegacyTransaction,
+  forwardMultipleLegacyTransactions,
   GeneralData,
   GENERAL_ACCOUNT_SEED,
   GovernanceData,
@@ -30,10 +30,10 @@ import {
   ValidatorName,
   VoteAccountGovernance,
   VoteGovernance,
-  VOTE_ACCOUNT_KEY,
+  VOTE_ACCOUNT_KEY
 } from '@ingl-permissionless/state';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { WalletNotConnectedError } from '@solana/wallet-adapter-base';
+import { SignerWalletAdapterProps, WalletNotConnectedError } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
   AccountMeta,
@@ -43,29 +43,15 @@ import {
   SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
-  TransactionInstruction,
+  TransactionInstruction
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import {
   ConfigAccountEnum,
   CreateProposal,
   GovernanceInterface,
-  InglNft,
-  VoteAccountEnum,
+  InglNft, VoteAccountEnum
 } from '../interfaces';
-
-export enum VersionStatus {
-  Deprecated = 'Deprecated',
-  Unsafe = 'Unsafe',
-  Safe = 'Safe',
-}
-
-export interface ProgramVersion {
-  program_data_hash: string;
-  version: number;
-  status: VersionStatus;
-  released_on: Date;
-}
 
 export class ProposalService {
   constructor(
@@ -74,16 +60,7 @@ export class ProposalService {
     private readonly walletContext: WalletContextState
   ) {}
 
-  async verifyVersion(programId?: PublicKey) {
-    const { data: programVersion } = await http.get<ProgramVersion | null>(
-      `/program-versions/verify?program_id=${(
-        programId ?? this.programId
-      ).toBase58()}`
-    );
-    return programVersion;
-  }
-
-  async validate({
+  async validateGovernanceInput({
     voteAccount,
     configAccount,
     programUpgrade,
@@ -201,7 +178,7 @@ export class ProposalService {
     if (!payerPubkey)
       throw new WalletNotConnectedError('Please connect your wallet !!!');
 
-    const governanceType = await this.validate(newProposal);
+    const governanceType = await this.validateGovernanceInput(newProposal);
     const payerAccount: AccountMeta = {
       pubkey: payerPubkey,
       isSigner: true,
@@ -411,7 +388,8 @@ export class ProposalService {
         governance_type instanceof MaxPrimaryStake
           ? {
               config_type: ConfigAccountEnum.MaxPrimaryStake,
-              value: governance_type.value.toNumber() / LAMPORTS_PER_SOL,
+              value:
+                new BN(governance_type.value).toNumber() / LAMPORTS_PER_SOL,
             }
           : governance_type instanceof NftHolderShare
           ? {
@@ -460,6 +438,7 @@ export class ProposalService {
       GovernanceData,
       { unchecked: true }
     );
+    console.log(proposal);
     let number_of_no_votes = 0;
     let number_of_yes_votes = 0;
     votes.forEach(({ vote }) =>
@@ -518,6 +497,7 @@ export class ProposalService {
 
     if (tokenMints.length === 0)
       throw new Error('Insufficient governance power');
+    const voteInstructions: TransactionInstruction[] = [];
     const cntAccounts = tokenMints.reduce<AccountMeta[]>(
       (accounts, tokenMint) => {
         const mintAccount: AccountMeta = {
@@ -543,40 +523,47 @@ export class ProposalService {
       },
       []
     );
+
     const systemProgramAccount: AccountMeta = {
       pubkey: SystemProgram.programId,
       isSigner: false,
       isWritable: false,
     };
-    const voteInstruction = new TransactionInstruction({
-      programId: this.programId,
-      data: Buffer.from(
-        serialize(
-          new VoteGovernance({
-            vote,
-            log_level: 0,
-            cnt: tokenMints.length,
-            numeration: proposal_numeration,
-          })
-        )
-      ),
-      keys: [
-        payerAccount,
-        proposalAccount,
-        ...cntAccounts,
+    while (cntAccounts.length > 0) {
+      const accounts = cntAccounts.splice(0, 21);
+      voteInstructions.push(
+        new TransactionInstruction({
+          programId: this.programId,
+          data: Buffer.from(
+            serialize(
+              new VoteGovernance({
+                vote,
+                log_level: 0,
+                cnt: accounts.length / 3,
+                numeration: proposal_numeration,
+              })
+            )
+          ),
+          keys: [
+            payerAccount,
+            proposalAccount,
+            ...accounts,
 
-        systemProgramAccount,
-      ],
-    });
+            systemProgramAccount,
+          ],
+        })
+      );
+    }
 
     try {
-      return forwardLegacyTransaction(
+      return forwardMultipleLegacyTransactions(
         {
           connection: this.connection,
           publicKey: payerPubkey,
-          signTransaction: this.walletContext.signTransaction,
+          signAllTransactions: this.walletContext
+            .signAllTransactions as SignerWalletAdapterProps['signAllTransactions'],
         },
-        [voteInstruction]
+        voteInstructions.map(instruction => ({instructions: [instruction], additionalUnits: 1_400_000 }))
       );
     } catch (error) {
       throw new Error(
@@ -712,7 +699,7 @@ export class ProposalService {
       !date_finalized ||
       new Date() < new Date(date_finalized + GOVERNANCE_SAFETY_LEEWAY)
     )
-      throw new Error('Proposal mus be executed');
+      throw new Error('Proposal must be finalized');
     if (is_proposal_executed)
       throw new Error('This proposal has already been executed');
     if (!did_proposal_pass) throw new Error('This proposal was not passed.');

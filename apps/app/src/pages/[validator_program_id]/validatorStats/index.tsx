@@ -1,13 +1,14 @@
+import { VersionStatus } from '@ingl-permissionless/axios';
 import { GitHub, ReportRounded, Twitter } from '@mui/icons-material';
 import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
-import { BN } from 'bn.js';
+import { PublicKey } from '@solana/web3.js';
 import { useEffect, useMemo, useState } from 'react';
 import { useIntl } from 'react-intl';
 import { useParams } from 'react-router';
 import ErrorMessage from '../../../common/components/ErrorMessage';
 import useNotification from '../../../common/utils/notification';
+import random from '../../../common/utils/random';
 import StatCard from '../../../components/stats/statCard';
 import ValidatorCardContent from '../../../components/validators/validatorCardContent';
 import { InglValidator } from '../../../interfaces';
@@ -263,22 +264,12 @@ export default function ValidatorStats() {
               upper={
                 areDetailsLoading || !details
                   ? 0
-                  : Number(
-                      (
-                        new BN(details.total_delegated_stake).toNumber() /
-                        LAMPORTS_PER_SOL
-                      ).toFixed(3)
-                    )
+                  : Number(details.total_delegated_stake.toFixed(3))
               }
               bottom={
                 areDetailsLoading || !details
                   ? 0
-                  : Number(
-                      (
-                        new BN(details.max_primary_stake).toNumber() /
-                        LAMPORTS_PER_SOL
-                      ).toFixed(3)
-                    )
+                  : Number(details.max_primary_stake.toFixed(3))
               }
               title_2="Total stake requested(SOL)"
               skeleton={areDetailsLoading || !details}
@@ -288,12 +279,7 @@ export default function ValidatorStats() {
               upper={
                 areDetailsLoading || !details
                   ? 0
-                  : Number(
-                      (
-                        new BN(details.total_secondary_stake).toNumber() /
-                        LAMPORTS_PER_SOL
-                      ).toFixed(3)
-                    )
+                  : Number(details.total_secondary_stake.toFixed(3))
               }
               skeleton={areDetailsLoading || !details}
             />
@@ -414,13 +400,41 @@ export default function ValidatorStats() {
                 value={
                   areDetailsLoading || !details
                     ? ''
-                    : `${
-                        new BN(details.unit_backing).toNumber() /
-                        LAMPORTS_PER_SOL
-                      } SOL`
+                    : `${details.unit_backing} SOL`
                 }
                 skeleton={areDetailsLoading || !details}
               />
+              <Box>
+                <Typography
+                  variant="body2"
+                  sx={{ color: 'rgba(255, 255, 255, 0.5)', fontWeight: '300' }}
+                >
+                  Program version
+                </Typography>
+                {!details ? (
+                  <Skeleton
+                    animation="wave"
+                    width={`${random() * 10}%`}
+                    sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
+                  />
+                ) : !details.programVersion ||
+                  details.programVersion.status === VersionStatus.Unsafe ? (
+                  <Typography variant="body2" color="error">
+                    UNSAFE
+                  </Typography>
+                ) : (
+                  <Typography
+                    variant="body2"
+                    color={
+                      details.programVersion.status === VersionStatus.Deprecated
+                        ? 'yellow'
+                        : 'green'
+                    }
+                  >
+                    {details.programVersion.version}
+                  </Typography>
+                )}
+              </Box>
             </Box>
           </Box>
         </Box>

@@ -17,7 +17,7 @@ export function SignIn() {
 
   const handleSubmit = (code: string) => {
     setIsLoading(true);
-    signIn(ProgramUsage.Permissionless, code)
+    signIn(ProgramUsage.PermissionlessValidator, code)
       .then((accessToken) => {
         localStorage.setItem('accessToken', accessToken);
         window.location.reload();
