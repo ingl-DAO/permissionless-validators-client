@@ -1,5 +1,5 @@
 import { deserialize, serialize } from '@dao-xyz/borsh';
-import { http, ProgramUsage } from '@ingl-permissionless/axios';
+import { http, ProgramUsage, verifyVersion } from '@ingl-permissionless/axios';
 import {
   BPF_LOADER_UPGRADEABLE_ID,
   Buy,
@@ -452,8 +452,15 @@ export class ValidatorService {
     const rentExempt = await this.connection.getMinimumBalanceForRentExemption(
       voteAccountInfo?.data.length ?? 0
     );
+    const programVersion = await verifyVersion(
+      ProgramUsage.Marketplace,
+      programId.toBase58(),
+      'Program'
+    );
 
     return {
+      programVersion,
+
       description,
       validator_id,
       validator_name,
