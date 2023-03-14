@@ -9,6 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { CollectionJson } from '../../interfaces';
 import theme from '../../theme/theme';
 
@@ -90,17 +91,27 @@ export default function CollectionInformation({
   onNext,
   solBacking: sb,
   jsonFileData: jfd,
-  creatorRoyalties:cr,
+  creatorRoyalties: cr,
 }: {
   solBacking: number;
   jsonFileData?: CollectionJson;
   creatorRoyalties: number;
-  onPrev: (val: { jsonFileData: CollectionJson|undefined; solBacking: number, creatorRoyalties:number }) => void;
-  onNext: (val: { jsonFileData: CollectionJson; solBacking: number, creatorRoyalties:number }) => void;
+  onPrev: (val: {
+    jsonFileData: CollectionJson | undefined;
+    solBacking: number;
+    creatorRoyalties: number;
+  }) => void;
+  onNext: (val: {
+    jsonFileData: CollectionJson;
+    solBacking: number;
+    creatorRoyalties: number;
+  }) => void;
 }) {
-  const [jsonFileData, setJsonFileData] = useState<CollectionJson | undefined>(jfd);
+  const [jsonFileData, setJsonFileData] = useState<CollectionJson | undefined>(
+    jfd
+  );
   const [solBacking, setSolBacking] = useState<number>(sb);
-  const [creatorRoyalties, setCreatorRoyalties] = useState<number>(cr)
+  const [creatorRoyalties, setCreatorRoyalties] = useState<number>(cr);
   const [jsonNfts, setJsonNfts] = useState<JsonNft[]>([]);
   const [raritySpread, setRaritySpread] = useState<RaritySpread[]>([]);
   const [activeNftPos, setActiveNftPos] = useState<number>(0);
@@ -110,12 +121,12 @@ export default function CollectionInformation({
 
     for (let index = 0; index < rarity_names.length; index++) {
       // for (let i = 0; i < uris[index].length; i++) {
-        const uriData = await (await fetch(uris[index][0])).json();
-        nfts.push({
-          image_ref: uriData.image,
-          is_delegated: true,
-          rarity: rarity_names[index],
-        });
+      const uriData = await (await fetch(uris[index][0])).json();
+      nfts.push({
+        image_ref: uriData.image,
+        is_delegated: true,
+        rarity: rarity_names[index],
+      });
       // }
     }
     return nfts;
@@ -165,8 +176,13 @@ export default function CollectionInformation({
             columnGap: theme.spacing(2),
           }}
         >
-          <Button variant="contained" color="primary" onClick={() =>onPrev({ jsonFileData, solBacking, creatorRoyalties })
-            }>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() =>
+              onPrev({ jsonFileData, solBacking, creatorRoyalties })
+            }
+          >
             Prev
           </Button>
           <Button
@@ -174,7 +190,9 @@ export default function CollectionInformation({
             color="primary"
             disabled={!jsonFileData}
             onClick={() =>
-              jsonFileData ? onNext({ jsonFileData, solBacking, creatorRoyalties }) : null
+              jsonFileData
+                ? onNext({ jsonFileData, solBacking, creatorRoyalties })
+                : null
             }
           >
             Next
@@ -260,7 +278,7 @@ export default function CollectionInformation({
                             'collection_uri',
                             'rarities',
                             'uris',
-                            'default_uri'
+                            'default_uri',
                           ];
 
                           if (
@@ -279,7 +297,7 @@ export default function CollectionInformation({
                               rarities: intern.rarities,
                               rarity_names: intern.rarity_names,
                               uris: intern.uris,
-                              default_uri: intern.default_uri
+                              default_uri: intern.default_uri,
                             });
                           }
                         }
@@ -452,9 +470,12 @@ export default function CollectionInformation({
               }}
               onChange={(e) => {
                 const val = Number(e.target.value);
-                if (val >= 0 && val<200) {
+                if (val >= 0 && val < 2) {
                   setCreatorRoyalties(val);
-                }else alert('must be greater than 0 and less than 200')
+                } else
+                  toast.error(
+                    'Creator royalties must be greater than 0 and less than 2'
+                  );
               }}
               value={creatorRoyalties}
             />
