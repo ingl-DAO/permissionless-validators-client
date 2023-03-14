@@ -1,7 +1,19 @@
-import { Box, Button, Checkbox, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Checkbox,
+  Skeleton,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import { useFormik } from 'formik';
 import Scrollbars from 'rc-scrollbars';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import * as Yup from 'yup';
+import random from '../../common/utils/random';
 import theme from '../../theme/theme';
 
 export interface ValidatorInfo {
@@ -76,8 +88,8 @@ export default function ValidatorInformation({
   setStep: (step: number) => void;
   handleSubmit: (val: ValidatorInfo) => void;
   validatorInfo: ValidatorInfo;
-  hasExistingVoteAccount: boolean
-  setHasExistingVoteAccount: (val: boolean) => void
+  hasExistingVoteAccount: boolean;
+  setHasExistingVoteAccount: (val: boolean) => void;
 }) {
   const fieldName = hasExistingVoteAccount ? 'vote_account_id' : 'validator_id';
   const initialValues: ValidatorInfo = validatorInfo ?? {
@@ -108,6 +120,43 @@ export default function ValidatorInformation({
       resetForm();
     },
   });
+  const wallet = useWallet();
+  const { connection } = useConnection();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [authorizedWithdrawer, setAuthorizedWithdrawer] = useState<string>();
+
+  useEffect(() => {
+    if (formik.values.vote_account_id) {
+      try {
+        const voteAccountKey = new PublicKey(formik.values.vote_account_id);
+        setIsLoading(true);
+        connection
+          .getAccountInfo(new PublicKey(voteAccountKey))
+          .then((voteAccountInfo) => {
+            console.log(voteAccountInfo);
+            if (voteAccountInfo) {
+              //The first four bytes are used to represent the vote account version, the 32 following stand for the validator_id
+              const authorizedWithdrawer = new PublicKey(
+                Uint8Array.from(voteAccountInfo.data).slice(36, 68)
+              ).toBase58();
+              if (wallet.publicKey?.toBase58() === authorizedWithdrawer)
+                setAuthorizedWithdrawer(authorizedWithdrawer);
+              else {
+                setAuthorizedWithdrawer(undefined);
+                toast.error(
+                  "Vote account authorized withdrawer doesn't match with wallet pubkey"
+                );
+              }
+            } else toast.error('Invalid vote account ID.');
+          })
+          .catch((error) => toast.error(error))
+          .finally(() => setIsLoading(false));
+      } catch (error) {
+        toast.error('Invalid pubkey !!!');
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.vote_account_id]);
 
   return (
     <Box
@@ -139,7 +188,16 @@ export default function ValidatorInformation({
           <Button variant="contained" color="primary" disabled>
             Prev
           </Button>
-          <Button variant="contained" color="primary" type="submit">
+          <Button
+            disabled={
+              hasExistingVoteAccount
+                ? !authorizedWithdrawer
+                : !hasExistingVoteAccount
+            }
+            variant="contained"
+            color="primary"
+            type="submit"
+          >
             Next
           </Button>
         </Box>
@@ -148,8 +206,8 @@ export default function ValidatorInformation({
         <Box sx={{ display: 'grid', rowGap: theme.spacing(1) }}>
           <CustomInput
             formik={formik}
-            label="Validator name"
             formikKey="validator_name"
+            label="Validator name"
             subLabel="Make it sound outstanding and unique!"
           />
           <Box
@@ -179,32 +237,69 @@ export default function ValidatorInformation({
               </Typography>
             </Box>
           </Box>
-          {[
-            {
-              label: hasExistingVoteAccount
-                ? 'Existing vote account ID'
-                : 'Validator ID',
-              description: `Solana public key of the validator ${
-                hasExistingVoteAccount ? 'vote account' : 'account'
-              }`,
-              formikKey: hasExistingVoteAccount
-                ? 'vote_account_id'
-                : 'validator_id',
-            },
-            {
-              label: 'Website',
-              description: 'Where do you live on the world wide web?',
-              formikKey: 'website',
-            },
-          ].map(({ description, formikKey, label }, index) => (
+          {hasExistingVoteAccount ? (
+            <Box
+              sx={{
+                display: 'grid',
+                gridAutoFlow: 'column',
+                columnGap: theme.spacing(2),
+              }}
+            >
+              <CustomInput
+                formik={formik}
+                formikKey="vote_account_id"
+                label="Existing vote account ID"
+                subLabel="Solana public key of the vote account"
+              />
+              <Box>
+                <Box>
+                  <Typography variant="h6">Authorized withdrawer ID</Typography>
+                  <Typography variant="caption" sx={{ color: 'wheat' }}>
+                    Vote account authorized withdrawer ID
+                  </Typography>
+                </Box>
+                {isLoading ? (
+                  <Skeleton
+                    animation="wave"
+                    width={`${random() * 10}%`}
+                    sx={{ backgroundColor: 'rgb(137 127 127 / 43%)' }}
+                  />
+                ) : (
+                  <TextField
+                    placeholder="Authorized withdrawer ID"
+                    value={authorizedWithdrawer}
+                    size="small"
+                    type="string"
+                    fullWidth
+                    disabled
+                    required
+                    sx={{
+                      '& input, & div': {
+                        backgroundColor: '#28293D',
+                        color: 'white',
+                        '&::placeholder': {
+                          color: 'white',
+                        },
+                      },
+                    }}
+                  />
+                )}
+              </Box>
+            </Box>
+          ) : (
             <CustomInput
               formik={formik}
-              formikKey={formikKey}
-              label={label}
-              subLabel={description}
-              key={index}
+              label="Validator ID"
+              formikKey="validator_id"
+              subLabel="Solana public key of the validator account"
             />
-          ))}
+          )}
+          <CustomInput
+            formik={formik}
+            formikKey="website"
+            label="Website"
+            subLabel="Where do you live on the world wide web?"
+          />
           <Box
             sx={{
               display: 'grid',

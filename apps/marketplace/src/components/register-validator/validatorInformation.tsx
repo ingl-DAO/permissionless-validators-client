@@ -4,6 +4,7 @@ import { PublicKey } from '@solana/web3.js';
 import { useFormik } from 'formik';
 import Scrollbars from 'rc-scrollbars';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import * as Yup from 'yup';
 import theme from '../../theme/theme';
 import BareCustomInput from './bareCustomInput';
@@ -73,36 +74,32 @@ export default function ValidatorInformation({
         connection
           .getAccountInfo(new PublicKey(voteAccountKey))
           .then((voteAccountInfo) => {
-            if (!voteAccountInfo) {
-              return formik.setFieldError(
-                'vote_account_id',
-                'Invalid vote account ID.'
-              );
-            }
-            //The first four bytes are used to represent the vote account version
-            const vallidatorId = new PublicKey(
-              voteAccountInfo.data.slice(4, 36)
-            ).toBase58();
+            if (voteAccountInfo) {
+              //The first four bytes are used to represent the vote account version
+              const accountData = Uint8Array.from(voteAccountInfo.data);
+              const vallidatorId = new PublicKey(
+                accountData.slice(4, 36)
+              ).toBase58();
 
-            const authorizedWithdrawer = new PublicKey(
-              voteAccountInfo.data.slice(36, 68)
-            ).toBase58();
-            if (wallet.publicKey?.toBase58() === authorizedWithdrawer)
-              setProgramData({
-                validator_id: vallidatorId,
-                authorized_withdrawer_id: wallet.publicKey.toBase58(),
-              });
-            else {
-              setProgramData(undefined);
-              formik.setFieldError(
-                'vote_account_id',
-                "Vote account authorized withdrawer doesn't match with wallet pubkey"
-              );
-            }
+              const authorizedWithdrawer = new PublicKey(
+                accountData.slice(36, 68)
+              ).toBase58();
+              if (wallet.publicKey?.toBase58() === authorizedWithdrawer)
+                setProgramData({
+                  validator_id: vallidatorId,
+                  authorized_withdrawer_id: wallet.publicKey.toBase58(),
+                });
+              else {
+                setProgramData(undefined);
+                toast.error(
+                  "Vote account authorized withdrawer doesn't match with wallet pubkey"
+                );
+              }
+            } else toast.error('Invalid vote account ID.');
           })
           .catch((error) => formik.setFieldError('vote_account_id', error));
       } catch (error) {
-        formik.setFieldError('vote_account_id', `Invalid pubkey, ${error}`);
+        toast.error('Invalid pubkey !!!');
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

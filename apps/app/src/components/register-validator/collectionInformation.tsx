@@ -395,23 +395,6 @@ export default function CollectionInformation({
                   </Box>
                 ))}
             </Box>
-            {/* <TextField
-              size="small"
-              placeholder="Unit backing"
-              fullWidth
-              disabled
-              required
-              sx={{
-                '& input': {
-                  backgroundColor: '#28293D',
-                  color: 'white',
-                  '&::placeholder': {
-                    color: 'white',
-                  },
-                },
-              }}
-              value={jsonFileData?.collection_uri}
-            /> */}
           </Box>
           <Box>
             <Box>
@@ -470,7 +453,7 @@ export default function CollectionInformation({
               }}
               onChange={(e) => {
                 const val = Number(e.target.value);
-                if (val >= 0 && val < 2) {
+                if (val >= 0 && val <= 2) {
                   setCreatorRoyalties(val);
                 } else
                   toast.error(
