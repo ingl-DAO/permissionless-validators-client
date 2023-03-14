@@ -1,4 +1,5 @@
 import { deserialize } from '@dao-xyz/borsh';
+import { ProgramUsage, verifyVersion } from '@ingl-permissionless/axios';
 import {
   computeVoteAccountRewardAPY,
   GeneralData,
@@ -23,7 +24,6 @@ import {
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import { InglValidator, Validator } from '../interfaces';
-import { verifyVersion } from './versionning.service';
 
 export class ValidatorService {
   constructor(
@@ -105,7 +105,11 @@ export class ValidatorService {
     if (!jsonLoaded) {
       jsonData = await (await fetch(uri)).json();
     }
-    const programVersion = await verifyVersion(programId.toBase58());
+    const programVersion = await verifyVersion(
+      ProgramUsage.PermissionlessValidator,
+      programId.toBase58(),
+      'Program'
+    );
     const result: InglValidator = {
       programVersion,
       collection_id: collectionkey.toString(),

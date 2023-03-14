@@ -7,7 +7,6 @@ import {
 import { Box, Button, Chip, Skeleton, Typography } from '@mui/material';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
-import { verifyVersion } from '../../../../services/versionning.service';
 import Scrollbars from 'rc-scrollbars';
 import { useEffect, useMemo, useState } from 'react';
 import { useIntl } from 'react-intl';
@@ -23,14 +22,18 @@ import {
   GovernanceInterface,
   InglNft,
   InglValidator,
-  ProgramVersion,
-  VersionStatus,
   VoteAccountEnum,
 } from '../../../../interfaces';
 import { NftService } from '../../../../services/nft.service';
 import { ProposalService } from '../../../../services/proposal.service';
 import { ValidatorService } from '../../../../services/validator.service';
 import theme from '../../../../theme/theme';
+import {
+  ProgramUsage,
+  ProgramVersion,
+  verifyVersion,
+  VersionStatus,
+} from '@ingl-permissionless/axios';
 
 export default function ProposalVote() {
   const navigate = useNavigate();
@@ -214,8 +217,20 @@ export default function ProposalVote() {
     }
     setProposalNotif(notif);
     Promise.all([
-      verifyVersion(validator_program_id as string),
-      ...(programId ? [verifyVersion(programId?.toBase58())] : []),
+      verifyVersion(
+        ProgramUsage.PermissionlessValidator,
+        validator_program_id as string,
+        'Program'
+      ),
+      ...(programId
+        ? [
+            verifyVersion(
+              ProgramUsage.PermissionlessValidator,
+              programId?.toBase58(),
+              'Buffer'
+            ),
+          ]
+        : []),
     ])
       .then(([programVersionResult, bufferVersionResult]) => {
         setBufferVersion(bufferVersionResult);

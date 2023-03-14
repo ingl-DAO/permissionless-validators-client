@@ -1,3 +1,4 @@
+import { VersionStatus } from '@ingl-permissionless/axios';
 import { GitHub, ReportRounded, Twitter } from '@mui/icons-material';
 import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
 import { useConnection } from '@solana/wallet-adapter-react';
@@ -10,7 +11,7 @@ import useNotification from '../../../common/utils/notification';
 import random from '../../../common/utils/random';
 import StatCard from '../../../components/stats/statCard';
 import ValidatorCardContent from '../../../components/validators/validatorCardContent';
-import { InglValidator, VersionStatus } from '../../../interfaces';
+import { InglValidator } from '../../../interfaces';
 import { ValidatorService } from '../../../services/validator.service';
 import theme from '../../../theme/theme';
 

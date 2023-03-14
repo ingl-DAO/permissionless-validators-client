@@ -1,17 +1,5 @@
+import { ProgramVersion } from '@ingl-permissionless/axios';
 import BN from 'bn.js';
-
-export enum VersionStatus {
-  Deprecated = 'Deprecated',
-  Unsafe = 'Unsafe',
-  Safe = 'Safe',
-}
-
-export interface ProgramVersion {
-  program_data_hash: string;
-  version: number;
-  status: VersionStatus;
-  released_on: Date;
-}
 
 export interface Validator {
   validator_program_id: string;
