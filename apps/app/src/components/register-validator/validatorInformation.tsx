@@ -1,7 +1,6 @@
 import { Box, Button, Checkbox, TextField, Typography } from '@mui/material';
 import { useFormik } from 'formik';
 import Scrollbars from 'rc-scrollbars';
-import { useState } from 'react';
 import * as Yup from 'yup';
 import theme from '../../theme/theme';
 
@@ -71,14 +70,16 @@ export default function ValidatorInformation({
   setStep,
   handleSubmit,
   validatorInfo,
+  hasExistingVoteAccount,
+  setHasExistingVoteAccount,
 }: {
   setStep: (step: number) => void;
   handleSubmit: (val: ValidatorInfo) => void;
   validatorInfo: ValidatorInfo;
+  hasExistingVoteAccount: boolean
+  setHasExistingVoteAccount: (val: boolean) => void
 }) {
-  const [isExistingValidator, setIsExistingValidator] =
-    useState<boolean>(false);
-  const fieldName = isExistingValidator ? 'vote_account_id' : 'validator_id';
+  const fieldName = hasExistingVoteAccount ? 'vote_account_id' : 'validator_id';
   const initialValues: ValidatorInfo = validatorInfo ?? {
     [fieldName]: '',
     discord_invite: '',
@@ -165,10 +166,10 @@ export default function ValidatorInformation({
                   fontSize: '40px',
                 },
               }}
-              checked={isExistingValidator}
+              checked={hasExistingVoteAccount}
               onChange={(e) => {
-                setIsExistingValidator(!isExistingValidator);
                 formik.setFieldValue(fieldName, '');
+                setHasExistingVoteAccount(!hasExistingVoteAccount);
               }}
             />
             <Box>
@@ -180,13 +181,13 @@ export default function ValidatorInformation({
           </Box>
           {[
             {
-              label: isExistingValidator
+              label: hasExistingVoteAccount
                 ? 'Existing vote account ID'
                 : 'Validator ID',
               description: `Solana public key of the validator ${
-                isExistingValidator ? 'vote account' : 'account'
+                hasExistingVoteAccount ? 'vote account' : 'account'
               }`,
-              formikKey: isExistingValidator
+              formikKey: hasExistingVoteAccount
                 ? 'vote_account_id'
                 : 'validator_id',
             },

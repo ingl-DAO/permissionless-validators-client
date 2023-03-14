@@ -51,6 +51,7 @@ export default function Register() {
   const [creatorRoyalties, setCreatorRoyalties] = useState<number>(0);
   const [daoInfo, setDaoInfo] = useState<DaoInfo>();
   const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [hasExistingVoteAccount, setHasExistingVoteAccount] = useState(false);
 
   const stepComponent: Record<number, React.ReactNode> = {
     4: (
@@ -122,8 +123,10 @@ export default function Register() {
     1: (
       <ValidatorInformation
         setStep={setStep}
-        handleSubmit={(val: ValidatorInfo) => setValidatorInfo(val)}
         validatorInfo={validatorInfo}
+        hasExistingVoteAccount={hasExistingVoteAccount}
+        setHasExistingVoteAccount={setHasExistingVoteAccount}
+        handleSubmit={(val: ValidatorInfo) => setValidatorInfo(val)}
       />
     ),
     2: (
