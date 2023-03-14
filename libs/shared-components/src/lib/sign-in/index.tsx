@@ -31,7 +31,7 @@ export function SignIn() {
       code: '',
     },
     validationSchema: Yup.object().shape({
-      code: Yup.string().required('The code is required').length(6),
+      code: Yup.string().required('The code is required'),
     }),
     onSubmit: ({ code }) => {
       handleSubmit(code);
