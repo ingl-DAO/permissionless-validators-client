@@ -29,7 +29,7 @@ import { SignIn } from '@ingl-permissionless/shared-components';
 export function App() {
   const [statusOfCodeValidation, setStatusOfCodeValidation] = useState<
     'loading' | 'success' | 'failed'
-  >('success');
+  >('loading');
   const { activeLanguage } = useLanguage();
   const activeMessage = activeLanguage === 'en' ? frMessages : enMessages;
   const routing = useRoutes(routes);

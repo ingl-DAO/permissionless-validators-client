@@ -162,12 +162,15 @@ export class ValidatorService {
           isSignatureRequired: true,
         }
       );
-      this.useProgramId(programId.toBase58());
+      await this.useProgramId(programId.toBase58());
       return signature;
     } catch (error) {
-      console.log(error);
+      const errorMessage =
+        typeof error === 'object'
+          ? (error as { message: string }).message
+          : error;
       throw new Error(
-        'Validator listing failed with the following error:' + error
+        'Validator listing failed with the following error:' + errorMessage
       );
     }
   }
@@ -217,7 +220,6 @@ export class ValidatorService {
       );
       return signature;
     } catch (error) {
-      console.log(error);
       throw new Error(
         'Validator listing failed with the following error:' + error
       );
@@ -1324,7 +1326,6 @@ export class ValidatorService {
       );
       return signature;
     } catch (error) {
-      console.log(error);
       throw new Error(
         'Validator purchase failed with the following error: ' + error
       );
@@ -1400,7 +1401,6 @@ export class ValidatorService {
       );
       return transactionId;
     } catch (error) {
-      console.log(error);
       throw new Error(
         'Validator rewards withdrawing failed with the following error: ' +
           error
@@ -1491,7 +1491,6 @@ export class ValidatorService {
       );
       return transactionId;
     } catch (error) {
-      console.log(error);
       throw new Error(
         'Validator secondary items transfer failed with the error : ' + error
       );
