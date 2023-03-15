@@ -12,16 +12,16 @@ import {
   INGL_REGISTRY_PROGRAM_ID,
   INGL_TEAM_ID,
   METAPLEX_PROGRAM_ID,
-  URIS_ACCOUNT_SEED,
+  URIS_ACCOUNT_SEED
 } from '@ingl-permissionless/state';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID
 } from '@solana/spl-token';
 import {
   SignerWalletAdapterProps,
-  WalletNotConnectedError,
+  WalletNotConnectedError
 } from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
@@ -30,11 +30,12 @@ import {
   PublicKey,
   SIGNATURE_LENGTH_IN_BYTES,
   SystemProgram,
+  SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   Transaction,
   VersionedMessage,
   VersionedTransaction,
-  VoteProgram,
+  VoteProgram
 } from '@solana/web3.js';
 import { toast } from 'react-toastify';
 import { CollectionJson, ValidatorRegistration } from '../interfaces';
@@ -122,24 +123,6 @@ export class RegistryService {
       const signedTransaction = signTransaction
         ? await signTransaction(transactionV0)
         : null;
-      // const transaction = Transaction.from(Buffer.from(serializedTransaction));
-      // const [signature] = await forwardExistingTransactions(
-      //   {
-      //     payerKey: payerPubkey,
-      //     connection: this.connection,
-      //     signAllTransactions: this.walletContext.signAllTransactions,
-      //   },
-      //   [transaction]
-      // );
-      // console.log(serializedTransaction);
-      // const signedTransaction = signTransaction
-      //   ? await signTransaction(transaction)
-      //   : null;
-      // const signMessage = this.walletContext.signMessage;
-      // const signedMessage = signMessage ? await signMessage(txBuffer) : null;
-      // console.log(txBuffer);
-      // console.log('transaction', transaction, serializedMessage);
-      // console.log(transaction, new MessageV0(transaction.message));
       const signature = await this.connection.sendTransaction(
         signedTransaction as VersionedTransaction
       );
@@ -299,7 +282,7 @@ export class RegistryService {
         payerAccount,
         { pubkey: pdaAuthorityKey, isSigner: false, isWritable: false },
         { pubkey: voteAccountKey, isSigner: false, isWritable: true },
-        { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false }
+        { pubkey: SYSVAR_CLOCK_PUBKEY, isSigner: false, isWritable: false }
       );
 
       validatorAccount = {

@@ -159,6 +159,7 @@ export default function Register() {
         setTransactionSignature(signature);
         setIsConfirmRaritiesUploadDialogOpen(true);
         setValidatorNotif(undefined);
+        navigate('/programs')
       })
       .catch((error) => {
         notif.update({
