@@ -21,7 +21,7 @@ import { clusterApiUrl } from '@solana/web3.js';
 import { useMemo, useState, useEffect } from 'react';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { verifyToken } from '@ingl-permissionless/axios';
+import { ProgramUsage, verifyToken } from '@ingl-permissionless/axios';
 import { CircularProgress } from '@mui/material';
 import { Box } from '@mui/system';
 import { SignIn } from '@ingl-permissionless/shared-components';
@@ -97,7 +97,7 @@ export function App() {
                 ) : statusOfCodeValidation === 'success' ? (
                   routing
                 ) : (
-                  <SignIn />
+                  <SignIn  usage={ProgramUsage.Marketplace}/>
                 )}
               </ThemeProvider>
             </LocalizationProvider>

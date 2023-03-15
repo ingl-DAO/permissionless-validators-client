@@ -12,12 +12,12 @@ import * as Yup from 'yup';
 import { ProgramUsage, signIn } from '@ingl-permissionless/axios';
 import { toast } from 'react-toastify';
 
-export function SignIn() {
+export function SignIn({usage}: {usage: ProgramUsage}) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleSubmit = (code: string) => {
     setIsLoading(true);
-    signIn(ProgramUsage.PermissionlessValidator, code)
+    signIn(usage, code)
       .then((accessToken) => {
         localStorage.setItem('accessToken', accessToken);
         window.location.reload();
