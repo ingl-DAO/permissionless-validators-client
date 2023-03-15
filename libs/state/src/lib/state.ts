@@ -284,7 +284,7 @@ export class ValidatorConfig {
   validator_id!: Uint8Array;
 
   @field({ type: fixedArray('u8', 32) })
-  vote_account!: Uint8Array;
+  vote_account_id!: Uint8Array;
 
   @field({ type: 'u32' })
   governance_expiration_time!: number;
