@@ -247,7 +247,7 @@ export async function createLookupTable(
       [
         lookupTableInst,
         AddressLookupTableProgram.extendLookupTable({
-          addresses: addresses.splice(0, 27),
+          addresses: addresses.splice(0, 33),
           payer: payerPubkey as PublicKey,
           authority: payerPubkey as PublicKey,
           lookupTable: lookupTableAddress,
