@@ -1,12 +1,10 @@
 import { deserialize, serialize } from '@dao-xyz/borsh';
 import {
   AUTHORIZED_WITHDRAWER_KEY,
-  createLookupTable,
   Delegated,
   DelegateNFT,
   forwardLegacyTransaction,
   forwardMultipleLegacyTransactions,
-  forwardV0Transaction,
   GeneralData,
   GENERAL_ACCOUNT_SEED,
   getDeserializedAccountData,
@@ -31,6 +29,7 @@ import {
   willExceedMaximumPrimaryStake,
 } from '@ingl-permissionless/state';
 import {
+  FindNftsByOwnerOutput,
   JsonMetadata,
   Metadata,
   Metaplex,
@@ -494,7 +493,7 @@ export class NftService {
             this.validatorConfigAccountPDA[0],
             ValidatorConfig
           )
-        )?.vote_account
+        )?.vote_account_id
       ),
       isSigner: false,
       isWritable: true,
@@ -637,7 +636,7 @@ export class NftService {
             this.validatorConfigAccountPDA[0],
             ValidatorConfig
           )
-        )?.vote_account
+        )?.vote_account_id
       ),
       isSigner: false,
       isWritable: false,
@@ -848,7 +847,7 @@ export class NftService {
             this.validatorConfigAccountPDA[0],
             ValidatorConfig
           )
-        )?.vote_account
+        )?.vote_account_id
       ),
       isSigner: false,
       isWritable: true,
@@ -1138,11 +1137,6 @@ export class NftService {
       metaplexProgramAccount,
     ];
 
-    const lookupTableAddresses = await createLookupTable(
-      this.connection,
-      this.walletContext,
-      instructionAccounts.map((_) => _.pubkey)
-    );
     const imprintRarityInstruction = new TransactionInstruction({
       programId: this.programId,
       data: Buffer.from(serialize(new ImprintRarity(0))),
@@ -1150,10 +1144,14 @@ export class NftService {
     });
 
     try {
-      const transactionId = await forwardV0Transaction(
-        { connection: this.connection, wallet: this.walletContext },
+      const transactionId = await forwardLegacyTransaction(
+        {
+          connection: this.connection,
+          publicKey: payerPubkey,
+          signTransaction: this.walletContext.signTransaction,
+        },
         [imprintRarityInstruction],
-        { lookupTableAddresses, additionalUnits: 600_000 }
+        { additionalUnits: 600_000 }
       );
       return transactionId;
     } catch (error) {
@@ -1172,15 +1170,17 @@ export class NftService {
       let ownerNfts = await metaplexNft.findAllByOwner({
         owner: payerPubkey,
       });
-      const nftsOwnByProgram = [];
+      const nftsOwnByProgram: FindNftsByOwnerOutput = [];
 
-      for (let i = 0; i < ownerNfts.length; i++) {
-        const ownerNft = ownerNfts[i] as Metadata;
-        const nftData = await this.loadNftData(ownerNft.mintAddress, ownerNft);
-        if (nftData) {
-          nftsOwnByProgram.push(ownerNft);
-        }
-      }
+      await Promise.all(
+        ownerNfts.map(async (ownerNft) => {
+          const nftData = await this.loadNftData(
+            (ownerNft as Metadata).mintAddress,
+            ownerNft
+          );
+          if (nftData) nftsOwnByProgram.push(ownerNft);
+        })
+      );
 
       ownerNfts = nftsOwnByProgram;
       const [generalAccountInfo, validatorConfigAccountInfo] =

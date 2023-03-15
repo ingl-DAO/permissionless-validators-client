@@ -29,11 +29,13 @@ import {
   ValidatorID,
   ValidatorName,
   VoteAccountGovernance,
-  VoteGovernance,
-  VOTE_ACCOUNT_KEY
+  VoteGovernance
 } from '@ingl-permissionless/state';
 import { getAssociatedTokenAddressSync } from '@solana/spl-token';
-import { SignerWalletAdapterProps, WalletNotConnectedError } from '@solana/wallet-adapter-base';
+import {
+  SignerWalletAdapterProps,
+  WalletNotConnectedError
+} from '@solana/wallet-adapter-base';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import {
   AccountMeta,
@@ -50,7 +52,8 @@ import {
   ConfigAccountEnum,
   CreateProposal,
   GovernanceInterface,
-  InglNft, VoteAccountEnum
+  InglNft,
+  VoteAccountEnum
 } from '../interfaces';
 
 export class ProposalService {
@@ -129,14 +132,17 @@ export class ProposalService {
           `MaxPrimaryStake, NftHolderShare, InitialRedemptionFee and RedemptionFeeDuration values most be number strings`
         );
       if (
-        [
-          ConfigAccountEnum.TwitterHandle,
-          ConfigAccountEnum.DiscordInvite,
-        ].includes(config_type)
+        config_type === ConfigAccountEnum.TwitterHandle &&
+        !(value as string).match(/^(@)?[A-Za-z0-9_]{1,15}$/)
       )
-        throw new Error(
-          `TwitterHandle and DiscordInvite value most be url links`
-        );
+        throw new Error(`Invalid TwitterHandle`);
+      if (
+        config_type === ConfigAccountEnum.DiscordInvite &&
+        !(value as string).match(
+          /https:\/\/(www.)?discord\.com\/[A-Za-z0-9_]{1,15}$/
+        )
+      )
+        throw new Error(`DiscordInvite value most be a valid url links`);
       switch (config_type) {
         case ConfigAccountEnum.MaxPrimaryStake: {
           governanceType = new MaxPrimaryStake(
@@ -225,12 +231,20 @@ export class ProposalService {
       isSigner: false,
       isWritable: true,
     };
-    const [voteAccountKey] = PublicKey.findProgramAddressSync(
-      [Buffer.from(VOTE_ACCOUNT_KEY)],
-      this.programId
+    const configAccountInfo = await this.connection.getAccountInfo(
+      inglConfigKey
+    );
+    if (!configAccountInfo)
+      throw new Error('Fractionalized validator instance not initialized.');
+    const { vote_account_id } = deserialize(
+      configAccountInfo.data,
+      ValidatorConfig,
+      {
+        unchecked: true,
+      }
     );
     const voteAccount: AccountMeta = {
-      pubkey: voteAccountKey,
+      pubkey: new PublicKey(vote_account_id),
       isSigner: false,
       isWritable: true,
     };
@@ -563,7 +577,10 @@ export class ProposalService {
           signAllTransactions: this.walletContext
             .signAllTransactions as SignerWalletAdapterProps['signAllTransactions'],
         },
-        voteInstructions.map(instruction => ({instructions: [instruction], additionalUnits: 1_400_000 }))
+        voteInstructions.map((instruction) => ({
+          instructions: [instruction],
+          additionalUnits: 1_400_000,
+        }))
       );
     } catch (error) {
       throw new Error(
@@ -780,14 +797,22 @@ export class ProposalService {
         sysvarClockAccount
       );
     } else if (governance_type instanceof VoteAccountGovernance) {
-      const [voteAccountKey] = PublicKey.findProgramAddressSync(
-        [Buffer.from(VOTE_ACCOUNT_KEY)],
-        this.programId
+      const configAccountInfo = await this.connection.getAccountInfo(
+        inglConfigKey
+      );
+      if (!configAccountInfo)
+        throw new Error('Fractionalized validator instance not initialized.');
+      const { vote_account_id } = deserialize(
+        configAccountInfo.data,
+        ValidatorConfig,
+        {
+          unchecked: true,
+        }
       );
       const voteAccount: AccountMeta = {
-        pubkey: voteAccountKey,
+        pubkey: new PublicKey(vote_account_id),
         isSigner: false,
-        isWritable: false,
+        isWritable: true,
       };
       const [authorizedWithdrawerKey] = PublicKey.findProgramAddressSync(
         [Buffer.from(AUTHORIZED_WITHDRAWER_KEY)],

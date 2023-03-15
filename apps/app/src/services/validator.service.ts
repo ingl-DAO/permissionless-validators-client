@@ -9,8 +9,7 @@ import {
   INGL_REGISTRY_PROGRAM_ID,
   ProgramStorage,
   REGISTRY_PROGRAM_ID,
-  ValidatorConfig,
-  VOTE_ACCOUNT_KEY,
+  ValidatorConfig
 } from '@ingl-permissionless/state';
 import { Metaplex, Nft, Sft, SftWithToken } from '@metaplex-foundation/js';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
@@ -20,7 +19,7 @@ import {
   Connection,
   LAMPORTS_PER_SOL,
   PublicKey,
-  VoteAccountInfo,
+  VoteAccountInfo
 } from '@solana/web3.js';
 import { BN } from 'bn.js';
 import { InglValidator, Validator } from '../interfaces';
@@ -42,10 +41,19 @@ export class ValidatorService {
       [Buffer.from(GENERAL_ACCOUNT_SEED)],
       programId
     );
-    const [voteAccountKey] = PublicKey.findProgramAddressSync(
-      [Buffer.from(VOTE_ACCOUNT_KEY)],
-      programId
+    const configAccountInfo = await this.connection.getAccountInfo(
+      configAccountKey
     );
+    if (!configAccountInfo)
+      throw new Error('Fractionalized validator instance not initialized.');
+    const { vote_account_id } = deserialize(
+      configAccountInfo.data,
+      ValidatorConfig,
+      {
+        unchecked: true,
+      }
+    );
+    const voteAccountKey = new PublicKey(vote_account_id);
     const [collectionkey] = PublicKey.findProgramAddressSync(
       [Buffer.from(INGL_NFT_COLLECTION_KEY)],
       programId
@@ -150,7 +158,7 @@ export class ValidatorService {
       ).toString(),
       validator_name: validatorConfigAccountData.validator_name,
       vote_account_id: new PublicKey(
-        validatorConfigAccountData.vote_account
+        validatorConfigAccountData.vote_account_id
       ).toString(),
       website: validatorConfigAccountData.website,
       discord_invite: validatorConfigAccountData.discord_invite,
@@ -232,7 +240,7 @@ export class ValidatorService {
           nft_holders_share,
           max_primary_stake,
           unit_backing,
-          vote_account,
+          vote_account_id: vote_account,
         } = deserialize(accountInfo?.data as Buffer, ValidatorConfig, {
           unchecked: true,
         });
