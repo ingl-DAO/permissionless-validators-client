@@ -133,7 +133,6 @@ export default function ValidatorInformation({
         connection
           .getAccountInfo(new PublicKey(voteAccountKey))
           .then((voteAccountInfo) => {
-            console.log(voteAccountInfo);
             if (voteAccountInfo) {
               //The first four bytes are used to represent the vote account version, the 32 following stand for the validator_id
               const authorizedWithdrawer = new PublicKey(
@@ -156,7 +155,7 @@ export default function ValidatorInformation({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.vote_account_id]);
+  }, [wallet, formik.values.vote_account_id]);
 
   return (
     <Box
@@ -192,7 +191,7 @@ export default function ValidatorInformation({
             disabled={
               hasExistingVoteAccount
                 ? !authorizedWithdrawer
-                : !hasExistingVoteAccount
+                : hasExistingVoteAccount
             }
             variant="contained"
             color="primary"
