@@ -721,7 +721,7 @@ export default function ProposalVote() {
                             proposalDetails.voteAccount.vote_type ===
                             VoteAccountEnum.Commission
                               ? 'swap commission'
-                              : 'swap validator ID'
+                              : 'Swap node operator ID'
                           }`
                         ) : proposalDetails.configAccount ? (
                           `Config account: ${

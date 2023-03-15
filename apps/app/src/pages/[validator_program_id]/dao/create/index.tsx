@@ -524,7 +524,7 @@ export default function ProposalCreation() {
                   >
                     {[
                       'Program upgrade',
-                      'Vote account : swap validator ID',
+                      'Vote account : Swap node operator ID',
                       'Vote account : swap commission',
                       'Config account : change max primary stake',
                       'Config account : change NFT holder share',
@@ -573,7 +573,7 @@ export default function ProposalCreation() {
                       subLabel="Github link to the code behind the deployed buffer data"
                     />
                   </Box>
-                ) : proposalType === 'Vote account : swap validator ID' ? (
+                ) : proposalType === 'Vote account : Swap node operator ID' ? (
                   <CustomInput
                     inputBackgroundColor="#1C1C28"
                     formik={vId_formik}
