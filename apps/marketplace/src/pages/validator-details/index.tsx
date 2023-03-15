@@ -685,7 +685,7 @@ export default function ValidatorDetailsPage() {
                     </Box>
                     <Box style={{ display: 'flex', alignItems: 'flex-end' }}>
                       <ValidatorCardContent
-                        title="Authorized withdrawer ID (Seller)"
+                        title="Seller ID"
                         value={
                           validatorDetails
                             ? validatorDetails.seller_public_key
