@@ -435,6 +435,7 @@ export default function ProposalVote() {
       })
       .finally(() => setIsFinalizingProposal(false));
   };
+  console.log(proposalDetails);
   return (
     <>
       <ConfirmDialog
@@ -1123,7 +1124,8 @@ export default function ProposalVote() {
               validatorDetails &&
               voteChoice !== undefined && (
                 <Box>
-                  {proposalDetails.did_proposal_pass ? (
+                  {proposalDetails.date_finalized &&
+                  proposalDetails.did_proposal_pass ? (
                     <>
                       <Typography>{`Finalize on ${formatDate(
                         new Date(proposalDetails.date_finalized ?? 0 * 1000)
@@ -1147,7 +1149,7 @@ export default function ProposalVote() {
                       )}
                     </>
                   ) : (
-                    !proposalDetails.is_still_ongoing &&
+                    !proposalDetails.date_finalized &&
                     (proposalDetails.number_of_no_votes +
                       proposalDetails.number_of_yes_votes) *
                       validatorDetails.unit_backing >=
